@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="55 60 140 160">
   <!-- Hexagon base -->
   <polygon points="125,60 195,100 195,180 125,220 55,180 55,100"
-           fill="#2563eb"/>
+           fill="#6990bf"/>
 
   <!-- Interconnect lines -->
-  <line x1="85" y1="100" x2="165" y2="180" stroke="#ffffff" stroke-width="3"/>
-  <line x1="165" y1="100" x2="85" y2="180" stroke="#ffffff" stroke-width="3"/>
+  <line x1="85" y1="100" x2="165" y2="180" stroke="#ffffff" stroke-width="8"/>
+  <line x1="165" y1="100" x2="85" y2="180" stroke="#ffffff" stroke-width="8"/>
 
   <!-- Nodes -->
-  <circle cx="85" cy="100" r="6" fill="#fbbf24"/>
-  <circle cx="165" cy="100" r="6" fill="#fbbf24"/>
-  <circle cx="85" cy="180" r="6" fill="#fbbf24"/>
-  <circle cx="165" cy="180" r="6" fill="#fbbf24"/>
+  <circle cx="85" cy="100" r="8" fill="#fce6aeff"/>
+  <circle cx="165" cy="100" r="8" fill="#fce6aeff"/>
+  <circle cx="85" cy="180" r="8" fill="#fce6aeff"/>
+  <circle cx="165" cy="180" r="8" fill="#fce6aeff"/>
 
   <!-- Center hub -->
-  <circle cx="125" cy="140" r="10" fill="#f59e0b"/>
+  <circle cx="125" cy="140" r="15" fill="#e4b057ff"/>
 </svg>
