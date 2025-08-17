@@ -27,4 +27,6 @@ jobs:
             sudo docker compose build
             echo "Build done"
             sudo systemctl restart wwnmgr
+            # ungly hack while nginx is part of agentpoc and needs to be restarted to reload upstream data as docker keeps changing IPs
+            sudo systemctl restart agentpoc
             echo "Systemctl restart done"
