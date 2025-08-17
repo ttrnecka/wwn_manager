@@ -1,19 +1,24 @@
 services:
-  webapi:
+  www_webapi:
     build:
       context: .
       dockerfile: ./webapi/Dockerfile
       args:
         IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
     image: www_webapi:0.0.1
-    ports:
-      - "8888:8888"
-    networks:
-      - wwn_identity_network
+    network_mode: "host"
     restart: always
     volumes:
       - ./logs:/logs
     environment:
       MONGO_URI: mongodb://localhost:27017/
-networks:
-  wwn_identity_network: {}
+  frontend-artifacts:
+    build:
+      context: .
+      dockerfile: ./webapi/Dockerfile   # or reuse the same commands as frontend-builder
+      args:
+        IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
+    volumes:
+      - ./dist:/output
+    entrypoint: sh -c
+    command: ["cp -r /app/dist/* /output/"]
