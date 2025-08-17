@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -15,6 +16,7 @@ type DependencyDeleteFunc func(ctx context.Context, parentID primitive.ObjectID)
 type GenericService[T any] interface {
 	All(context.Context) ([]T, error)
 	Get(context.Context, string) (*T, error)
+	DeleteAll(context.Context) error
 	Delete(context.Context, string) error
 	Update(context.Context, primitive.ObjectID, *T) (primitive.ObjectID, error)
 	RegisterDependencies(...DependencyDeleteFunc)
@@ -59,6 +61,10 @@ func (s *genericService[T]) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return s.MainRepo.HardDeleteByID(ctx, idp)
+}
+
+func (s *genericService[T]) DeleteAll(ctx context.Context) error {
+	return s.MainRepo.HardDelete(ctx, bson.M{})
 }
 
 func (s *genericService[T]) Update(ctx context.Context, id primitive.ObjectID, item *T) (primitive.ObjectID, error) {

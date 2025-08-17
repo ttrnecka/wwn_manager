@@ -91,6 +91,9 @@ export default {
       try {
         await fcService.importFile(this.file);
         await this.loadCustomers();
+        if (this.selectedCustomer) {
+          await this.loadEntries();
+        }
         this.$refs.flash.show("Import succeeded", "success");
       } catch (err) {
         console.error("Import failed!", err);

@@ -129,6 +129,11 @@ func (h *FCEntryHandler) ImportHandler(c echo.Context) error {
 		entries = append(entries, entry)
 	}
 
+	err = h.service.DeleteAll(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+	}
+
 	for _, entry := range entries {
 		_, err := h.service.Update(c.Request().Context(), entry.ID, &entry)
 		if err != nil {
