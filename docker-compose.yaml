@@ -1,5 +1,5 @@
 services:
-  www_webapi:
+  wwn_webapi:
     build:
       context: .
       dockerfile: ./webapi/Dockerfile

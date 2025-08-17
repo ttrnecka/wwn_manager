@@ -1,11 +1,11 @@
 services:
-  www_webapi:
+  wwn_webapi:
     build:
       context: .
       dockerfile: ./webapi/Dockerfile
       args:
         IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
-    image: www_webapi:0.0.1
+    image: wwn_webapi:0.0.1
     network_mode: "host"
     restart: always
     volumes:
