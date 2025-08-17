@@ -9,13 +9,12 @@ services:
     ports:
       - "8080:8888"
     networks:
-      - wwn_identity_network
+      - xapoc_agent_poc_network
     restart: always
     volumes:
       - ./logs:/logs
-    depends_on:
-      - mongodb
     environment:
-      MONGO_URI: mongodb://localhost:27017/
+      MONGO_URI: mongodb://mongodb:27017/
 networks:
-  wwn_identity_network: {}
+  xapoc_agent_poc_network:
+    external: true
