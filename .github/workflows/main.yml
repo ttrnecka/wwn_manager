@@ -1,6 +1,7 @@
 name: Deploy via SSH
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master  # Change this to your deployment branch
