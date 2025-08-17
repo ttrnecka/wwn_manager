@@ -1,0 +1,19 @@
+services:
+  webapi:
+    build:
+      context: .
+      dockerfile: ./webapi/Dockerfile
+      args:
+        IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
+    image: www_webapi:0.0.1
+    ports:
+      - "8888:8888"
+    networks:
+      - wwn_identity_network
+    restart: always
+    volumes:
+      - ./logs:/logs
+    environment:
+      MONGO_URI: mongodb://localhost:27017/
+networks:
+  wwn_identity_network: {}

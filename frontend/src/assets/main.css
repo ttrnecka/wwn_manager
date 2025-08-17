@@ -1,0 +1,20 @@
+@import './base.css';
+
+a,
+.blue {
+  text-decoration: none;
+  color: hsla(217, 90%, 61%, 1);
+  transition: 0.4s;
+  padding: 3px;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(231, 36%, 54%, 0.2);
+  }
+}
+
+.btn {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}

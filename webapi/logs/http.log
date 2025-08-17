@@ -1,0 +1,2 @@
+{"level":"fatal","error":"error parsing uri: scheme must be \"mongodb\" or \"mongodb+srv\"","time":"2025-08-16T16:22:54+02:00"}
+{"level":"fatal","error":"error parsing uri: scheme must be \"mongodb\" or \"mongodb+srv\"","time":"2025-08-16T17:34:29+02:00"}
