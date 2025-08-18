@@ -3,9 +3,10 @@
 a,
 .blue {
   text-decoration: none;
-  color: hsla(217, 90%, 61%, 1);
+  color: hsla(213, 40%, 58%, 1);
   transition: 0.4s;
-  padding: 3px;
+  font-weight: 500;
+  font-variant: all-small-caps;
 }
 
 @media (hover: hover) {
@@ -17,4 +18,14 @@ a,
 .btn {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
+}
+
+.btn-primary {
+  color: #fff;           
+  background-color: hsla(213, 40%, 58%, 1);
+  border-color: hsla(213, 40%, 58%, 1);
+}
+
+.btn-primary:hover {
+  color: #fff;      
 }

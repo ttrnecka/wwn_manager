@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="55 60 140 160">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="47.5 50 155 180">
+  <!-- Darker background square with half margin -->
+  <rect x="47.5" y="50" width="155" height="180" fill="#5078a5"/>
+
   <!-- Hexagon base -->
   <polygon points="125,60 195,100 195,180 125,220 55,180 55,100"
            fill="#6990bf"/>
