@@ -6,6 +6,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type FCEntryService interface {
@@ -28,4 +29,17 @@ func (s fcEntryService) Customers(ctx context.Context) ([]any, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+func (s fcEntryService) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) ([]entity.FCEntry, error) {
+	bson, ok := filter.(bson.M)
+	if ok {
+		customer, ok := bson["customer"]
+		if ok {
+			if customer == "__GLOBAL__" {
+				delete(bson, "customer")
+			}
+		}
+	}
+	return s.GenericService.Find(ctx, filter, opts...)
 }

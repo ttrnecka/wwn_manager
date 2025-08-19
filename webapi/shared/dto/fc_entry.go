@@ -7,4 +7,5 @@ type FCEntryDTO struct {
 	Zone     string `json:"zone"`
 	Alias    string `json:"alias"`
 	Hostname string `json:"hostname"`
+	Type     string `json:"type"`
 }

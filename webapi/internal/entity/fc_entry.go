@@ -12,6 +12,7 @@ type FCEntry struct {
 	Zone          string `bson:"zone"`
 	Alias         string `bson:"alias"`
 	Hostname      string `bson:"hostname,omitempty"`
+	Type          string `bson:"type,omitempty"`
 }
 
 func FCEntries() *cdb.CRUD[FCEntry] {

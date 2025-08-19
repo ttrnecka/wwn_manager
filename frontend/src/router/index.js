@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import FCManager  from '../views/FCManager.vue'
+import GlobalFCManager  from '../views/GlobalFCManager.vue'
 import Login from '../views/Login.vue'
 import { useDataStore } from '@/stores/dataStore'
 
@@ -12,6 +13,12 @@ const router = createRouter({
       alias: ['/index.html'],
       name: 'fcmgr',
       component: FCManager 
+    },
+    {
+      path: '/global',
+      alias: ['/global.html'],
+      name: 'global',
+      component: GlobalFCManager 
     },
     {
       path: '/:pathMatch(.*)*',

@@ -39,10 +39,17 @@ func (h *FCEntryHandler) FCEntries(c echo.Context) error {
 		return err
 	}
 
+	globalRules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": "__GLOBAL__"}, options.Find().SetSort(bson.M{"order": 1}))
+	if err != nil {
+		return err
+	}
+
+	rules = append(rules, globalRules...)
+
 	itemsDTO := []dto.FCEntryDTO{}
 	for i, item := range items {
 		itemsDTO = append(itemsDTO, mapper.ToFCEntryDTO(item))
-		itemsDTO[i].Hostname = applyRules(item, rules)
+		itemsDTO[i].Type, itemsDTO[i].Hostname = applyRules(item, rules)
 	}
 	return c.JSON(http.StatusOK, itemsDTO)
 }
@@ -151,12 +158,52 @@ func (h *FCEntryHandler) ListCustomers(c echo.Context) error {
 	return c.JSON(http.StatusOK, customers)
 }
 
-func applyRules(entry entity.FCEntry, rules []entity.Rule) string {
+func applyRules(entry entity.FCEntry, rules []entity.Rule) (string, string) {
 	hostname := ""
+	htype := "Unknown"
 	sort.Slice(rules, func(i, j int) bool {
 		return rules[i].Order < rules[j].Order
 	})
 
+	// RANGE rules
+RANGE:
+	for _, rule := range rules {
+		r, err := regexp.Compile(rule.Regex)
+		if err != nil {
+			continue
+		}
+		switch rule.Type {
+		case entity.WWNArrayRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				htype = "Array"
+				break RANGE
+			}
+		case entity.WWNBackupRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				htype = "Backup"
+				break RANGE
+			}
+		case entity.WWNHostRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				htype = "Host"
+				break RANGE
+			}
+		case entity.WWNOtherRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				htype = "Other"
+				break RANGE
+			}
+		}
+	}
+	// do hest check only for host ranges
+	if htype == "Array" || htype == "Backup" || htype == "Other" {
+		return htype, hostname
+	}
+	// MAP rules
 TOP:
 	for _, rule := range rules {
 		r, err := regexp.Compile(rule.Regex)
@@ -176,7 +223,13 @@ TOP:
 				hostname = match[1] // first capture group
 				break TOP
 			}
+		case entity.WWNMapRule:
+			match := r.FindStringSubmatch(entry.WWN)
+			if len(match) > 1 {
+				hostname = match[1] // first capture group
+				break TOP
+			}
 		}
 	}
-	return hostname
+	return htype, hostname
 }

@@ -20,6 +20,7 @@
       <table class="table table-hover mb-0">
         <thead>
           <tr>
+            <th>Type</th>
             <th>WWN</th>
             <th>Zone</th>
             <th>Alias</th>
@@ -28,6 +29,7 @@
         </thead>
         <tbody>
           <tr v-for="e in pagedEntries" :key="e.id">
+            <td>{{ e.type }}</td>
             <td>{{ e.wwn }}</td>
             <td>{{ e.zone }}</td>
             <td>{{ e.alias }}</td>
