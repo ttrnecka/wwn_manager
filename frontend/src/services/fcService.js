@@ -23,6 +23,10 @@ export default {
     return axios.post(`${API}/customers/${customer}/rules`, rule);
   },
 
+  addRules(customer, rules) {
+    return axios.post(`${API}/customers/${customer}/rules_all`, rules);
+  },
+
   deleteRule(customer, id) {
     return axios.delete(`${API}/customers/${customer}/rules/${id}`);
   },

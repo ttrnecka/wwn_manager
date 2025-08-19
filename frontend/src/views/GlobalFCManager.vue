@@ -50,6 +50,7 @@ import RulesTable from "@/components/RulesTable.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
+import { useRulesStore } from '@/stores/ruleStore';
 
 export default {
   name: "GlobalFCManager",
@@ -71,6 +72,9 @@ export default {
     },
     typeRules() {
       return this.rules.filter(rule => !this.rangeRuleNames.includes(rule.type));
+    },
+    rulesStore() {
+      return useRulesStore();
     }
   },
   methods: {
@@ -106,6 +110,7 @@ export default {
     async loadRules() {
       if (!this.selectedCustomer) return;
       const res = await fcService.getRules(this.selectedCustomer);
+      this.rulesStore.setGlobalRules(res.data);
       this.rules = res.data;
     },
     async loadEntries() {

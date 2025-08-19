@@ -6,7 +6,8 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-	"sort"
+	"runtime"
+	"sync"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
@@ -46,11 +47,12 @@ func (h *FCEntryHandler) FCEntries(c echo.Context) error {
 
 	rules = append(rules, globalRules...)
 
-	itemsDTO := []dto.FCEntryDTO{}
-	for i, item := range items {
-		itemsDTO = append(itemsDTO, mapper.ToFCEntryDTO(item))
-		itemsDTO[i].Type, itemsDTO[i].Hostname = applyRules(item, rules)
-	}
+	itemsDTO := processItems(items, rules)
+	// itemsDTO := []dto.FCEntryDTO{}
+	// for i, item := range items {
+	// 	itemsDTO = append(itemsDTO, mapper.ToFCEntryDTO(item))
+	// 	itemsDTO[i].Type, itemsDTO[i].Hostname = applyRules(item, rules)
+	// }
 	return c.JSON(http.StatusOK, itemsDTO)
 }
 
@@ -158,12 +160,14 @@ func (h *FCEntryHandler) ListCustomers(c echo.Context) error {
 	return c.JSON(http.StatusOK, customers)
 }
 
-func applyRules(entry entity.FCEntry, rules []entity.Rule) (string, string) {
+func applyRules(entry entity.FCEntry, rules []entity.Rule) (string, string, string, string) {
 	hostname := ""
+	var hostname_rule, type_rule string
 	htype := "Unknown"
-	sort.Slice(rules, func(i, j int) bool {
-		return rules[i].Order < rules[j].Order
-	})
+	// do not sort, already provide in required order
+	// sort.Slice(rules, func(i, j int) bool {
+	// 	return rules[i].Order < rules[j].Order
+	// })
 
 	// RANGE rules
 RANGE:
@@ -172,6 +176,7 @@ RANGE:
 		if err != nil {
 			continue
 		}
+		type_rule = rule.ID.Hex()
 		switch rule.Type {
 		case entity.WWNArrayRangeRule:
 			match := r.MatchString(entry.WWN)
@@ -198,10 +203,11 @@ RANGE:
 				break RANGE
 			}
 		}
+		type_rule = ""
 	}
 	// do hest check only for host ranges
 	if htype == "Array" || htype == "Backup" || htype == "Other" {
-		return htype, hostname
+		return htype, type_rule, hostname, hostname_rule
 	}
 	// MAP rules
 TOP:
@@ -210,6 +216,7 @@ TOP:
 		if err != nil {
 			continue
 		}
+		hostname_rule = rule.ID.Hex()
 		switch rule.Type {
 		case entity.ZoneRule:
 			match := r.FindStringSubmatch(entry.Zone)
@@ -230,6 +237,39 @@ TOP:
 				break TOP
 			}
 		}
+		hostname_rule = ""
 	}
-	return htype, hostname
+	return htype, type_rule, hostname, hostname_rule
+}
+
+func processItems(items []entity.FCEntry, rules []entity.Rule) []dto.FCEntryDTO {
+	numWorkers := runtime.NumCPU() // one worker per CPU core
+	itemsDTO := make([]dto.FCEntryDTO, len(items))
+
+	var wg sync.WaitGroup
+	wg.Add(len(items))
+
+	// channel to distribute indices
+	idxCh := make(chan int)
+
+	// start workers
+	for w := 0; w < numWorkers; w++ {
+		go func() {
+			for i := range idxCh {
+				dtoItem := mapper.ToFCEntryDTO(items[i])
+				dtoItem.Type, dtoItem.TypeRule, dtoItem.Hostname, dtoItem.HostNameRule = applyRules(items[i], rules)
+				itemsDTO[i] = dtoItem
+				wg.Done()
+			}
+		}()
+	}
+
+	// send work
+	for i := range items {
+		idxCh <- i
+	}
+	close(idxCh)
+
+	wg.Wait()
+	return itemsDTO
 }

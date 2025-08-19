@@ -13,6 +13,8 @@ type FCEntry struct {
 	Alias         string `bson:"alias"`
 	Hostname      string `bson:"hostname,omitempty"`
 	Type          string `bson:"type,omitempty"`
+	TypeRule      string `bson:"type_rule,omitempty"`
+	HostNameRule  string `bson:"hostname_rule,omitempty"`
 }
 
 func FCEntries() *cdb.CRUD[FCEntry] {

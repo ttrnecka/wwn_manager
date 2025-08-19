@@ -1,7 +1,13 @@
 <template>
   <div class="card my-3">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <span>Entries</span>
+      <span><b>Entries</b></span>
+      <span>
+        <input class="form-check-input me-1" type="checkbox" v-model="hostOnly" id="host-only">
+        <label class="form-check-label" for="host-only">
+          <b>Host Only</b>
+        </label>
+      </span>
       <input v-model="searchTerm" @input="applyFilter"
              class="form-control w-50" placeholder="Filter by WWN, Zone, Alias, Hostname" />
     </div>
@@ -29,11 +35,11 @@
         </thead>
         <tbody>
           <tr v-for="e in pagedEntries" :key="e.id">
-            <td>{{ e.type }}</td>
+            <td :title="getEntryTypeRule(e)">{{ e.type }}</td>
             <td>{{ e.wwn }}</td>
             <td>{{ e.zone }}</td>
             <td>{{ e.alias }}</td>
-            <td><strong>{{ e.hostname }}</strong></td>
+            <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
             <td colspan="4" class="text-center">No entries found</td>
@@ -56,6 +62,7 @@
 
 <script>
 import PagingControls from "./PagingControls.vue";
+import { useRulesStore } from '@/stores/ruleStore';
 
 export default {
   name: "EntriesTable",
@@ -66,12 +73,16 @@ export default {
   },
   data() {
     return {
+      hostOnly: false,
       searchTerm: "",
       currentPage: 1,
       filteredEntries: []
     };
   },
   computed: {
+    rulesStore() {
+      return useRulesStore();
+    },
     pagedEntries() {
       const start = (this.currentPage - 1) * this.pageSize;
       const end = start + this.pageSize;
@@ -79,19 +90,42 @@ export default {
     }
   },
   watch: {
-    entries: { handler: "applyFilter", immediate: true }
+    entries: { handler: "applyFilter", immediate: true },
+    hostOnly: { handler: "applyFilter", immediate: true }
   },
   methods: {
+    getEntryTypeRule(entry) {
+      let rule = this.rulesStore.getRules.find((r) => r.id === entry.type_rule)
+      let text = "No Rule"
+      if (rule) {
+        let customer = rule.customer === '__GLOBAL__' ? "Global" : rule.customer
+        text = `${customer} rule number ${rule.order}: ${rule.comment}`
+      }
+      return text
+    },
+    getEntryHostnameRule(entry) {
+      let rule = this.rulesStore.getRules.find((r) => r.id === entry.hostname_rule)
+      let text = "No Rule"
+      if (rule) {
+        let customer = rule.customer === '__GLOBAL__' ? "Global" : rule.customer
+        text = `${customer} rule number ${rule.order}: ${rule.comment}`
+      }
+      return text
+    },
     applyFilter() {
       const term = this.searchTerm.toLowerCase().trim();
       this.filteredEntries = term
         ? this.entries.filter(e =>
+            e.type.toLowerCase().includes(term) ||
             e.wwn.toLowerCase().includes(term) ||
             e.zone.toLowerCase().includes(term) ||
             e.alias.toLowerCase().includes(term) ||
             (e.hostname || "").toLowerCase().includes(term)
           )
         : [...this.entries];
+      if (this.hostOnly) {
+        this.filteredEntries = this.filteredEntries.filter(e => e.type === "Host")
+      }
       this.currentPage = 1;
     },
     changePage(page) {

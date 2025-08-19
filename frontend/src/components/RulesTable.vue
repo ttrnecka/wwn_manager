@@ -11,13 +11,14 @@
             <th class="col-1">Order</th>
             <th class="col-2">Type</th>
             <th class="col-3"> Regex</th>
-            <th class="col-4"></th>
+            <th class="col-2"> Comment</th>
+            <th class="col-1"></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="rule in sortedRules" :key="rule.id">
             <td class="col-1">
-              <input type="number" v-model.number="rule.order" min="1" class="form-control form-control-sm" @focus="rule._oldOrder = rule.order" @change="updateOrder(rule, rule.order)"/>
+              <input type="number" v-model.number="rule.order" min="1" class="form-control form-control-sm" @focus="rule._oldOrder = rule.order" @blur="updateOrder(rule, rule.order)"/>
             </td>
             <td class="col-2">
               <select v-model="rule.type" class="form-select form-select-sm">
@@ -27,7 +28,10 @@
             <td class="col-3">
               <input type="text" v-model="rule.regex" class="form-control form-control-sm" />
             </td>
-            <td class="col-4 text-end align-middle">
+            <td class="col-2">
+              <input type="text" v-model="rule.comment" class="form-control form-control-sm" />
+            </td>
+            <td class="col-1 text-end align-middle">
                 <button class="btn btn-sm btn-danger delete-button" @click="deleteRule(rule)">Delete</button>
             </td>
           </tr>
@@ -88,9 +92,10 @@ export default {
       });
     },
     async saveRules() {
-      for (const rule of this.localRules) {
-        await fcService.addRule(this.customer, rule);
-      }
+      // for (const rule of this.localRules) {
+      //   await fcService.addRule(this.customer, rule);
+      // }
+      await fcService.addRules(this.customer, this.localRules);
       this.$emit("rulesChanged");
     },
     async deleteRule(rule) {

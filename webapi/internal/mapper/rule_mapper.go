@@ -12,6 +12,7 @@ func ToRuleEntity(p dto.RuleDTO) entity.Rule {
 		Type:     p.Type,
 		Regex:    p.Regex,
 		Order:    p.Order,
+		Comment:  p.Comment,
 	}
 	entry.ID, _ = primitive.ObjectIDFromHex(p.ID)
 	return entry
@@ -24,5 +25,6 @@ func ToRuleDTO(p entity.Rule) dto.RuleDTO {
 		Type:     p.Type,
 		Regex:    p.Regex,
 		Order:    p.Order,
+		Comment:  p.Comment,
 	}
 }

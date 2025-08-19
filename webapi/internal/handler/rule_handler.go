@@ -93,3 +93,27 @@ func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
 	itemDTO = mapper.ToRuleDTO(*itemTmp)
 	return c.JSON(http.StatusOK, itemDTO)
 }
+
+func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
+	customer := c.Param("name")
+	var itemsDTO []dto.RuleDTO
+	if err := json.NewDecoder(c.Request().Body).Decode(&itemsDTO); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	for _, item := range itemsDTO {
+		item.Customer = customer
+		if err := validate.Struct(item); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+		item := mapper.ToRuleEntity(item)
+
+		_, err := h.service.Update(c.Request().Context(), item.ID, &item)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{
+				"error": err.Error(),
+			})
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
+}
