@@ -20,8 +20,12 @@
 
         <!-- Display selected file name -->
         <span class="me-3">{{ fileName || "No file chosen" }}</span>
-        <button class="btn btn-primary " @click="uploadFile" :disabled="!file">
-          Import
+        <button class="btn btn-primary me-2 " @click="uploadFile" :disabled="!file">
+          Import Entries
+        </button>
+
+        <button class="btn btn-primary " @click="donwloadRules">
+          Export Rules
         </button>
       </div>
 
@@ -131,6 +135,10 @@ export default {
         this.loading = false;
       }
     },
+    async donwloadRules() {
+      const resp = await fcService.getRulesExport();
+      fcService.saveFile(resp);
+    }
   },
   mounted() {
     this.loadData();

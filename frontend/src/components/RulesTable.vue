@@ -10,8 +10,9 @@
           <tr>
             <th class="col-1">Order</th>
             <th class="col-2">Type</th>
-            <th class="col-3"> Regex</th>
-            <th class="col-2"> Comment</th>
+            <th class="col-3">Regex</th>
+            <th class="col-3">Group</th>
+            <th class="col-2">Comment</th>
             <th class="col-1"></th>
           </tr>
         </thead>
@@ -27,6 +28,9 @@
             </td>
             <td class="col-3">
               <input type="text" v-model="rule.regex" class="form-control form-control-sm" />
+            </td>
+            <td class="col-3">
+              <input type="number" v-model="rule.group" class="form-control form-control-sm" />
             </td>
             <td class="col-2">
               <input type="text" v-model="rule.comment" class="form-control form-control-sm" />

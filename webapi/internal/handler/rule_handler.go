@@ -1,8 +1,11 @@
 package handler
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
@@ -44,6 +47,30 @@ func (h *RuleHandler) Rules(c echo.Context) error {
 		itemsDTO = append(itemsDTO, mapper.ToRuleDTO(item))
 	}
 	return c.JSON(http.StatusOK, itemsDTO)
+}
+
+func (h *RuleHandler) ExportRules(c echo.Context) error {
+
+	items, err := h.service.All(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	f, err := os.CreateTemp("", "exportcsv-")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	writer := csv.NewWriter(f)
+
+	for _, item := range items {
+		itemDTO := mapper.ToRuleDTO(item)
+		writer.Write([]string{strconv.Itoa(itemDTO.Order), itemDTO.Customer, itemDTO.Regex, strconv.Itoa(itemDTO.Group), string(itemDTO.Type)})
+	}
+	writer.Flush()
+	return c.Attachment(f.Name(), "rules.csv")
 }
 
 func (h *RuleHandler) DeleteRule(c echo.Context) error {

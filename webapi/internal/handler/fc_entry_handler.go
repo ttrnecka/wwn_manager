@@ -220,20 +220,20 @@ TOP:
 		switch rule.Type {
 		case entity.ZoneRule:
 			match := r.FindStringSubmatch(entry.Zone)
-			if len(match) > 1 {
-				hostname = match[1] // first capture group
+			if len(match) > 1 && len(match) >= rule.Group {
+				hostname = match[rule.Group] // first capture group
 				break TOP
 			}
 		case entity.AliasRule:
 			match := r.FindStringSubmatch(entry.Alias)
-			if len(match) > 1 {
-				hostname = match[1] // first capture group
+			if len(match) > 1 && len(match) >= rule.Group {
+				hostname = match[rule.Group] // first capture group
 				break TOP
 			}
 		case entity.WWNMapRule:
 			match := r.FindStringSubmatch(entry.WWN)
-			if len(match) > 1 {
-				hostname = match[1] // first capture group
+			if len(match) > 1 && len(match) >= rule.Group {
+				hostname = match[rule.Group] // first capture group
 				break TOP
 			}
 		}

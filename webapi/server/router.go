@@ -51,6 +51,7 @@ func Router() *echo.Echo {
 
 	api.POST("/import", fcEntryHandler.ImportHandler)
 	api.GET("/customers", fcEntryHandler.ListCustomers)
+	api.GET("/rules", ruleHandler.ExportRules)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
 	api.POST("/customers/:name/rules_all", ruleHandler.CreateUpdateRules)

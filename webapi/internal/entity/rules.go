@@ -25,6 +25,7 @@ type Rule struct {
 	Customer      string   `bson:"customer"`
 	Type          RuleType `bson:"type"`
 	Regex         string   `bson:"regex"`
+	Group         int      `bson:"group"`
 	Order         int      `bson:"order"`
 	Comment       string   `bson:"comment"`
 }

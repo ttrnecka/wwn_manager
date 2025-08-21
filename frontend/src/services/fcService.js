@@ -34,4 +34,29 @@ export default {
   getEntries(customer) {
     return axios.get(`${API}/customers/${customer}/entries`);
   },
+
+  getRulesExport() {
+    return axios.get(`${API}/rules`, {responseType: "blob"});
+  },
+
+  saveFile(resp) {
+    const disposition = resp.headers["content-disposition"];
+    let filename = "downloaded-file";
+    
+    if (disposition && disposition.includes("filename=")) {
+      const matches = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      if (matches && matches[1]) {
+        filename = matches[1].replace(/['"]/g, "");
+      }
+    }
+      
+    const blob = new Blob([resp.data], { type: resp.headers["content-type"] });
+
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download=filename;
+    // document.body.appendChild(link);
+    link.click(); 
+    window.URL.revokeObjectURL(link.href);
+  }
 };
