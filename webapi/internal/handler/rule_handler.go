@@ -98,6 +98,11 @@ func (h *RuleHandler) DeleteRule(c echo.Context) error {
 }
 
 func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
+	mode := c.QueryParam("mode")
+	// bulk mode with array of rules
+	if mode == "bulk" {
+		return h.CreateUpdateRules(c)
+	}
 	customer := c.Param("name")
 	var itemDTO dto.RuleDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&itemDTO); err != nil {
@@ -171,7 +176,7 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 	// channel to distribute indices
 	idxCh := make(chan int)
 
-	globalRules, err := h.service.Find(ctx, bson.M{"customer": "__GLOBAL__"}, options.Find().SetSort(bson.M{"order": 1}))
+	globalRules, err := h.service.Find(ctx, bson.M{"customer": entity.GLOBAL_CUSTOMER}, options.Find().SetSort(bson.M{"order": 1}))
 	if err != nil {
 		return err
 	}

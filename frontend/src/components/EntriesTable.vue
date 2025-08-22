@@ -63,6 +63,7 @@
 <script>
 import PagingControls from "./PagingControls.vue";
 import { useRulesStore } from '@/stores/ruleStore';
+import { GLOBAL_CUSTOMER } from '@/config'
 
 export default {
   name: "EntriesTable",
@@ -98,7 +99,7 @@ export default {
       let rule = this.rulesStore.getRules.find((r) => r.id === entry.type_rule)
       let text = "No Rule"
       if (rule) {
-        let customer = rule.customer === '__GLOBAL__' ? "Global" : rule.customer
+        let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
         text = `${customer} rule number ${rule.order}: ${rule.comment}`
       }
       return text
@@ -107,7 +108,7 @@ export default {
       let rule = this.rulesStore.getRules.find((r) => r.id === entry.hostname_rule)
       let text = "No Rule"
       if (rule) {
-        let customer = rule.customer === '__GLOBAL__' ? "Global" : rule.customer
+        let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
         text = `${customer} rule number ${rule.order}: ${rule.comment}`
       }
       return text

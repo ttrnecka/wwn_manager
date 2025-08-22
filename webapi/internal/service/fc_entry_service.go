@@ -36,7 +36,7 @@ func (s fcEntryService) Find(ctx context.Context, filter interface{}, opts ...*o
 	if ok {
 		customer, ok := bson["customer"]
 		if ok {
-			if customer == "__GLOBAL__" {
+			if customer == entity.GLOBAL_CUSTOMER {
 				delete(bson, "customer")
 			}
 		}

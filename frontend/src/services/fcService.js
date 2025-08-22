@@ -24,7 +24,7 @@ export default {
   },
 
   addRules(customer, rules) {
-    return axios.post(`${API}/customers/${customer}/rules/all`, rules);
+    return axios.post(`${API}/customers/${customer}/rules?mode=bulk`, rules);
   },
 
   deleteRule(customer, id) {

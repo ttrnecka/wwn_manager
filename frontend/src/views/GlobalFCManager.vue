@@ -1,8 +1,8 @@
 <template>
   <div>
-    <LoadingOverlay :active="loading" color="primary" size="3rem" />
-    <FlashMessage ref="flash" />
-    <div class="container mt-4" :class="{ 'opacity-50': loading, 'pe-none': loading }">
+    <LoadingOverlay :active="loadingState.loading" color="primary" size="3rem" />
+    <FlashMessage />
+    <div class="container mt-4" :class="{ 'opacity-50': loadingState.loading, 'pe-none': loadingState.loading }">
       <!-- Import -->
       <div class="mb-3">
         <!-- Hidden file input -->
@@ -54,20 +54,30 @@ import RulesTable from "@/components/RulesTable.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
+import { useFlashStore } from '@/stores/flash'
 import { useRulesStore } from '@/stores/ruleStore';
+import { GLOBAL_CUSTOMER } from '@/config'
+import { provide } from 'vue'
 
 export default {
   name: "GlobalFCManager",
   components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage },
+  provide() {
+    return {
+      loadingState: this.loadingState
+    };
+  },
   data() {
     return {
       file: null,
       fileName: "",
-      selectedCustomer: "__GLOBAL__",
+      selectedCustomer: GLOBAL_CUSTOMER,
       rules: [],
       entries: [],
       rangeRuleNames: ['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other'],
-      loading: false,
+      loadingState: {
+        loading: false,
+      },
     };
   },
   computed: {
@@ -79,6 +89,9 @@ export default {
     },
     rulesStore() {
       return useRulesStore();
+    },
+    flash() {
+      return useFlashStore();
     }
   },
   methods: {
@@ -97,18 +110,18 @@ export default {
     },
     async uploadFile() {
       if (!this.file) return;
-      this.loading = true;
+      this.loadingState.loading = true;
       try {
         await fcService.importFile(this.file);
         if (this.selectedCustomer) {
           await this.loadEntries();
         }
-        this.$refs.flash.show("Import succeeded", "success");
+        // this.flash.show("Import succeeded", "success");
       } catch (err) {
         console.error("Import failed!", err);
-        this.$refs.flash.show("Import failed", "danger");
+        this.flash.show("Import failed", "danger");
       } finally {
-        this.loading = false;
+        this.loadingState.loading = false;
       }
     },
     async loadRules() {
@@ -123,16 +136,16 @@ export default {
       this.entries = res.data;
     },
     async loadData() {
-      this.loading = true;
+      this.loadingState.loading = true;
       try {
         await this.loadRules();
         await this.loadEntries();
-        this.$refs.flash.show("Data load succeeded", "success");
+        // this.flash.show("Data load succeeded", "success");
       } catch (err) {
         console.error("Data load failed", err);
-        this.$refs.flash.show("Data load failed", "danger");
+        this.flash.show("Data load failed", "danger");
       } finally {
-        this.loading = false;
+        this.loadingState.loading = false;
       }
     },
     async donwloadRules() {

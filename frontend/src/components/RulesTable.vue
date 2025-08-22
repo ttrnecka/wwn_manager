@@ -11,7 +11,7 @@
             <th class="col-1">Order</th>
             <th class="col-2">Type</th>
             <th class="col-3">Regex</th>
-            <th class="col-3">Group</th>
+            <th class="col-1">Group</th>
             <th class="col-2">Comment</th>
             <th class="col-1"></th>
           </tr>
@@ -29,8 +29,8 @@
             <td class="col-3">
               <input type="text" v-model="rule.regex" class="form-control form-control-sm" />
             </td>
-            <td class="col-3">
-              <input type="number" v-model="rule.group" class="form-control form-control-sm" />
+            <td class="col-1">
+              <input type="number" v-model="rule.group" class="form-control form-control-sm" :disabled="disabledGroup(rule)" />
             </td>
             <td class="col-2">
               <input type="text" v-model="rule.comment" class="form-control form-control-sm" />
@@ -50,6 +50,8 @@
 
 <script>
 import fcService from "@/services/fcService";
+import { GLOBAL_CUSTOMER } from '@/config'
+import { inject } from 'vue'
 
 export default {
   name: "RulesTable",
@@ -58,6 +60,7 @@ export default {
     types: { type: Array, default: () => ["alias","wwn_map","zone"] },
     customer: { type: String },
   },
+  inject: ['loadingState'],
   data() {
     return {
       localRules: JSON.parse(JSON.stringify(this.rules)), // local copy
@@ -78,11 +81,14 @@ export default {
       return [...this.localRules].sort((a, b) => a.order - b.order);
     },
     title() {
-      let c = this.customer === "__GLOBAL__" ? "Global " : "";
+      let c = this.customer === GLOBAL_CUSTOMER ? "Global " : "";
       return this.types.includes("wwn_range_array") ? "Range Rules" : `${c}Host Mapping Rules`;
     }
   },
   methods: {
+    disabledGroup(rule) {
+      return rule.type.includes("range") && rule.customer == GLOBAL_CUSTOMER;
+    },
     addNewRule() {
       let maxOrder = this.localRules.length > 0 
         ? Math.max(...this.localRules.map(r => r.order)) 
@@ -93,23 +99,31 @@ export default {
         type: this.types.includes("wwn_range_array") ? "wwn_range_array" : "alias", 
         regex: "",
         order: maxOrder + 1, // assign next order
+        group: 1
       });
     },
     async saveRules() {
-      // for (const rule of this.localRules) {
-      //   await fcService.addRule(this.customer, rule);
-      // }
-      await fcService.addRules(this.customer, this.localRules);
+      this.loadingState.loading = true;
+      try {
+        await fcService.addRules(this.customer, this.localRules);
+      }
+      catch(err) {
+        console.error("Rules failed to save!", err);
+      }
+      finally {
+        this.loadingState.loading = false;  
+      }
       this.$emit("rulesChanged");
     },
     async deleteRule(rule) {
       if (rule.id) {
         // Existing rule in backend
         await fcService.deleteRule(this.customer, rule.id);
+        this.$emit("rulesChanged");
+      } else {
+        // Remove from local copy in both cases
+        this.localRules = this.localRules.filter(r => r !== rule);
       }
-      // Remove from local copy in both cases
-      this.localRules = this.localRules.filter(r => r !== rule);
-      this.$emit("rulesChanged");
     },
     updateOrder(rule, newOrder) {
       if (newOrder < 1) newOrder = 1;

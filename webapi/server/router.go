@@ -54,7 +54,6 @@ func Router() *echo.Echo {
 	api.GET("/rules", ruleHandler.ExportRules)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
-	api.POST("/customers/:name/rules/all", ruleHandler.CreateUpdateRules)
 	api.DELETE("/customers/:name/rules/:id", ruleHandler.DeleteRule)
 	api.GET("/customers/:name/entries", fcEntryHandler.FCEntries)
 

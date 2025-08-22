@@ -1,8 +1,8 @@
 <template>
   <div>
-    <LoadingOverlay :active="loading" color="primary" size="3rem" />
+    <LoadingOverlay :active="loadingState.loading" color="primary" size="3rem" />
     <FlashMessage ref="flash" />
-    <div class="container mt-4" :class="{ 'opacity-50': loading, 'pe-none': loading }">
+    <div class="container mt-4" :class="{ 'opacity-50': loadingState.loading, 'pe-none': loadingState.loading }">
       <!-- Customers -->
       <div class="mb-3">
         <select v-model="selectedCustomer" class="form-select" @change="loadData">
@@ -34,23 +34,36 @@ import RulesTable from "@/components/RulesTable.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
+import { useFlashStore } from '@/stores/flash'
 import { useRulesStore } from '@/stores/ruleStore';
+import { GLOBAL_CUSTOMER } from '@/config'
+import { provide } from 'vue'
 
 export default {
   name: "FCManager",
   components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage },
+  provide() {
+    return {
+      loadingState: this.loadingState
+    };
+  },
   data() {
     return {
       customers: [],
       selectedCustomer: "",
       rules: [],
       entries: [],
-      loading: false,
+      loadingState: {
+        loading: false,
+      },
     };
   },
   computed: {
     rulesStore() {
       return useRulesStore();
+    },
+    flash() {
+      return useFlashStore();
     }
   },
   methods: {
@@ -60,7 +73,7 @@ export default {
     },
     async loadRules() {
       if (!this.selectedCustomer) return;
-      const res = await fcService.getRules("__GLOBAL__");
+      const res = await fcService.getRules(GLOBAL_CUSTOMER);
       this.rulesStore.setGlobalRules(res.data);
       const res2 = await fcService.getRules(this.selectedCustomer);
       this.rulesStore.setRules(res2.data);
@@ -72,16 +85,16 @@ export default {
       this.entries = res.data;
     },
     async loadData() {
-      this.loading = true;
+      this.loadingState.loading = true;
       try {
         await this.loadRules();
         await this.loadEntries();
-        this.$refs.flash.show("Data load succeeded", "success");
+        // this.flash.show("Data load succeeded", "success");
       } catch (err) {
         console.error("Data load failed", err);
-        this.$refs.flash.show("Data load failed", "danger");
+        this.flash.show("Data load failed", "danger");
       } finally {
-        this.loading = false;
+        this.loadingState.loading = false;
       }
     },
   },

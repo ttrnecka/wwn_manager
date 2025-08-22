@@ -31,18 +31,6 @@ func (h *FCEntryHandler) FCEntries(c echo.Context) error {
 		return err
 	}
 
-	// rules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": customer}, options.Find().SetSort(bson.M{"order": 1}))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// globalRules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": "__GLOBAL__"}, options.Find().SetSort(bson.M{"order": 1}))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// rules = append(rules, globalRules...)
-
 	var iteamDTO []dto.FCEntryDTO
 
 	for _, item := range items {
