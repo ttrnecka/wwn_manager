@@ -13,18 +13,24 @@ func ToFCEntryEntity(p dto.FCEntryDTO) entity.FCEntry {
 		Zone:     p.Zone,
 		Alias:    p.Alias,
 		Hostname: p.Hostname,
+		Type:     p.Type,
 	}
 	entry.ID, _ = primitive.ObjectIDFromHex(p.ID)
+	entry.TypeRule, _ = primitive.ObjectIDFromHex(p.TypeRule)
+	entry.HostNameRule, _ = primitive.ObjectIDFromHex(p.HostNameRule)
 	return entry
 }
 
 func ToFCEntryDTO(p entity.FCEntry) dto.FCEntryDTO {
 	return dto.FCEntryDTO{
-		ID:       p.ID.Hex(),
-		Customer: p.Customer,
-		WWN:      p.WWN,
-		Zone:     p.Zone,
-		Alias:    p.Alias,
-		Hostname: p.Hostname,
+		ID:           p.ID.Hex(),
+		Customer:     p.Customer,
+		WWN:          p.WWN,
+		Zone:         p.Zone,
+		Alias:        p.Alias,
+		Hostname:     p.Hostname,
+		Type:         p.Type,
+		TypeRule:     p.TypeRule.Hex(),
+		HostNameRule: p.HostNameRule.Hex(),
 	}
 }

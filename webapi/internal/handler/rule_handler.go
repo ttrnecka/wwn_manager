@@ -1,26 +1,33 @@
 package handler
 
 import (
+	"context"
 	"encoding/csv"
 	"encoding/json"
 	"net/http"
 	"os"
+	"regexp"
+	"runtime"
 	"strconv"
+	"sync"
 
 	"github.com/labstack/echo/v4"
+	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type RuleHandler struct {
-	service service.RuleService
+	service        service.RuleService
+	fcEntryService service.FCEntryService
 }
 
-func NewRuleHandler(s service.RuleService) *RuleHandler {
-	return &RuleHandler{s}
+func NewRuleHandler(s service.RuleService, f service.FCEntryService) *RuleHandler {
+	return &RuleHandler{s, f}
 }
 
 func (h *RuleHandler) GetRules(c echo.Context) error {
@@ -141,6 +148,151 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 			})
 		}
 	}
+	err := h.applyRules(c.Request().Context())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
 
 	return c.NoContent(http.StatusOK)
+}
+
+func (h *RuleHandler) applyRules(ctx context.Context) error {
+
+	fcEntries, err := h.fcEntryService.All(ctx)
+	if err != nil {
+		return err
+	}
+
+	numWorkers := runtime.NumCPU() // one worker per CPU core
+
+	var wg sync.WaitGroup
+	wg.Add(len(fcEntries))
+
+	// channel to distribute indices
+	idxCh := make(chan int)
+
+	globalRules, err := h.service.Find(ctx, bson.M{"customer": "__GLOBAL__"}, options.Find().SetSort(bson.M{"order": 1}))
+	if err != nil {
+		return err
+	}
+
+	ruleMap := make(map[string][]entity.Rule)
+
+	mutex := sync.Mutex{}
+
+	// start workers
+	for range numWorkers {
+		go func() {
+			for i := range idxCh {
+				mutex.Lock()
+				rules, ok := ruleMap[fcEntries[i].Customer]
+				mutex.Unlock()
+				if !ok {
+					rules, err = h.service.Find(ctx, bson.M{"customer": fcEntries[i].Customer}, options.Find().SetSort(bson.M{"order": 1}))
+					if err != nil {
+						continue
+					}
+					rules = append(rules, globalRules...)
+					mutex.Lock()
+					ruleMap[fcEntries[i].Customer] = rules
+					mutex.Unlock()
+				}
+				err = applyRules(&fcEntries[i], rules)
+				wg.Done()
+			}
+		}()
+	}
+
+	// send work
+	for i := range fcEntries {
+		idxCh <- i
+	}
+	close(idxCh)
+
+	wg.Wait()
+
+	err = h.fcEntryService.DeleteAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = h.fcEntryService.InsertAll(ctx, fcEntries)
+	return err
+}
+
+func applyRules(entry *entity.FCEntry, rules []entity.Rule) error {
+	entry.Hostname = ""
+	entry.Type = "Unknown"
+
+	// RANGE rules
+RANGE:
+	for _, rule := range rules {
+		r, err := regexp.Compile(rule.Regex)
+		if err != nil {
+			return err
+		}
+		entry.TypeRule = rule.ID
+		switch rule.Type {
+		case entity.WWNArrayRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				entry.Type = "Array"
+				break RANGE
+			}
+		case entity.WWNBackupRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				entry.Type = "Backup"
+				break RANGE
+			}
+		case entity.WWNHostRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				entry.Type = "Host"
+				break RANGE
+			}
+		case entity.WWNOtherRangeRule:
+			match := r.MatchString(entry.WWN)
+			if match {
+				entry.Type = "Other"
+				break RANGE
+			}
+		}
+		entry.TypeRule = primitive.NilObjectID
+	}
+	// do host check only for host ranges
+	if entry.Type == "Array" || entry.Type == "Backup" || entry.Type == "Other" {
+		return nil
+	}
+	// MAP rules
+TOP:
+	for _, rule := range rules {
+		r, err := regexp.Compile(rule.Regex)
+		if err != nil {
+			return err
+		}
+		entry.HostNameRule = rule.ID
+		switch rule.Type {
+		case entity.ZoneRule:
+			match := r.FindStringSubmatch(entry.Zone)
+			if len(match) > 1 && len(match) >= rule.Group {
+				entry.Hostname = match[rule.Group] // first capture group
+				break TOP
+			}
+		case entity.AliasRule:
+			match := r.FindStringSubmatch(entry.Alias)
+			if len(match) > 1 && len(match) >= rule.Group {
+				entry.Hostname = match[rule.Group] // first capture group
+				break TOP
+			}
+		case entity.WWNMapRule:
+			match := r.FindStringSubmatch(entry.WWN)
+			if len(match) > 1 && len(match) >= rule.Group {
+				entry.Hostname = match[rule.Group] // first capture group
+				break TOP
+			}
+		}
+		entry.HostNameRule = primitive.NilObjectID
+	}
+	return nil
 }

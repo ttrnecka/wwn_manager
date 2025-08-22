@@ -22,6 +22,7 @@ type GenericService[T any] interface {
 	RegisterDependencies(...DependencyDeleteFunc)
 	Collection() *mongo.Collection
 	Find(context.Context, interface{}, ...*options.FindOptions) ([]T, error)
+	InsertAll(context.Context, []T) error
 }
 
 type genericService[T any] struct {
@@ -81,6 +82,10 @@ func (s *genericService[T]) DeleteDependencies(ctx context.Context, parentID pri
 		}
 	}
 	return nil
+}
+
+func (s *genericService[T]) InsertAll(ctx context.Context, items []T) error {
+	return s.MainRepo.InsertAll(ctx, items)
 }
 
 func (s *genericService[T]) RegisterDependencies(fn ...DependencyDeleteFunc) {

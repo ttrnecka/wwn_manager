@@ -5,9 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"regexp"
-	"runtime"
-	"sync"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
@@ -15,7 +12,6 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type FCEntryHandler struct {
@@ -35,25 +31,25 @@ func (h *FCEntryHandler) FCEntries(c echo.Context) error {
 		return err
 	}
 
-	rules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": customer}, options.Find().SetSort(bson.M{"order": 1}))
-	if err != nil {
-		return err
-	}
-
-	globalRules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": "__GLOBAL__"}, options.Find().SetSort(bson.M{"order": 1}))
-	if err != nil {
-		return err
-	}
-
-	rules = append(rules, globalRules...)
-
-	itemsDTO := processItems(items, rules)
-	// itemsDTO := []dto.FCEntryDTO{}
-	// for i, item := range items {
-	// 	itemsDTO = append(itemsDTO, mapper.ToFCEntryDTO(item))
-	// 	itemsDTO[i].Type, itemsDTO[i].Hostname = applyRules(item, rules)
+	// rules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": customer}, options.Find().SetSort(bson.M{"order": 1}))
+	// if err != nil {
+	// 	return err
 	// }
-	return c.JSON(http.StatusOK, itemsDTO)
+
+	// globalRules, err := h.ruleService.Find(c.Request().Context(), bson.M{"customer": "__GLOBAL__"}, options.Find().SetSort(bson.M{"order": 1}))
+	// if err != nil {
+	// 	return err
+	// }
+
+	// rules = append(rules, globalRules...)
+
+	var iteamDTO []dto.FCEntryDTO
+
+	for _, item := range items {
+		iteamDTO = append(iteamDTO, mapper.ToFCEntryDTO(item))
+	}
+
+	return c.JSON(http.StatusOK, iteamDTO)
 }
 
 func (h *FCEntryHandler) DeleteFCEntry(c echo.Context) error {
@@ -160,116 +156,116 @@ func (h *FCEntryHandler) ListCustomers(c echo.Context) error {
 	return c.JSON(http.StatusOK, customers)
 }
 
-func applyRules(entry entity.FCEntry, rules []entity.Rule) (string, string, string, string) {
-	hostname := ""
-	var hostname_rule, type_rule string
-	htype := "Unknown"
-	// do not sort, already provide in required order
-	// sort.Slice(rules, func(i, j int) bool {
-	// 	return rules[i].Order < rules[j].Order
-	// })
+// func applyRules(entry entity.FCEntry, rules []entity.Rule) (string, string, string, string) {
+// 	hostname := ""
+// 	var hostname_rule, type_rule string
+// 	htype := "Unknown"
+// 	// do not sort, already provide in required order
+// 	// sort.Slice(rules, func(i, j int) bool {
+// 	// 	return rules[i].Order < rules[j].Order
+// 	// })
 
-	// RANGE rules
-RANGE:
-	for _, rule := range rules {
-		r, err := regexp.Compile(rule.Regex)
-		if err != nil {
-			continue
-		}
-		type_rule = rule.ID.Hex()
-		switch rule.Type {
-		case entity.WWNArrayRangeRule:
-			match := r.MatchString(entry.WWN)
-			if match {
-				htype = "Array"
-				break RANGE
-			}
-		case entity.WWNBackupRangeRule:
-			match := r.MatchString(entry.WWN)
-			if match {
-				htype = "Backup"
-				break RANGE
-			}
-		case entity.WWNHostRangeRule:
-			match := r.MatchString(entry.WWN)
-			if match {
-				htype = "Host"
-				break RANGE
-			}
-		case entity.WWNOtherRangeRule:
-			match := r.MatchString(entry.WWN)
-			if match {
-				htype = "Other"
-				break RANGE
-			}
-		}
-		type_rule = ""
-	}
-	// do hest check only for host ranges
-	if htype == "Array" || htype == "Backup" || htype == "Other" {
-		return htype, type_rule, hostname, hostname_rule
-	}
-	// MAP rules
-TOP:
-	for _, rule := range rules {
-		r, err := regexp.Compile(rule.Regex)
-		if err != nil {
-			continue
-		}
-		hostname_rule = rule.ID.Hex()
-		switch rule.Type {
-		case entity.ZoneRule:
-			match := r.FindStringSubmatch(entry.Zone)
-			if len(match) > 1 && len(match) >= rule.Group {
-				hostname = match[rule.Group] // first capture group
-				break TOP
-			}
-		case entity.AliasRule:
-			match := r.FindStringSubmatch(entry.Alias)
-			if len(match) > 1 && len(match) >= rule.Group {
-				hostname = match[rule.Group] // first capture group
-				break TOP
-			}
-		case entity.WWNMapRule:
-			match := r.FindStringSubmatch(entry.WWN)
-			if len(match) > 1 && len(match) >= rule.Group {
-				hostname = match[rule.Group] // first capture group
-				break TOP
-			}
-		}
-		hostname_rule = ""
-	}
-	return htype, type_rule, hostname, hostname_rule
-}
+// 	// RANGE rules
+// RANGE:
+// 	for _, rule := range rules {
+// 		r, err := regexp.Compile(rule.Regex)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		type_rule = rule.ID.Hex()
+// 		switch rule.Type {
+// 		case entity.WWNArrayRangeRule:
+// 			match := r.MatchString(entry.WWN)
+// 			if match {
+// 				htype = "Array"
+// 				break RANGE
+// 			}
+// 		case entity.WWNBackupRangeRule:
+// 			match := r.MatchString(entry.WWN)
+// 			if match {
+// 				htype = "Backup"
+// 				break RANGE
+// 			}
+// 		case entity.WWNHostRangeRule:
+// 			match := r.MatchString(entry.WWN)
+// 			if match {
+// 				htype = "Host"
+// 				break RANGE
+// 			}
+// 		case entity.WWNOtherRangeRule:
+// 			match := r.MatchString(entry.WWN)
+// 			if match {
+// 				htype = "Other"
+// 				break RANGE
+// 			}
+// 		}
+// 		type_rule = ""
+// 	}
+// 	// do hest check only for host ranges
+// 	if htype == "Array" || htype == "Backup" || htype == "Other" {
+// 		return htype, type_rule, hostname, hostname_rule
+// 	}
+// 	// MAP rules
+// TOP:
+// 	for _, rule := range rules {
+// 		r, err := regexp.Compile(rule.Regex)
+// 		if err != nil {
+// 			continue
+// 		}
+// 		hostname_rule = rule.ID.Hex()
+// 		switch rule.Type {
+// 		case entity.ZoneRule:
+// 			match := r.FindStringSubmatch(entry.Zone)
+// 			if len(match) > 1 && len(match) >= rule.Group {
+// 				hostname = match[rule.Group] // first capture group
+// 				break TOP
+// 			}
+// 		case entity.AliasRule:
+// 			match := r.FindStringSubmatch(entry.Alias)
+// 			if len(match) > 1 && len(match) >= rule.Group {
+// 				hostname = match[rule.Group] // first capture group
+// 				break TOP
+// 			}
+// 		case entity.WWNMapRule:
+// 			match := r.FindStringSubmatch(entry.WWN)
+// 			if len(match) > 1 && len(match) >= rule.Group {
+// 				hostname = match[rule.Group] // first capture group
+// 				break TOP
+// 			}
+// 		}
+// 		hostname_rule = ""
+// 	}
+// 	return htype, type_rule, hostname, hostname_rule
+// }
 
-func processItems(items []entity.FCEntry, rules []entity.Rule) []dto.FCEntryDTO {
-	numWorkers := runtime.NumCPU() // one worker per CPU core
-	itemsDTO := make([]dto.FCEntryDTO, len(items))
+// func processItems(items []entity.FCEntry, rules []entity.Rule) []dto.FCEntryDTO {
+// 	numWorkers := runtime.NumCPU() // one worker per CPU core
+// 	itemsDTO := make([]dto.FCEntryDTO, len(items))
 
-	var wg sync.WaitGroup
-	wg.Add(len(items))
+// 	var wg sync.WaitGroup
+// 	wg.Add(len(items))
 
-	// channel to distribute indices
-	idxCh := make(chan int)
+// 	// channel to distribute indices
+// 	idxCh := make(chan int)
 
-	// start workers
-	for w := 0; w < numWorkers; w++ {
-		go func() {
-			for i := range idxCh {
-				dtoItem := mapper.ToFCEntryDTO(items[i])
-				dtoItem.Type, dtoItem.TypeRule, dtoItem.Hostname, dtoItem.HostNameRule = applyRules(items[i], rules)
-				itemsDTO[i] = dtoItem
-				wg.Done()
-			}
-		}()
-	}
+// 	// start workers
+// 	for w := 0; w < numWorkers; w++ {
+// 		go func() {
+// 			for i := range idxCh {
+// 				dtoItem := mapper.ToFCEntryDTO(items[i])
+// 				dtoItem.Type, dtoItem.TypeRule, dtoItem.Hostname, dtoItem.HostNameRule = applyRules(items[i], rules)
+// 				itemsDTO[i] = dtoItem
+// 				wg.Done()
+// 			}
+// 		}()
+// 	}
 
-	// send work
-	for i := range items {
-		idxCh <- i
-	}
-	close(idxCh)
+// 	// send work
+// 	for i := range items {
+// 		idxCh <- i
+// 	}
+// 	close(idxCh)
 
-	wg.Wait()
-	return itemsDTO
-}
+// 	wg.Wait()
+// 	return itemsDTO
+// }

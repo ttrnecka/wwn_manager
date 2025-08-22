@@ -39,7 +39,7 @@ func Router() *echo.Echo {
 	//handlers
 	userHandler := handler.NewUserHandler(userSvc)
 	fcEntryHandler := handler.NewFCEntryHandler(fcEntrySvc, ruleSvc)
-	ruleHandler := handler.NewRuleHandler(ruleSvc)
+	ruleHandler := handler.NewRuleHandler(ruleSvc, fcEntrySvc)
 
 	e.POST("/api/login", userHandler.LoginUser)
 	e.GET("/api/logout", userHandler.LogoutUser)
@@ -54,7 +54,7 @@ func Router() *echo.Echo {
 	api.GET("/rules", ruleHandler.ExportRules)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
-	api.POST("/customers/:name/rules_all", ruleHandler.CreateUpdateRules)
+	api.POST("/customers/:name/rules/all", ruleHandler.CreateUpdateRules)
 	api.DELETE("/customers/:name/rules/:id", ruleHandler.DeleteRule)
 	api.GET("/customers/:name/entries", fcEntryHandler.FCEntries)
 
