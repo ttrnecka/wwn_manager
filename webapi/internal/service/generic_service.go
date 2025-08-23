@@ -21,9 +21,12 @@ type GenericService[T any] interface {
 	Update(context.Context, primitive.ObjectID, *T) (primitive.ObjectID, error)
 	RegisterDependencies(...DependencyDeleteFunc)
 	Collection() *mongo.Collection
-	Find(context.Context, interface{}, ...*options.FindOptions) ([]T, error)
+	Find(context.Context, Filter, SortOption) ([]T, error)
 	InsertAll(context.Context, []T) error
 }
+
+type Filter = map[string]interface{}
+type SortOption = map[string]string
 
 type genericService[T any] struct {
 	MainRepo    repository.GenericRepository[T]
@@ -40,8 +43,16 @@ func (s *genericService[T]) All(ctx context.Context) ([]T, error) {
 	return s.MainRepo.All(ctx)
 }
 
-func (s *genericService[T]) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) ([]T, error) {
-	return s.MainRepo.Find(ctx, filter, opts...)
+func (s *genericService[T]) Find(ctx context.Context, filter Filter, opt SortOption) ([]T, error) {
+	var mopts []*options.FindOptions
+	for k, v := range opt {
+		order := 1
+		if v == "desc" {
+			order = -1
+		}
+		mopts = append(mopts, options.Find().SetSort(bson.M{k: order}))
+	}
+	return s.MainRepo.Find(ctx, filter, mopts...)
 }
 
 func (s *genericService[T]) Get(ctx context.Context, id string) (*T, error) {

@@ -11,8 +11,6 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type FCWWNEntryHandler struct {
@@ -27,7 +25,7 @@ func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService) *F
 func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
 	customer := c.Param("name")
 
-	items, err := h.service.Find(c.Request().Context(), bson.M{"customer": customer}, options.Find().SetSort(bson.M{"wwn": 1}))
+	items, err := h.service.Find(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"wwn": "asc"})
 	if err != nil {
 		return err
 	}

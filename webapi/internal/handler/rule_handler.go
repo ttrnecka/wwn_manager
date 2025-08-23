@@ -16,9 +16,6 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type RuleHandler struct {
@@ -32,7 +29,7 @@ func NewRuleHandler(s service.RuleService, w service.FCWWNEntryService) *RuleHan
 
 func (h *RuleHandler) GetRules(c echo.Context) error {
 	customer := c.Param("name")
-	rules, err := h.service.Find(c.Request().Context(), bson.M{"customer": customer}, options.Find().SetSort(bson.M{"order": 1}))
+	rules, err := h.service.Find(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
@@ -176,7 +173,7 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 	// channel to distribute indices
 	idxCh := make(chan int)
 
-	globalRules, err := h.service.Find(ctx, bson.M{"customer": entity.GLOBAL_CUSTOMER}, options.Find().SetSort(bson.M{"order": 1}))
+	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return err
 	}
@@ -193,7 +190,7 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 				rules, ok := ruleMap[fcWWNEntries[i].Customer]
 				mutex.Unlock()
 				if !ok {
-					rules, err = h.service.Find(ctx, bson.M{"customer": fcWWNEntries[i].Customer}, options.Find().SetSort(bson.M{"order": 1}))
+					rules, err = h.service.Find(ctx, service.Filter{"customer": fcWWNEntries[i].Customer}, service.SortOption{"order": "asc"})
 					if err != nil {
 						continue
 					}
@@ -263,7 +260,7 @@ RANGE:
 				break RANGE
 			}
 		}
-		entry.TypeRule = primitive.NilObjectID
+		entry.TypeRule = entity.NilObjectID()
 	}
 	// do host check only for host ranges
 	if entry.Type == "Array" || entry.Type == "Backup" || entry.Type == "Other" {
@@ -301,7 +298,7 @@ TOP:
 				break TOP
 			}
 		}
-		entry.HostNameRule = primitive.NilObjectID
+		entry.HostNameRule = entity.NilObjectID()
 	}
 	if entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname {
 		entry.NeedsReconcile = true
