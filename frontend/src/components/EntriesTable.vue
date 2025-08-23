@@ -1,5 +1,5 @@
 <template>
-  <div class="card my-3">
+  <div class="card my-3" style="min-width: 800px;">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span><b>Entries</b></span>
       <span>
@@ -29,7 +29,7 @@
     </div>
 
     <div class="card-body p-0">
-      <table class="table table-hover mb-0">
+      <table class="table table-hover mb-0 entry-table">
         <thead>
           <tr>
             <th>Type</th>
@@ -44,7 +44,7 @@
           <tr v-for="e in pagedEntries" :key="e.id" :class="{reconcile: needToReconcile(e)}">
             <td :title="getEntryTypeRule(e)">{{ e.type }}</td>
             <td>{{ e.wwn }}</td>
-            <td>{{ e.zones.join(', ') }}</td>
+            <td class="no-wrap">{{ e.zones.join(', ') }}</td>
             <td>{{ e.aliases.join(', ') }}</td>
             <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
             <td><strong>{{ e.loaded_hostname }}</strong></td>
@@ -158,4 +158,16 @@ export default {
   .reconcile > *{
     background-color: rgb(248, 225, 217);
   }  
+
+  .no-wrap {
+    white-space: nowrap;     /* Prevent wrapping */
+    overflow: hidden;        /* Hide the extra text */
+    text-overflow: ellipsis; /* Show "..." at the end when cut */
+
+  }
+
+  .entry-table {
+    table-layout: fixed;   /* Important for ellipsis in td */
+    width: 100%;
+  }
 </style>
