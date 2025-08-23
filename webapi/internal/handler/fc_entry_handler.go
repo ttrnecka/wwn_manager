@@ -17,10 +17,11 @@ import (
 type FCEntryHandler struct {
 	service     service.FCEntryService
 	ruleService service.RuleService
+	wwnService  service.FCWWNEntryService
 }
 
-func NewFCEntryHandler(s service.FCEntryService, r service.RuleService) *FCEntryHandler {
-	return &FCEntryHandler{s, r}
+func NewFCEntryHandler(s service.FCEntryService, r service.RuleService, w service.FCWWNEntryService) *FCEntryHandler {
+	return &FCEntryHandler{s, r, w}
 }
 
 func (h *FCEntryHandler) FCEntries(c echo.Context) error {
@@ -102,6 +103,9 @@ func (h *FCEntryHandler) ImportHandler(c echo.Context) error {
 	reader.Comma = ',' // switch to '\t' if TSV
 
 	var entries []entity.FCEntry
+	var wwnEntries []entity.FCWWNEntry
+	wwnEntryMap := make(map[string]map[string]*entity.FCWWNEntry, 0)
+
 	for {
 		line, err := reader.Read()
 		if err == io.EOF {
@@ -121,6 +125,56 @@ func (h *FCEntryHandler) ImportHandler(c echo.Context) error {
 			LoadedHostname: line[4],
 		}
 		entries = append(entries, entry)
+
+		// Create or update FCWWNEntry
+		if cMap, ok := wwnEntryMap[entry.Customer]; ok {
+			if wwnEntry, ok := cMap[entry.WWN]; ok {
+				// Update existing entry
+				if entry.Zone != "" && !contains(wwnEntry.Zones, entry.Zone) {
+					wwnEntry.Zones = append(wwnEntry.Zones, entry.Zone)
+				}
+				if entry.Alias != "" && !contains(wwnEntry.Aliases, entry.Alias) {
+					wwnEntry.Aliases = append(wwnEntry.Aliases, entry.Alias)
+				}
+				wwnEntryMap[entry.Customer][entry.WWN] = wwnEntry
+			} else {
+				// Create new entry for this WWN
+				newWWNEntry := entity.FCWWNEntry{
+					Customer:       entry.Customer,
+					WWN:            entry.WWN,
+					Zones:          []string{},
+					Aliases:        []string{},
+					LoadedHostname: entry.LoadedHostname,
+				}
+				if entry.Zone != "" {
+					newWWNEntry.Zones = append(newWWNEntry.Zones, entry.Zone)
+				}
+				if entry.Alias != "" {
+					newWWNEntry.Aliases = append(newWWNEntry.Aliases, entry.Alias)
+				}
+				wwnEntryMap[entry.Customer][entry.WWN] = &newWWNEntry
+				wwnEntries = append(wwnEntries, newWWNEntry)
+			}
+		} else {
+			// Create new map for this customer and add the WWN entry
+			newWWNEntry := entity.FCWWNEntry{
+				Customer:       entry.Customer,
+				WWN:            entry.WWN,
+				Zones:          []string{},
+				Aliases:        []string{},
+				LoadedHostname: entry.LoadedHostname,
+			}
+			if entry.Zone != "" {
+				newWWNEntry.Zones = append(newWWNEntry.Zones, entry.Zone)
+			}
+			if entry.Alias != "" {
+				newWWNEntry.Aliases = append(newWWNEntry.Aliases, entry.Alias)
+			}
+			wwnEntryMap[entry.Customer] = map[string]*entity.FCWWNEntry{
+				entry.WWN: &newWWNEntry,
+			}
+			wwnEntries = append(wwnEntries, newWWNEntry)
+		}
 	}
 
 	err = h.service.DeleteAll(c.Request().Context())
@@ -132,12 +186,17 @@ func (h *FCEntryHandler) ImportHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
-	// for _, entry := range entries {
-	// 	_, err := h.service.Update(c.Request().Context(), entry.ID, &entry)
-	// 	if err != nil {
-	// 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-	// 	}
-	// }
+
+	err = h.wwnService.DeleteAll(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+	}
+
+	err = h.wwnService.InsertAll(c.Request().Context(), wwnEntries)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+	}
+
 	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
 }
 
@@ -147,4 +206,13 @@ func (h *FCEntryHandler) ListCustomers(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, customers)
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }

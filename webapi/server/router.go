@@ -24,21 +24,24 @@ func Router() *echo.Echo {
 	// db layer
 	users := entity.Users()
 	fcEntries := entity.FCEntries()
+	fcWWNEntries := entity.FCWWNEntries()
 	rule := entity.Rules()
 
 	// repositories
 	usersRepo := repository.NewUserRepository(users)
 	fcEntryRepo := repository.NewFCEntryRepository(fcEntries)
+	fcWWNEntryRepo := repository.NewFCWWNEntryRepository(fcWWNEntries)
 	ruleRepo := repository.NewRuleRepository(rule)
 
 	// services
 	userSvc := service.NewUserService(usersRepo)
 	fcEntrySvc := service.NewFCEntryService(fcEntryRepo)
+	fcwWWNEntrySvc := service.NewFCWWNEntryService(fcWWNEntryRepo)
 	ruleSvc := service.NewRuleService(ruleRepo)
 
 	//handlers
 	userHandler := handler.NewUserHandler(userSvc)
-	fcEntryHandler := handler.NewFCEntryHandler(fcEntrySvc, ruleSvc)
+	fcEntryHandler := handler.NewFCEntryHandler(fcEntrySvc, ruleSvc, fcwWWNEntrySvc)
 	ruleHandler := handler.NewRuleHandler(ruleSvc, fcEntrySvc)
 
 	e.POST("/api/login", userHandler.LoginUser)
