@@ -8,12 +8,14 @@ import (
 
 func ToFCEntryEntity(p dto.FCEntryDTO) entity.FCEntry {
 	entry := entity.FCEntry{
-		Customer: p.Customer,
-		WWN:      p.WWN,
-		Zone:     p.Zone,
-		Alias:    p.Alias,
-		Hostname: p.Hostname,
-		Type:     p.Type,
+		Customer:       p.Customer,
+		WWN:            p.WWN,
+		Zone:           p.Zone,
+		Alias:          p.Alias,
+		Hostname:       p.Hostname,
+		LoadedHostname: p.LoadedHostname,
+		Type:           p.Type,
+		NeedsReconcile: p.NeedsReconcile,
 	}
 	entry.ID, _ = primitive.ObjectIDFromHex(p.ID)
 	entry.TypeRule, _ = primitive.ObjectIDFromHex(p.TypeRule)
@@ -23,14 +25,16 @@ func ToFCEntryEntity(p dto.FCEntryDTO) entity.FCEntry {
 
 func ToFCEntryDTO(p entity.FCEntry) dto.FCEntryDTO {
 	return dto.FCEntryDTO{
-		ID:           p.ID.Hex(),
-		Customer:     p.Customer,
-		WWN:          p.WWN,
-		Zone:         p.Zone,
-		Alias:        p.Alias,
-		Hostname:     p.Hostname,
-		Type:         p.Type,
-		TypeRule:     p.TypeRule.Hex(),
-		HostNameRule: p.HostNameRule.Hex(),
+		ID:             p.ID.Hex(),
+		Customer:       p.Customer,
+		WWN:            p.WWN,
+		Zone:           p.Zone,
+		Alias:          p.Alias,
+		Hostname:       p.Hostname,
+		LoadedHostname: p.LoadedHostname,
+		Type:           p.Type,
+		TypeRule:       p.TypeRule.Hex(),
+		HostNameRule:   p.HostNameRule.Hex(),
+		NeedsReconcile: p.NeedsReconcile,
 	}
 }

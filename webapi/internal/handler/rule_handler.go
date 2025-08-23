@@ -299,5 +299,9 @@ TOP:
 		}
 		entry.HostNameRule = primitive.NilObjectID
 	}
+	if entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname {
+		entry.NeedsReconcile = true
+	}
+
 	return nil
 }

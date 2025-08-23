@@ -114,10 +114,11 @@ func (h *FCEntryHandler) ImportHandler(c echo.Context) error {
 			continue
 		}
 		entry := entity.FCEntry{
-			Customer: line[0],
-			WWN:      line[1],
-			Zone:     line[2],
-			Alias:    line[3],
+			Customer:       line[0],
+			WWN:            line[1],
+			Zone:           line[2],
+			Alias:          line[3],
+			LoadedHostname: line[4],
 		}
 		entries = append(entries, entry)
 	}
@@ -127,12 +128,16 @@ func (h *FCEntryHandler) ImportHandler(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
 
-	for _, entry := range entries {
-		_, err := h.service.Update(c.Request().Context(), entry.ID, &entry)
-		if err != nil {
-			return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-		}
+	err = h.service.InsertAll(c.Request().Context(), entries)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
+	// for _, entry := range entries {
+	// 	_, err := h.service.Update(c.Request().Context(), entry.ID, &entry)
+	// 	if err != nil {
+	// 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+	// 	}
+	// }
 	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
 }
 
@@ -143,117 +148,3 @@ func (h *FCEntryHandler) ListCustomers(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, customers)
 }
-
-// func applyRules(entry entity.FCEntry, rules []entity.Rule) (string, string, string, string) {
-// 	hostname := ""
-// 	var hostname_rule, type_rule string
-// 	htype := "Unknown"
-// 	// do not sort, already provide in required order
-// 	// sort.Slice(rules, func(i, j int) bool {
-// 	// 	return rules[i].Order < rules[j].Order
-// 	// })
-
-// 	// RANGE rules
-// RANGE:
-// 	for _, rule := range rules {
-// 		r, err := regexp.Compile(rule.Regex)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		type_rule = rule.ID.Hex()
-// 		switch rule.Type {
-// 		case entity.WWNArrayRangeRule:
-// 			match := r.MatchString(entry.WWN)
-// 			if match {
-// 				htype = "Array"
-// 				break RANGE
-// 			}
-// 		case entity.WWNBackupRangeRule:
-// 			match := r.MatchString(entry.WWN)
-// 			if match {
-// 				htype = "Backup"
-// 				break RANGE
-// 			}
-// 		case entity.WWNHostRangeRule:
-// 			match := r.MatchString(entry.WWN)
-// 			if match {
-// 				htype = "Host"
-// 				break RANGE
-// 			}
-// 		case entity.WWNOtherRangeRule:
-// 			match := r.MatchString(entry.WWN)
-// 			if match {
-// 				htype = "Other"
-// 				break RANGE
-// 			}
-// 		}
-// 		type_rule = ""
-// 	}
-// 	// do hest check only for host ranges
-// 	if htype == "Array" || htype == "Backup" || htype == "Other" {
-// 		return htype, type_rule, hostname, hostname_rule
-// 	}
-// 	// MAP rules
-// TOP:
-// 	for _, rule := range rules {
-// 		r, err := regexp.Compile(rule.Regex)
-// 		if err != nil {
-// 			continue
-// 		}
-// 		hostname_rule = rule.ID.Hex()
-// 		switch rule.Type {
-// 		case entity.ZoneRule:
-// 			match := r.FindStringSubmatch(entry.Zone)
-// 			if len(match) > 1 && len(match) >= rule.Group {
-// 				hostname = match[rule.Group] // first capture group
-// 				break TOP
-// 			}
-// 		case entity.AliasRule:
-// 			match := r.FindStringSubmatch(entry.Alias)
-// 			if len(match) > 1 && len(match) >= rule.Group {
-// 				hostname = match[rule.Group] // first capture group
-// 				break TOP
-// 			}
-// 		case entity.WWNMapRule:
-// 			match := r.FindStringSubmatch(entry.WWN)
-// 			if len(match) > 1 && len(match) >= rule.Group {
-// 				hostname = match[rule.Group] // first capture group
-// 				break TOP
-// 			}
-// 		}
-// 		hostname_rule = ""
-// 	}
-// 	return htype, type_rule, hostname, hostname_rule
-// }
-
-// func processItems(items []entity.FCEntry, rules []entity.Rule) []dto.FCEntryDTO {
-// 	numWorkers := runtime.NumCPU() // one worker per CPU core
-// 	itemsDTO := make([]dto.FCEntryDTO, len(items))
-
-// 	var wg sync.WaitGroup
-// 	wg.Add(len(items))
-
-// 	// channel to distribute indices
-// 	idxCh := make(chan int)
-
-// 	// start workers
-// 	for w := 0; w < numWorkers; w++ {
-// 		go func() {
-// 			for i := range idxCh {
-// 				dtoItem := mapper.ToFCEntryDTO(items[i])
-// 				dtoItem.Type, dtoItem.TypeRule, dtoItem.Hostname, dtoItem.HostNameRule = applyRules(items[i], rules)
-// 				itemsDTO[i] = dtoItem
-// 				wg.Done()
-// 			}
-// 		}()
-// 	}
-
-// 	// send work
-// 	for i := range items {
-// 		idxCh <- i
-// 	}
-// 	close(idxCh)
-
-// 	wg.Wait()
-// 	return itemsDTO
-// }

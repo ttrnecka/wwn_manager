@@ -9,7 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/rs/zerolog v1.34.0
 	github.com/ttrnecka/agent_poc/common v0.0.0-20250822063804-3c30ca1c6d8e
-	github.com/ttrnecka/agent_poc/logger v0.0.0-20250816113952-880a7370ee68
+	github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
 )

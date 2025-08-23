@@ -7,15 +7,17 @@ import (
 )
 
 type FCEntry struct {
-	cdb.BaseModel `bson:",inline"`
-	Customer      string             `bson:"customer"`
-	WWN           string             `bson:"wwn"`
-	Zone          string             `bson:"zone"`
-	Alias         string             `bson:"alias"`
-	Hostname      string             `bson:"hostname,omitempty"`
-	Type          string             `bson:"type,omitempty"`
-	TypeRule      primitive.ObjectID `bson:"type_rule,omitempty"`
-	HostNameRule  primitive.ObjectID `bson:"hostname_rule,omitempty"`
+	cdb.BaseModel  `bson:",inline"`
+	Customer       string             `bson:"customer"`
+	WWN            string             `bson:"wwn"`
+	Zone           string             `bson:"zone"`
+	Alias          string             `bson:"alias"`
+	Hostname       string             `bson:"hostname,omitempty"`
+	LoadedHostname string             `bson:"loaded_hostname"`
+	Type           string             `bson:"type,omitempty"`
+	TypeRule       primitive.ObjectID `bson:"type_rule,omitempty"`
+	HostNameRule   primitive.ObjectID `bson:"hostname_rule,omitempty"`
+	NeedsReconcile bool               `bson:"needs_reconcile"`
 }
 
 func FCEntries() *cdb.CRUD[FCEntry] {
