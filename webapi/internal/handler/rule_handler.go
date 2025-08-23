@@ -22,12 +22,12 @@ import (
 )
 
 type RuleHandler struct {
-	service        service.RuleService
-	fcEntryService service.FCEntryService
+	service           service.RuleService
+	fcWWNEntryService service.FCWWNEntryService
 }
 
-func NewRuleHandler(s service.RuleService, f service.FCEntryService) *RuleHandler {
-	return &RuleHandler{s, f}
+func NewRuleHandler(s service.RuleService, w service.FCWWNEntryService) *RuleHandler {
+	return &RuleHandler{s, w}
 }
 
 func (h *RuleHandler) GetRules(c echo.Context) error {
@@ -163,7 +163,7 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 
 func (h *RuleHandler) applyRules(ctx context.Context) error {
 
-	fcEntries, err := h.fcEntryService.All(ctx)
+	fcWWNEntries, err := h.fcWWNEntryService.All(ctx)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 	numWorkers := runtime.NumCPU() // one worker per CPU core
 
 	var wg sync.WaitGroup
-	wg.Add(len(fcEntries))
+	wg.Add(len(fcWWNEntries))
 
 	// channel to distribute indices
 	idxCh := make(chan int)
@@ -190,42 +190,42 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 		go func() {
 			for i := range idxCh {
 				mutex.Lock()
-				rules, ok := ruleMap[fcEntries[i].Customer]
+				rules, ok := ruleMap[fcWWNEntries[i].Customer]
 				mutex.Unlock()
 				if !ok {
-					rules, err = h.service.Find(ctx, bson.M{"customer": fcEntries[i].Customer}, options.Find().SetSort(bson.M{"order": 1}))
+					rules, err = h.service.Find(ctx, bson.M{"customer": fcWWNEntries[i].Customer}, options.Find().SetSort(bson.M{"order": 1}))
 					if err != nil {
 						continue
 					}
 					rules = append(rules, globalRules...)
 					mutex.Lock()
-					ruleMap[fcEntries[i].Customer] = rules
+					ruleMap[fcWWNEntries[i].Customer] = rules
 					mutex.Unlock()
 				}
-				err = applyRules(&fcEntries[i], rules)
+				err = applyRules(&fcWWNEntries[i], rules)
 				wg.Done()
 			}
 		}()
 	}
 
 	// send work
-	for i := range fcEntries {
+	for i := range fcWWNEntries {
 		idxCh <- i
 	}
 	close(idxCh)
 
 	wg.Wait()
 
-	err = h.fcEntryService.DeleteAll(ctx)
+	err = h.fcWWNEntryService.DeleteAll(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = h.fcEntryService.InsertAll(ctx, fcEntries)
+	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntries)
 	return err
 }
 
-func applyRules(entry *entity.FCEntry, rules []entity.Rule) error {
+func applyRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.Hostname = ""
 	entry.Type = "Unknown"
 
@@ -279,16 +279,20 @@ TOP:
 		entry.HostNameRule = rule.ID
 		switch rule.Type {
 		case entity.ZoneRule:
-			match := r.FindStringSubmatch(entry.Zone)
-			if len(match) > 1 && len(match) >= rule.Group {
-				entry.Hostname = match[rule.Group] // first capture group
-				break TOP
+			for _, zone := range entry.Zones {
+				match := r.FindStringSubmatch(zone)
+				if len(match) > 1 && len(match) >= rule.Group {
+					entry.Hostname = match[rule.Group] // first capture group
+					break TOP
+				}
 			}
 		case entity.AliasRule:
-			match := r.FindStringSubmatch(entry.Alias)
-			if len(match) > 1 && len(match) >= rule.Group {
-				entry.Hostname = match[rule.Group] // first capture group
-				break TOP
+			for _, alias := range entry.Aliases {
+				match := r.FindStringSubmatch(alias)
+				if len(match) > 1 && len(match) >= rule.Group {
+					entry.Hostname = match[rule.Group] // first capture group
+					break TOP
+				}
 			}
 		case entity.WWNMapRule:
 			match := r.FindStringSubmatch(entry.WWN)

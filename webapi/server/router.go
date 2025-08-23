@@ -23,26 +23,23 @@ func Router() *echo.Echo {
 
 	// db layer
 	users := entity.Users()
-	fcEntries := entity.FCEntries()
 	fcWWNEntries := entity.FCWWNEntries()
 	rule := entity.Rules()
 
 	// repositories
 	usersRepo := repository.NewUserRepository(users)
-	fcEntryRepo := repository.NewFCEntryRepository(fcEntries)
 	fcWWNEntryRepo := repository.NewFCWWNEntryRepository(fcWWNEntries)
 	ruleRepo := repository.NewRuleRepository(rule)
 
 	// services
 	userSvc := service.NewUserService(usersRepo)
-	fcEntrySvc := service.NewFCEntryService(fcEntryRepo)
 	fcwWWNEntrySvc := service.NewFCWWNEntryService(fcWWNEntryRepo)
 	ruleSvc := service.NewRuleService(ruleRepo)
 
 	//handlers
 	userHandler := handler.NewUserHandler(userSvc)
-	fcEntryHandler := handler.NewFCEntryHandler(fcEntrySvc, ruleSvc, fcwWWNEntrySvc)
-	ruleHandler := handler.NewRuleHandler(ruleSvc, fcEntrySvc)
+	fcWWNEntryHandler := handler.NewFCWWNEntryHandler(fcwWWNEntrySvc, ruleSvc)
+	ruleHandler := handler.NewRuleHandler(ruleSvc, fcwWWNEntrySvc)
 
 	e.POST("/api/login", userHandler.LoginUser)
 	e.GET("/api/logout", userHandler.LogoutUser)
@@ -52,13 +49,13 @@ func Router() *echo.Echo {
 
 	//rules amd entries
 
-	api.POST("/import", fcEntryHandler.ImportHandler)
-	api.GET("/customers", fcEntryHandler.ListCustomers)
+	api.POST("/import", fcWWNEntryHandler.ImportHandler)
+	api.GET("/customers", fcWWNEntryHandler.ListCustomers)
 	api.GET("/rules", ruleHandler.ExportRules)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
 	api.DELETE("/customers/:name/rules/:id", ruleHandler.DeleteRule)
-	api.GET("/customers/:name/entries", fcEntryHandler.FCEntries)
+	api.GET("/customers/:name/entries", fcWWNEntryHandler.FCWWNEntries)
 
 	return e
 

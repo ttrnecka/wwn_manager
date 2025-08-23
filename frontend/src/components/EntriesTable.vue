@@ -34,8 +34,8 @@
           <tr>
             <th>Type</th>
             <th>WWN</th>
-            <th>Zone</th>
-            <th>Alias</th>
+            <th>Zones</th>
+            <th>Aliases</th>
             <th>Hostname (Generated)</th>
             <th>Hostname (Loaded)</th>
           </tr>
@@ -44,8 +44,8 @@
           <tr v-for="e in pagedEntries" :key="e.id" :class="{reconcile: needToReconcile(e)}">
             <td :title="getEntryTypeRule(e)">{{ e.type }}</td>
             <td>{{ e.wwn }}</td>
-            <td>{{ e.zone }}</td>
-            <td>{{ e.alias }}</td>
+            <td>{{ e.zones.join(', ') }}</td>
+            <td>{{ e.aliases.join(', ') }}</td>
             <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
             <td><strong>{{ e.loaded_hostname }}</strong></td>
           </tr>
@@ -132,8 +132,8 @@ export default {
         ? this.entries.filter(e =>
             e.type.toLowerCase().includes(term) ||
             e.wwn.toLowerCase().includes(term) ||
-            e.zone.toLowerCase().includes(term) ||
-            e.alias.toLowerCase().includes(term) ||
+            e.zones.map((e) => e.toLowerCase()).includes(term) ||
+            e.aliases.map((e) => e.toLowerCase()).includes(term) ||
             (e.hostname || "").toLowerCase().includes(term)
           )
         : [...this.entries];
