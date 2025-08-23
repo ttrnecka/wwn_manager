@@ -50,8 +50,7 @@
 
 <script>
 import fcService from "@/services/fcService";
-import { GLOBAL_CUSTOMER } from '@/config'
-import Swal from 'sweetalert2';
+import { GLOBAL_CUSTOMER } from '@/config';
 import { showAlert } from '@/services/alert';
 
 export default {
