@@ -278,7 +278,7 @@ TOP:
 		case entity.ZoneRule:
 			for _, zone := range entry.Zones {
 				match := r.FindStringSubmatch(zone)
-				if len(match) > 1 && len(match) >= rule.Group {
+				if len(match) > 0 && len(match) >= rule.Group {
 					entry.Hostname = match[rule.Group] // first capture group
 					break TOP
 				}
@@ -286,15 +286,15 @@ TOP:
 		case entity.AliasRule:
 			for _, alias := range entry.Aliases {
 				match := r.FindStringSubmatch(alias)
-				if len(match) > 1 && len(match) >= rule.Group {
+				if len(match) > 0 && len(match) >= rule.Group {
 					entry.Hostname = match[rule.Group] // first capture group
 					break TOP
 				}
 			}
 		case entity.WWNMapRule:
 			match := r.FindStringSubmatch(entry.WWN)
-			if len(match) > 1 && len(match) >= rule.Group {
-				entry.Hostname = match[rule.Group] // first capture group
+			if len(match) > 0 {
+				entry.Hostname = rule.Comment
 				break TOP
 			}
 		}

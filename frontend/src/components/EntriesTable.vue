@@ -32,22 +32,24 @@
       <table class="table table-hover mb-0 entry-table">
         <thead>
           <tr>
-            <th>Type</th>
-            <th>WWN</th>
-            <th>Zones</th>
-            <th>Aliases</th>
+            <th class="col-1">Type</th>
+            <th class="col-2">WWN</th>
+            <th class="col-3">Zones</th>
+            <th class="col-3">Aliases</th>
             <th>Hostname (Generated)</th>
             <th>Hostname (Loaded)</th>
+            <th class="col-3">Reconciliation</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="e in pagedEntries" :key="e.id" :class="{reconcile: needToReconcile(e)}">
-            <td :title="getEntryTypeRule(e)">{{ e.type }}</td>
-            <td>{{ e.wwn }}</td>
-            <td class="no-wrap">{{ e.zones.join(', ') }}</td>
-            <td>{{ e.aliases.join(', ') }}</td>
+            <td class="col-1" :title="getEntryTypeRule(e)">{{ e.type }}</td>
+            <td class="col-2">{{ e.wwn }}</td>
+            <td class="col-3 no-wrap">{{ e.zones.join(', ') }}</td>
+            <td class="col-3 no-wrap">{{ e.aliases.join(', ') }}</td>
             <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
             <td><strong>{{ e.loaded_hostname }}</strong></td>
+            <td class="col-3 no-wrap">{{ needToReconcile(e) ? "Hosts don't match":"OK" }}</td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
             <td colspan="4" class="text-center">No entries found</td>
@@ -170,4 +172,9 @@ export default {
     table-layout: fixed;   /* Important for ellipsis in td */
     width: 100%;
   }
+
+    td.col-1, th.col-1 { max-width: 80px; width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    td.col-2, th.col-2 { max-width: 150px; width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    td.col-3, th.col-3 { width: auto;}
+    td.col-4, th.col-4 { width: auto;}
 </style>

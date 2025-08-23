@@ -51,7 +51,8 @@
 <script>
 import fcService from "@/services/fcService";
 import { GLOBAL_CUSTOMER } from '@/config'
-import { inject } from 'vue'
+import Swal from 'sweetalert2';
+import { showAlert } from '@/services/alert';
 
 export default {
   name: "RulesTable",
@@ -87,7 +88,8 @@ export default {
   },
   methods: {
     disabledGroup(rule) {
-      return rule.type.includes("range") && rule.customer == GLOBAL_CUSTOMER;
+      return rule.type.includes("range") && rule.customer == GLOBAL_CUSTOMER
+        || rule.type === "wwn_map";
     },
     addNewRule() {
       let maxOrder = this.localRules.length > 0 
@@ -103,27 +105,26 @@ export default {
       });
     },
     async saveRules() {
-      this.loadingState.loading = true;
-      try {
-        await fcService.addRules(this.customer, this.localRules);
-      }
-      catch(err) {
-        console.error("Rules failed to save!", err);
-      }
-      finally {
-        this.loadingState.loading = false;  
-      }
-      this.$emit("rulesChanged");
+      const result = await showAlert(async () => {
+          await fcService.addRules(this.customer, this.localRules);
+          this.$emit("rulesChanged");
+      },
+      {title: 'Save the rules?', text: "It may take a moment to process them", confirmButtonText: 'Yes, save!'})
     },
     async deleteRule(rule) {
-      if (rule.id) {
-        // Existing rule in backend
-        await fcService.deleteRule(this.customer, rule.id);
-        this.$emit("rulesChanged");
-      } else {
-        // Remove from local copy in both cases
-        this.localRules = this.localRules.filter(r => r !== rule);
-      }
+      const result = await showAlert(async () => {
+            console.log("Deleting rule", rule);
+            if (rule.id) {
+              // Existing rule in backend
+              await fcService.deleteRule(this.customer, rule.id);
+              this.$emit("rulesChanged");
+            } else {
+              // Remove from local copy in both cases
+              this.localRules = this.localRules.filter(r => r !== rule);
+            }
+        },
+        {title: 'Delete this rule?', confirmButtonText: 'Yes, delete it!'}
+      )
     },
     updateOrder(rule, newOrder) {
       if (newOrder < 1) newOrder = 1;
@@ -149,4 +150,10 @@ export default {
   .delete-button {
     margin-right: var(--bs-card-cap-padding-y)
   }
+
+  .custom-loader {
+    animation: none;
+    border-width: 0;
+  }
+
 </style>
