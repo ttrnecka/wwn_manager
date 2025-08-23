@@ -52,7 +52,9 @@ func (s *genericService[T]) Find(ctx context.Context, filter Filter, opt SortOpt
 		}
 		mopts = append(mopts, options.Find().SetSort(bson.M{k: order}))
 	}
-	return s.MainRepo.Find(ctx, filter, mopts...)
+	// explicint casting - both are map[string]interface{} but different types and Find ignores anything that is not bson.M
+	bson := bson.M(filter)
+	return s.MainRepo.Find(ctx, bson, mopts...)
 }
 
 func (s *genericService[T]) Get(ctx context.Context, id string) (*T, error) {
