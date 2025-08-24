@@ -7,17 +7,19 @@ import (
 )
 
 type FCWWNEntry struct {
-	cdb.BaseModel  `bson:",inline"`
-	Customer       string             `bson:"customer"`
-	WWN            string             `bson:"wwn"`
-	Zones          []string           `bson:"zones"`
-	Aliases        []string           `bson:"aliases"`
-	Hostname       string             `bson:"hostname,omitempty"`
-	LoadedHostname string             `bson:"loaded_hostname"`
-	Type           string             `bson:"type,omitempty"`
-	TypeRule       primitive.ObjectID `bson:"type_rule,omitempty"`
-	HostNameRule   primitive.ObjectID `bson:"hostname_rule,omitempty"`
-	NeedsReconcile bool               `bson:"needs_reconcile"`
+	cdb.BaseModel      `bson:",inline"`
+	Customer           string             `bson:"customer"`
+	WWN                string             `bson:"wwn"`
+	Zones              []string           `bson:"zones"`
+	Aliases            []string           `bson:"aliases"`
+	Hostname           string             `bson:"hostname,omitempty"`
+	LoadedHostname     string             `bson:"loaded_hostname"`
+	Type               string             `bson:"type,omitempty"`
+	TypeRule           primitive.ObjectID `bson:"type_rule,omitempty"`
+	HostNameRule       primitive.ObjectID `bson:"hostname_rule,omitempty"`
+	NeedsReconcile     bool               `bson:"needs_reconcile"`
+	IsPrimaryCustomer  bool               `bson:"is_primary_customer"`
+	DuplicateCustomers []string           `bson:"duplicate_customers"`
 }
 
 func FCWWNEntries() *cdb.CRUD[FCWWNEntry] {

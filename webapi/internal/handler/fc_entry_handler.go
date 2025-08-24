@@ -185,6 +185,10 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
 	}
+	err = h.service.FlagDuplicateWWNs(c.Request().Context())
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+	}
 
 	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
 }

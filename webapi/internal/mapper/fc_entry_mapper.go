@@ -8,14 +8,16 @@ import (
 
 func ToFCWWNEntryEntity(p dto.FCWWNEntryDTO) entity.FCWWNEntry {
 	entry := entity.FCWWNEntry{
-		Customer:       p.Customer,
-		WWN:            p.WWN,
-		Zones:          p.Zones,
-		Aliases:        p.Aliases,
-		Hostname:       p.Hostname,
-		LoadedHostname: p.LoadedHostname,
-		Type:           p.Type,
-		NeedsReconcile: p.NeedsReconcile,
+		Customer:           p.Customer,
+		WWN:                p.WWN,
+		Zones:              p.Zones,
+		Aliases:            p.Aliases,
+		Hostname:           p.Hostname,
+		LoadedHostname:     p.LoadedHostname,
+		Type:               p.Type,
+		NeedsReconcile:     p.NeedsReconcile,
+		IsPrimaryCustomer:  p.IsPrimaryCustomer,
+		DuplicateCustomers: p.DuplicateCustomers,
 	}
 	entry.ID, _ = primitive.ObjectIDFromHex(p.ID)
 	entry.TypeRule, _ = primitive.ObjectIDFromHex(p.TypeRule)
@@ -25,16 +27,18 @@ func ToFCWWNEntryEntity(p dto.FCWWNEntryDTO) entity.FCWWNEntry {
 
 func ToFCWWNEntryDTO(p entity.FCWWNEntry) dto.FCWWNEntryDTO {
 	return dto.FCWWNEntryDTO{
-		ID:             p.ID.Hex(),
-		Customer:       p.Customer,
-		WWN:            p.WWN,
-		Zones:          p.Zones,
-		Aliases:        p.Aliases,
-		Hostname:       p.Hostname,
-		LoadedHostname: p.LoadedHostname,
-		Type:           p.Type,
-		TypeRule:       p.TypeRule.Hex(),
-		HostNameRule:   p.HostNameRule.Hex(),
-		NeedsReconcile: p.NeedsReconcile,
+		ID:                 p.ID.Hex(),
+		Customer:           p.Customer,
+		WWN:                p.WWN,
+		Zones:              p.Zones,
+		Aliases:            p.Aliases,
+		Hostname:           p.Hostname,
+		LoadedHostname:     p.LoadedHostname,
+		Type:               p.Type,
+		TypeRule:           p.TypeRule.Hex(),
+		HostNameRule:       p.HostNameRule.Hex(),
+		NeedsReconcile:     p.NeedsReconcile,
+		IsPrimaryCustomer:  p.IsPrimaryCustomer,
+		DuplicateCustomers: p.DuplicateCustomers,
 	}
 }

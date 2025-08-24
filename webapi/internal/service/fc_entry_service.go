@@ -6,11 +6,13 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type FCWWNEntryService interface {
 	GenericService[entity.FCWWNEntry]
 	Customers(context.Context) ([]any, error)
+	FlagDuplicateWWNs(context.Context) error
 }
 
 type fcWWNEntryService struct {
@@ -39,4 +41,68 @@ func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOpti
 	}
 
 	return s.GenericService.Find(ctx, filter, opt)
+}
+
+func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context) error {
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.D{
+			{"_id", "$wwn"},
+			{"customers", bson.D{{"$addToSet", "$customer"}}},
+			{"count", bson.D{{"$sum", 1}}},
+		}}},
+		{{"$match", bson.D{
+			{"count", bson.D{{"$gt", 1}}},
+		}}},
+		{{"$lookup", bson.D{
+			{"from", "fc_wwn_entries"},
+			{"localField", "_id"},
+			{"foreignField", "wwn"},
+			{"as", "docs"},
+		}}},
+		{{"$unwind", "$docs"}},
+		{{"$replaceRoot", bson.D{
+			{"newRoot", bson.D{
+				{"$mergeObjects", bson.A{"$docs", bson.D{
+					{"duplicate_customers", "$customers"},
+				}}},
+			}},
+		}}},
+		{{"$merge", bson.D{
+			{"into", "fc_wwn_entries"},
+			{"on", "_id"},
+			{"whenMatched", "merge"},
+			{"whenNotMatched", "discard"},
+		}}},
+	}
+	_, err := s.Collection().Aggregate(ctx, pipeline)
+	if err != nil {
+		return err
+	}
+	// defer cursor.Close(ctx)
+
+	// var duplicates []struct {
+	// 	WWN       string   `bson:"wwn"`
+	// 	Customers []string `bson:"customers"`
+	// }
+	// if err = cursor.All(ctx, &duplicates); err != nil {
+	// 	return err
+	// }
+
+	// if len(duplicates) == 0 {
+	// 	return nil
+	// }
+
+	// var wwnList []string
+	// for _, d := range duplicates {
+	// 	wwnList = append(wwnList, d.WWN)
+	// }
+
+	// filter := bson.M{"wwn": bson.M{"$in": wwnList}}
+	// update := bson.M{"$set": bson.M{"is_duplicate": true}}
+
+	// _, err = s.Collection().UpdateMany(ctx, filter, update)
+	// if err != nil {
+	// 	return err
+	// }
+	return nil
 }

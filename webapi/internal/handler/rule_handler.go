@@ -300,7 +300,7 @@ TOP:
 		}
 		entry.HostNameRule = entity.NilObjectID()
 	}
-	if entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname {
+	if len(entry.DuplicateCustomers) > 0 || (entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname) {
 		entry.NeedsReconcile = true
 	}
 

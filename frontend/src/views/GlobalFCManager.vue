@@ -116,7 +116,9 @@ export default {
         if (this.selectedCustomer) {
           await this.loadEntries();
         }
-        // this.flash.show("Import succeeded", "success");
+        this.file = null;
+        this.fileName = "";
+        this.$refs.fileInput.value = null; // Reset file input
       } catch (err) {
         console.error("Import failed!", err);
         this.flash.show("Import failed", "danger");
