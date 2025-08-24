@@ -9,7 +9,7 @@ services:
     network_mode: "host"
     restart: always
     volumes:
-      - ./logs:/logs
+      - ./logs:/app/logs
     environment:
       MONGO_URI: mongodb://localhost:27017/
   frontend-artifacts:
