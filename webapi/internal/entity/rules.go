@@ -13,7 +13,8 @@ type RuleType string
 const (
 	ZoneRule           RuleType = "zone"
 	AliasRule          RuleType = "alias"
-	WWNMapRule         RuleType = "wwn_map"
+	WWNHostMapRule     RuleType = "wwn_host_map"
+	WWNCustomerMapRule RuleType = "wwn_customer_map"
 	WWNArrayRangeRule  RuleType = "wwn_range_array"
 	WWNBackupRangeRule RuleType = "wwn_range_backup"
 	WWNHostRangeRule   RuleType = "wwn_range_host"

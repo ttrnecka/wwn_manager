@@ -36,13 +36,21 @@
         @rulesChanged="loadData"
       />
       <RulesTable
-        :rules="typeRules"
+        :rules="hostRules"
         :customer="selectedCustomer"
+        @rulesChanged="loadData"
+      />
+
+      <RulesTable
+        :rules="duplicateRules"
+        :customer="selectedCustomer"
+        :types="['wwn_customer_map']"
         @rulesChanged="loadData"
       />
 
       <EntriesTable
         :entries="entries"
+        @rulesChanged="loadData"
       />
     </div>
   </div>
@@ -75,6 +83,8 @@ export default {
       rules: [],
       entries: [],
       rangeRuleNames: ['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other'],
+      hostRuleNames: ['alias', 'wwn_host_map', 'zone'],
+      duplicateRuleNames: ['wwn_customer_map'],
       loadingState: {
         loading: false,
       },
@@ -84,8 +94,11 @@ export default {
     rangeRules() {
       return this.rules.filter(rule => this.rangeRuleNames.includes(rule.type));
     },
-    typeRules() {
-      return this.rules.filter(rule => !this.rangeRuleNames.includes(rule.type));
+    hostRules() {
+      return this.rules.filter(rule => this.hostRuleNames.includes(rule.type));
+    },
+    duplicateRules() {
+      return this.rules.filter(rule => this.duplicateRuleNames.includes(rule.type));
     },
     rulesStore() {
       return useRulesStore();
@@ -129,8 +142,10 @@ export default {
     async loadRules() {
       if (!this.selectedCustomer) return;
       const res = await fcService.getRules(this.selectedCustomer);
-      this.rulesStore.setGlobalRules(res.data);
+      this.rulesStore.setScopedRules(res.data);
       this.rules = res.data;
+      const res2 = await fcService.getAllRules();
+      this.rulesStore.setAllRules(res2.data);
     },
     async loadEntries() {
       if (!this.selectedCustomer) return;

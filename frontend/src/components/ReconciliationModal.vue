@@ -20,7 +20,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="$emit('close')">Cancel</button>
-            <button type="button" class="btn btn-primary" @click="$emit('commit')">Commit</button>
+            <button type="button" class="btn btn-primary" @click="$emit('commit')">Reconcile</button>
           </div>
         </div>
       </div>

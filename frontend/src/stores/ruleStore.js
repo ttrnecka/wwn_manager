@@ -2,24 +2,24 @@ import { defineStore } from 'pinia';
 
 export const useRulesStore = defineStore('rules', {
   state: () => ({
-    rules: [],
-    globalRules: []
+    scopedRules: [],
+    allRules: []
   }),
   getters: {
-    getRules: (state) => state.rules.concat(state.globalRules)  // getter
+    getRules: (state) => state.allRules  // getter
   },
   actions: {
-    setRules(newRules) {  // setter
-      this.rules = newRules;
+    setScopedRules(newRules) {  // setter
+      this.scopedRules = newRules;
     },
-    addRule(rule) {       // optional helper
-      this.rules.push(rule);
+    addScopedRule(rule) {       // optional helper
+      this.scopedRules.push(rule);
     },
-    setGlobalRules(newRules) {  // setter
-      this.globalRules = newRules;
+    setAllRules(newRules) {  // setter
+      this.allRules = newRules;
     },
-    addGlobalRule(rule) {       // optional helper
-      this.globalRules.push(rule);
+    addAllRule(rule) {       // optional helper
+      this.allRules.push(rule);
     },
   }
 });

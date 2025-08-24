@@ -78,31 +78,5 @@ func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// defer cursor.Close(ctx)
-
-	// var duplicates []struct {
-	// 	WWN       string   `bson:"wwn"`
-	// 	Customers []string `bson:"customers"`
-	// }
-	// if err = cursor.All(ctx, &duplicates); err != nil {
-	// 	return err
-	// }
-
-	// if len(duplicates) == 0 {
-	// 	return nil
-	// }
-
-	// var wwnList []string
-	// for _, d := range duplicates {
-	// 	wwnList = append(wwnList, d.WWN)
-	// }
-
-	// filter := bson.M{"wwn": bson.M{"$in": wwnList}}
-	// update := bson.M{"$set": bson.M{"is_duplicate": true}}
-
-	// _, err = s.Collection().UpdateMany(ctx, filter, update)
-	// if err != nil {
-	// 	return err
-	// }
 	return nil
 }

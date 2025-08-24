@@ -17,6 +17,7 @@ type FCWWNEntry struct {
 	Type               string             `bson:"type,omitempty"`
 	TypeRule           primitive.ObjectID `bson:"type_rule,omitempty"`
 	HostNameRule       primitive.ObjectID `bson:"hostname_rule,omitempty"`
+	DuplicateRule      primitive.ObjectID `bson:"duplicate_rule,omitempty"`
 	NeedsReconcile     bool               `bson:"needs_reconcile"`
 	IsPrimaryCustomer  bool               `bson:"is_primary_customer"`
 	DuplicateCustomers []string           `bson:"duplicate_customers"`

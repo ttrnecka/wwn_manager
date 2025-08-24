@@ -16,6 +16,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type RuleHandler struct {
@@ -150,7 +151,11 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 			})
 		}
 	}
-	err := h.applyRules(c.Request().Context())
+	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+	err = h.applyRules(c.Request().Context(), fcWWNEntries)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -158,12 +163,49 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *RuleHandler) applyRules(ctx context.Context) error {
+func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
+	fcWWNEntryId := c.Param("id")
 
-	fcWWNEntries, err := h.fcWWNEntryService.All(ctx)
+	// get entry
+	fcWWNEntry, err := h.fcWWNEntryService.Get(c.Request().Context(), fcWWNEntryId)
 	if err != nil {
-		return err
+		return c.JSON(http.StatusNotFound, err)
 	}
+
+	// get reconciliation rules and fix entry
+	var reconcileDTO dto.EntryReconcileDTO
+	if err := json.NewDecoder(c.Request().Body).Decode(&reconcileDTO); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	// save rules
+	err = h.service.CreateReconcileRules(c.Request().Context(), fcWWNEntry, reconcileDTO)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// update entry in db
+	_, err = h.fcWWNEntryService.Update(c.Request().Context(), fcWWNEntry.ID, fcWWNEntry)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	// get all entries for given WWN
+
+	entries, err := h.fcWWNEntryService.Find(c.Request().Context(), service.Filter{"wwn": fcWWNEntry.WWN}, service.SortOption{})
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	err = h.applyRules(c.Request().Context(), entries)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	// apply rules for selected entries
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWWNEntry) error {
 
 	numWorkers := runtime.NumCPU() // one worker per CPU core
 
@@ -213,7 +255,12 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 
 	wg.Wait()
 
-	err = h.fcWWNEntryService.DeleteAll(ctx)
+	wwns := make([]string, 0)
+	for _, e := range fcWWNEntries {
+		wwns = append(wwns, e.WWN)
+	}
+
+	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"wwn": bson.M{"$in": wwns}})
 	if err != nil {
 		return err
 	}
@@ -225,6 +272,9 @@ func (h *RuleHandler) applyRules(ctx context.Context) error {
 func applyRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.Hostname = ""
 	entry.Type = "Unknown"
+	entry.NeedsReconcile = false
+	entry.IsPrimaryCustomer = false
+	entry.DuplicateRule = entity.NilObjectID()
 
 	// RANGE rules
 RANGE:
@@ -269,6 +319,9 @@ RANGE:
 	// MAP rules
 TOP:
 	for _, rule := range rules {
+		if rule.Group < 0 {
+			continue
+		}
 		r, err := regexp.Compile(rule.Regex)
 		if err != nil {
 			return err
@@ -291,7 +344,7 @@ TOP:
 					break TOP
 				}
 			}
-		case entity.WWNMapRule:
+		case entity.WWNHostMapRule:
 			match := r.FindStringSubmatch(entry.WWN)
 			if len(match) > 0 {
 				entry.Hostname = rule.Comment
@@ -300,7 +353,26 @@ TOP:
 		}
 		entry.HostNameRule = entity.NilObjectID()
 	}
-	if len(entry.DuplicateCustomers) > 0 || (entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname) {
+
+	// DUP rules
+	dupReconciled := false
+DUP:
+	for _, rule := range rules {
+		if rule.Type != entity.WWNCustomerMapRule {
+			continue
+		}
+		if entry.WWN == rule.Regex {
+			entry.DuplicateRule = rule.ID
+			entry.IsPrimaryCustomer = false
+			if entry.Customer == rule.Comment {
+				entry.IsPrimaryCustomer = true
+			}
+			dupReconciled = true
+			break DUP
+		}
+	}
+	if len(entry.DuplicateCustomers) > 0 && !dupReconciled ||
+		(entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname) {
 		entry.NeedsReconcile = true
 	}
 

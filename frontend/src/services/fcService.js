@@ -19,6 +19,10 @@ export default {
     return axios.get(`${API}/customers/${customer}/rules`);
   },
 
+  getAllRules() {
+    return axios.get(`${API}/rules`);
+  },
+
   addRule(customer, rule) {
     return axios.post(`${API}/customers/${customer}/rules`, rule);
   },
@@ -31,12 +35,16 @@ export default {
     return axios.delete(`${API}/customers/${customer}/rules/${id}`);
   },
 
+  setReconcileRules(entry_id,reconcileObj) {
+    return axios.post(`${API}/entries/${entry_id}/reconcile`, reconcileObj);
+  },
+
   getEntries(customer) {
     return axios.get(`${API}/customers/${customer}/entries`);
   },
 
   getRulesExport() {
-    return axios.get(`${API}/rules`, {responseType: "blob"});
+    return axios.get(`${API}/rules/export`, {responseType: "blob"});
   },
 
   saveFile(resp) {

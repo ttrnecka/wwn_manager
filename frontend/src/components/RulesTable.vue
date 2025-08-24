@@ -19,21 +19,25 @@
         <tbody>
           <tr v-for="rule in sortedRules" :key="rule.id">
             <td class="col-1">
-              <input type="number" v-model.number="rule.order" min="1" class="form-control form-control-sm" @focus="rule._oldOrder = rule.order" @blur="updateOrder(rule, rule.order)"/>
+              <input type="number" v-model.number="rule.order" min="1" 
+                    class="form-control form-control-sm" 
+                    @focus="rule._oldOrder = rule.order" 
+                    @blur="updateOrder(rule, rule.order)"
+                    :disabled="noEditRule(rule)"/>
             </td>
             <td class="col-2">
-              <select v-model="rule.type" class="form-select form-select-sm">
+              <select v-model="rule.type" class="form-select form-select-sm" :disabled="noEditRule(rule)">
                 <option v-for="type in types" :key="type" :value="type">{{nameMap[type]}}</option>
               </select>
             </td>
             <td class="col-3">
-              <input type="text" v-model="rule.regex" class="form-control form-control-sm" />
+              <input type="text" v-model="rule.regex" class="form-control form-control-sm" :disabled="noEditRule(rule)"/>
             </td>
             <td class="col-1">
               <input type="number" v-model="rule.group" class="form-control form-control-sm" :disabled="disabledGroup(rule)" />
             </td>
             <td class="col-2">
-              <input type="text" v-model="rule.comment" class="form-control form-control-sm" />
+              <input type="text" v-model="rule.comment" class="form-control form-control-sm" :disabled="noEditRule(rule)"/>
             </td>
             <td class="col-1 text-end align-middle">
                 <button class="btn btn-sm btn-danger delete-button" @click="deleteRule(rule)">Delete</button>
@@ -57,14 +61,14 @@ export default {
   name: "RulesTable",
   props: {
     rules: { type: Array, default: () => [] },
-    types: { type: Array, default: () => ["alias","wwn_map","zone"] },
+    types: { type: Array, default: () => ["alias","wwn_host_map","zone"] },
     customer: { type: String },
   },
   inject: ['loadingState'],
   data() {
     return {
       localRules: JSON.parse(JSON.stringify(this.rules)), // local copy
-      nameMap: {"zone": "Zone", "alias": "Alias", "wwn_map": "WWN", "wwn_range_array": "WWN Range - Array", "wwn_range_backup": "WWN Range - Backup", "wwn_range_host": "WWN Range - Host", "wwn_range_other": "WWN Range - Other"},
+      nameMap: {"zone": "Zone", "alias": "Alias", "wwn_host_map": "WWN", "wwn_range_array": "WWN Range - Array", "wwn_range_backup": "WWN Range - Backup", "wwn_range_host": "WWN Range - Host", "wwn_range_other": "WWN Range - Other", "wwn_customer_map": "WWN Primary Customer"},
     };
   },
   watch: {
@@ -82,13 +86,23 @@ export default {
     },
     title() {
       let c = this.customer === GLOBAL_CUSTOMER ? "Global " : "";
-      return this.types.includes("wwn_range_array") ? "Range Rules" : `${c}Host Mapping Rules`;
+      let name = "Host Mapping Rules";
+      if (this.types.includes("wwn_range_array")) {
+        name = "Range Rules";
+      }
+      if (this.types.includes("wwn_customer_map")) {
+        name = "Duplicate Rules";
+      }
+      return `${c}${name}`;
     }
   },
   methods: {
     disabledGroup(rule) {
       return rule.type.includes("range") && rule.customer == GLOBAL_CUSTOMER
-        || rule.type === "wwn_map";
+        || rule.type === "wwn_map" || rule.type === "wwn_customer_map";
+    },
+    noEditRule(rule) {
+      return rule.type === "wwn_customer_map";
     },
     addNewRule() {
       let maxOrder = this.localRules.length > 0 
@@ -141,8 +155,8 @@ export default {
 </script>
 
 <style>
-  td.col-1, th.col-1 { max-width: 100px; width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  td.col-2, th.col-2 { max-width: 200px; width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td.col-1, th.col-1 { max-width: 80px; width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  td.col-2, th.col-2 { max-width: 220px; width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   td.col-3, th.col-3 { width: auto;}
   td.col-4, th.col-4 { width: auto;}
 

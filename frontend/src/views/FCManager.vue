@@ -23,6 +23,7 @@
       <EntriesTable
         v-if="selectedCustomer"
         :entries="entries"
+        @rulesChanged="loadData"
       />
     </div>
   </div>
@@ -73,11 +74,11 @@ export default {
     },
     async loadRules() {
       if (!this.selectedCustomer) return;
-      const res = await fcService.getRules(GLOBAL_CUSTOMER);
-      this.rulesStore.setGlobalRules(res.data);
-      const res2 = await fcService.getRules(this.selectedCustomer);
-      this.rulesStore.setRules(res2.data);
-      this.rules = res2.data;
+      const res = await fcService.getRules(this.selectedCustomer);
+      this.rulesStore.setScopedRules(res.data);
+      this.rules = res.data;
+      const res2 = await fcService.getAllRules();
+      this.rulesStore.setAllRules(res2.data);
     },
     async loadEntries() {
       if (!this.selectedCustomer) return;

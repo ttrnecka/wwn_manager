@@ -23,6 +23,7 @@ type GenericService[T any] interface {
 	Collection() *mongo.Collection
 	Find(context.Context, Filter, SortOption) ([]T, error)
 	InsertAll(context.Context, []T) error
+	DeleteMany(context.Context, Filter) error
 }
 
 type Filter = bson.M
@@ -73,6 +74,10 @@ func (s *genericService[T]) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return s.MainRepo.HardDeleteByID(ctx, idp)
+}
+
+func (s *genericService[T]) DeleteMany(ctx context.Context, filter Filter) error {
+	return s.MainRepo.HardDelete(ctx, filter)
 }
 
 func (s *genericService[T]) DeleteAll(ctx context.Context) error {

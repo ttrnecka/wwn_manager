@@ -22,6 +22,7 @@ func ToFCWWNEntryEntity(p dto.FCWWNEntryDTO) entity.FCWWNEntry {
 	entry.ID, _ = primitive.ObjectIDFromHex(p.ID)
 	entry.TypeRule, _ = primitive.ObjectIDFromHex(p.TypeRule)
 	entry.HostNameRule, _ = primitive.ObjectIDFromHex(p.HostNameRule)
+	entry.DuplicateRule, _ = primitive.ObjectIDFromHex(p.DuplicateRule)
 	return entry
 }
 
@@ -37,6 +38,7 @@ func ToFCWWNEntryDTO(p entity.FCWWNEntry) dto.FCWWNEntryDTO {
 		Type:               p.Type,
 		TypeRule:           p.TypeRule.Hex(),
 		HostNameRule:       p.HostNameRule.Hex(),
+		DuplicateRule:      p.DuplicateRule.Hex(),
 		NeedsReconcile:     p.NeedsReconcile,
 		IsPrimaryCustomer:  p.IsPrimaryCustomer,
 		DuplicateCustomers: p.DuplicateCustomers,

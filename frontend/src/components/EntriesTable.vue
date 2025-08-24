@@ -33,6 +33,7 @@
         <thead>
           <tr>
             <th class="col-1">Type</th>
+            <th class="col-2">Customer</th>
             <th class="col-2">WWN</th>
             <th class="col-3">Zones</th>
             <th class="col-3">Aliases</th>
@@ -44,6 +45,7 @@
         <tbody>
           <tr v-for="e in pagedEntries" :key="e.id" :class="{reconcile: needToReconcile(e)}">
             <td class="col-1" :title="getEntryTypeRule(e)">{{ e.type }}</td>
+            <td class="col-2">{{ e.customer }}</td>
             <td class="col-2">{{ e.wwn }}</td>
             <td class="col-3 no-wrap">{{ e.zones.join(', ') }}</td>
             <td class="col-3 no-wrap">{{ e.aliases.join(', ') }}</td>
@@ -53,6 +55,7 @@
               <button v-show="needToReconcile(e)" class="btn btn-primary btn-sm" @click="openRecModal(e)">
                 Reconcile
               </button>
+              <span v-show="e.duplicate_customers?.length>0 && !needToReconcile(e)" :title="getEntryDuplicateRule(e)">Reconciled</span>
             </td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
@@ -87,10 +90,10 @@
       </div>
       <form @submit.prevent="">
         <div class="mb-3">
-          <select v-show="modalData?.entry?.duplicate_customers?.length>0" id="primary-customer" 
+          <select v-show="modalData?.entry?.duplicate_customers?.length>0 && dupRuleNil(modalData?.entry)" id="primary-customer" 
                     class="form-select form-select-sm" 
                     aria-label="Select customer" 
-                    v-model="modalData.primaryCustomer"
+                    v-model="modalData.primary_customer"
                     >
             <option selected disabled value="">-- Select Primary Customer --</option>
             <option v-for="cust,index in modalData?.entry?.duplicate_customers" :value="cust" :key="index">{{cust}}</option>
@@ -100,7 +103,7 @@
           <select   id="primary-hostname" 
                     class="form-select form-select-sm" 
                     aria-label="Select hostname" 
-                    v-model="modalData.primaryCustomer"
+                    v-model="modalData.primary_hostname"
                     >
             <option selected disabled value="">-- Select Primary Hostname --</option>
             <option v-for="hostname,index in [modalData?.entry?.hostname,modalData?.entry?.loaded_hostname]" :value="hostname" :key="index">{{hostname}}</option>
@@ -116,6 +119,8 @@ import PagingControls from "./PagingControls.vue";
 import { useRulesStore } from '@/stores/ruleStore';
 import { GLOBAL_CUSTOMER } from '@/config'
 import ReconciliationModal from './ReconciliationModal.vue';
+import fcService from "@/services/fcService";
+import { useFlashStore } from '@/stores/flash'
 
 export default {
   name: "EntriesTable",
@@ -134,8 +139,8 @@ export default {
       showRecModal: false,
       modalData: {
         entry: null,
-        primaryCustomer: "",
-        primaryHostname: null
+        primary_customer: "",
+        primary_hostname: ""
       },
     };
   },
@@ -147,6 +152,9 @@ export default {
       const start = (this.currentPage - 1) * this.pageSize;
       const end = start + this.pageSize;
       return this.filteredEntries.slice(start, end);
+    },
+    flash() {
+      return useFlashStore();
     }
   },
   watch: {
@@ -163,13 +171,22 @@ export default {
       this.showRecModal = false;
       this.modalData = {
         entry: null,
-        primaryCustomer: "",
-        primaryHostname: null
+        primary_customer: "",
+        primary_hostname: ""
       }
     },
-    commitReconcile() {
+    dupRuleNil(entry) {
+      return entry.duplicate_rule === null || entry.duplicate_rule === "000000000000000000000000";
+    },
+    async commitReconcile() {
       // Placeholder for actual reconcile logic
-      alert(`Reconciled entry ID: ${this.modalData?.id}`);
+      try {
+        await fcService.setReconcileRules(this.modalData.entry.id, this.modalData);
+        this.$emit("rulesChanged");
+      } catch (err) {
+        console.error("Reconciliation failed!", err);
+        this.flash.show("Reconciliation failed", "danger");
+      }
       this.closeRecModal();
     },
     needToReconcile(entry) {
@@ -193,7 +210,7 @@ export default {
       let text = "No Rule"
       if (rule) {
         let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
-        text = `${customer} rule number ${rule.order}: ${rule.comment}`
+        text = `${customer} range rule number ${rule.order}: ${rule.comment}`
       }
       return text
     },
@@ -202,7 +219,16 @@ export default {
       let text = "No Rule"
       if (rule) {
         let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
-        text = `${customer} rule number ${rule.order}: ${rule.comment}`
+        text = `${customer} host rule number ${rule.order}: ${rule.comment}`
+      }
+      return text
+    },
+    getEntryDuplicateRule(entry) {
+      let rule = this.rulesStore.getRules.find((r) => r.id === entry.duplicate_rule)
+      let text = "No Rule"
+      if (rule) {
+        let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
+        text = `${customer} duplicate rule: ${rule.comment}`
       }
       return text
     },
