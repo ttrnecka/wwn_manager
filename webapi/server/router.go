@@ -1,11 +1,6 @@
 package server
 
 import (
-	"fmt"
-	"net/http"
-	"runtime"
-	"time"
-
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -17,16 +12,6 @@ import (
 	mid "github.com/ttrnecka/wwn_identity/webapi/server/middleware"
 )
 
-func origin() string {
-	pcs := make([]uintptr, 10)
-	n := runtime.Callers(3, pcs) // skip 3 frames (Callers, origin, handler)
-	frames := runtime.CallersFrames(pcs[:n])
-	if frame, more := frames.Next(); more {
-		return fmt.Sprintf("%s:%d", frame.File, frame.Line)
-	}
-	return "unknown"
-}
-
 func Router() *echo.Echo {
 	e := echo.New()
 
@@ -35,23 +20,6 @@ func Router() *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 	e.Use(mid.SessionManager())
-
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		// Capture request details
-		req := c.Request()
-		path := req.URL.Path
-
-		// Log full trace with timestamp and route
-		fmt.Printf("\n=== ERROR ===\nTime: %s\nPath: %s\nError: %v\nStack Trace:\n%s\n",
-			time.Now().Format(time.RFC3339), path, err, origin())
-
-		// Respond with generic error to client
-		if !c.Response().Committed {
-			c.JSON(http.StatusInternalServerError, map[string]string{
-				"message": "Internal Server Error",
-			})
-		}
-	}
 
 	// db layer
 	users := entity.Users()
