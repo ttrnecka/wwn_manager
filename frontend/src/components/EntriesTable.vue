@@ -49,7 +49,7 @@
             <td class="col-3 no-wrap">{{ e.aliases.join(', ') }}</td>
             <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
             <td><strong>{{ e.loaded_hostname }}</strong></td>
-            <td class="col-3 no-wrap" :title="reconcileMsg(e)">
+            <td class="col-3 no-wrap">
               <button v-show="needToReconcile(e)" class="btn btn-primary btn-sm" @click="openRecModal(e)">
                 Reconcile
               </button>
@@ -74,22 +74,25 @@
 
     <ReconciliationModal 
       :show="showRecModal" 
-      :title="modalData?.name || 'Details'" 
+      :title="modalData?.name || ' Reconciliation Details'" 
       @close="closeRecModal"
       @commit="commitReconcile"
     >
-      <p>Customer: {{ modalData?.entry?.customer }}</p>
-      <p>WWN: {{ modalData?.entry?.wwn }}</p>
-      <p>Message: {{ reconcileMsg(modalData.entry) }}</p>
-
-      <form @submit.prevent="saveProbe()">
+      <div class="mb-3">
+        <h6>WWN: {{ modalData?.entry?.wwn }}</h6>
+        <h6>Issues:</h6>
+        <ul>
+          <li v-for="msg,index in reconcileIssues(modalData.entry)" :key="index">{{msg}}</li>
+        </ul>
+      </div>
+      <form @submit.prevent="">
         <div class="mb-3">
           <select v-show="modalData?.entry?.duplicate_customers?.length>0" id="primary-customer" 
                     class="form-select form-select-sm" 
                     aria-label="Select customer" 
                     v-model="modalData.primaryCustomer"
                     >
-            <option selected disabled value="">-- Primary Customer --</option>
+            <option selected disabled value="">-- Select Primary Customer --</option>
             <option v-for="cust,index in modalData?.entry?.duplicate_customers" :value="cust" :key="index">{{cust}}</option>
           </select>
         </div>
@@ -99,7 +102,7 @@
                     aria-label="Select hostname" 
                     v-model="modalData.primaryCustomer"
                     >
-            <option selected disabled value="">-- Primary Hostname --</option>
+            <option selected disabled value="">-- Select Primary Hostname --</option>
             <option v-for="hostname,index in [modalData?.entry?.hostname,modalData?.entry?.loaded_hostname]" :value="hostname" :key="index">{{hostname}}</option>
           </select>
         </div>
@@ -175,18 +178,15 @@ export default {
     diffHostname(entry) {
       return entry?.loaded_hostname !== "" && entry?.hostname !== entry?.loaded_hostname;
     },
-    reconcileMsg(entry) {
+    reconcileIssues(entry) {
       let msgs = []
       if (entry?.duplicate_customers?.length > 0) {
-        msgs.push("Duplicate WWN");
+        msgs.push("Multiple customers with the same WWN");
       }
       if (this.diffHostname(entry)) {
         msgs.push("Hostname mismatch");
       }
-      if (msgs.length > 0) {
-        return msgs.join(", ");
-      }
-      return "OK";
+      return msgs;
     },
     getEntryTypeRule(entry) {
       let rule = this.rulesStore.getRules.find((r) => r.id === entry.type_rule)
