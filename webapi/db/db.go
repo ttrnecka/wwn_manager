@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
@@ -22,7 +23,7 @@ func Connect() (*DB, error) {
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("mongo connection failed: %w", err)
 	}
 	db.database = client.Database("wwn_identity")
 	db.client = client

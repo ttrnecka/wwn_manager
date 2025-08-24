@@ -1,6 +1,8 @@
 package db
 
 import (
+	"fmt"
+
 	"github.com/rs/zerolog"
 	logging "github.com/ttrnecka/agent_poc/logger"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,13 +22,13 @@ func init() {
 func Init() error {
 	d, err := Connect()
 	if err != nil {
-		return err
+		return fmt.Errorf("initializing db failed: %w", err)
 	}
 	dB = d
 
 	// Ensure all indexes before starting application logic
 	if err := EnsureUserCollection(); err != nil {
-		return err
+		return fmt.Errorf("setting user collection failed: %w", err)
 	}
 	return nil
 }
