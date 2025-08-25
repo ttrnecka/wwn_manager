@@ -39,7 +39,7 @@
             <th class="col-3">Aliases</th>
             <th>Hostname (Generated)</th>
             <th>Hostname (Loaded)</th>
-            <th class="col-3">Reconciliation</th>
+            <th class="col-5">Reconciliation</th>
           </tr>
         </thead>
         <tbody>
@@ -47,11 +47,11 @@
             <td class="col-1" :title="getEntryTypeRule(e)">{{ e.type }}</td>
             <td class="col-2">{{ e.customer }}</td>
             <td class="col-2">{{ e.wwn }}</td>
-            <td class="col-3 no-wrap">{{ e.zones.join(', ') }}</td>
-            <td class="col-3 no-wrap">{{ e.aliases.join(', ') }}</td>
+            <td class="col-3 no-wrap" :title="e.zones.join(', ')">{{ e.zones.join(', ') }}</td>
+            <td class="col-3 no-wrap" :title="e.aliases.join(', ')">{{ e.aliases.join(', ') }}</td>
             <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
             <td><strong>{{ e.loaded_hostname }}</strong></td>
-            <td class="col-3 no-wrap">
+            <td class="col-5">
               <button v-show="needToReconcile(e)" class="btn btn-primary btn-sm" @click="openRecModal(e)">
                 Reconcile
               </button>
@@ -96,7 +96,7 @@
                     v-model="modalData.primary_customer"
                     >
             <option selected disabled value="">-- Select Primary Customer --</option>
-            <option v-for="cust,index in modalData?.entry?.duplicate_customers" :value="cust" :key="index">{{cust}}</option>
+            <option v-for="cust,index in modalData?.entry?.duplicate_customers.sort()" :value="cust" :key="index">{{cust}}</option>
           </select>
         </div>
         <div v-show="diffHostname(modalData.entry)" class="mb-3">
@@ -106,7 +106,7 @@
                     v-model="modalData.primary_hostname"
                     >
             <option selected disabled value="">-- Select Primary Hostname --</option>
-            <option v-for="hostname,index in [modalData?.entry?.hostname,modalData?.entry?.loaded_hostname]" :value="hostname" :key="index">{{hostname}}</option>
+            <option v-for="hostname,index in [modalData?.entry?.hostname,modalData?.entry?.loaded_hostname].sort()" :value="hostname" :key="index">{{hostname}}</option>
           </select>
         </div>
       </form>
@@ -238,8 +238,8 @@ export default {
         ? this.entries.filter(e =>
             e.type.toLowerCase().includes(term) ||
             e.wwn.toLowerCase().includes(term) ||
-            e.zones.map((e) => e.toLowerCase()).includes(term) ||
-            e.aliases.map((e) => e.toLowerCase()).includes(term) ||
+            e.zones.some((e) => e.toLowerCase().includes(term)) ||
+            e.aliases.some((e) => e.toLowerCase().includes(term)) ||
             (e.hostname || "").toLowerCase().includes(term)
           )
         : [...this.entries];
@@ -278,7 +278,8 @@ export default {
   }
 
     td.col-1, th.col-1 { max-width: 80px; width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    td.col-2, th.col-2 { max-width: 150px; width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    td.col-2, th.col-2 { max-width: 170px; width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     td.col-3, th.col-3 { width: auto;}
     td.col-4, th.col-4 { width: auto;}
+    td.col-5, th.col-5 { max-width: 100px; width: 100px; }
 </style>

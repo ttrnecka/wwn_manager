@@ -10,7 +10,7 @@
           <option v-for="c in customers" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>
-
+      
       <!-- Rules -->
       <RulesTable
         v-if="selectedCustomer"

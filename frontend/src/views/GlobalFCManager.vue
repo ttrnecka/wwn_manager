@@ -24,30 +24,70 @@
           Import Entries
         </button>
 
-        <button class="btn btn-primary " @click="donwloadRules">
+        <button class="btn btn-primary me-2" @click="downloadRules">
           Export Rules
         </button>
+
+        <button class="btn btn-primary me-2" @click="downloadCustomerMapRules">
+          Export Customer WWNs
+        </button>
+        <button class="btn btn-primary " @click="downloadHostWWN">
+          Export Host WWNs
+        </button>
       </div>
-
-      <RulesTable
-        :rules="rangeRules"
-        :customer="selectedCustomer"
-        :types="['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other']"
-        @rulesChanged="loadData"
-      />
-      <RulesTable
-        :rules="hostRules"
-        :customer="selectedCustomer"
-        @rulesChanged="loadData"
-      />
-
-      <RulesTable
-        :rules="duplicateRules"
-        :customer="selectedCustomer"
-        :types="['wwn_customer_map']"
-        @rulesChanged="loadData"
-      />
-
+      
+      <div class="accordion" id="ruleAccordion">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Range Rules
+            </button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <RulesTable
+                :rules="rangeRules"
+                :customer="selectedCustomer"
+                :types="['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other']"
+                @rulesChanged="loadData"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+              Host Rules
+            </button>
+          </h2>
+          <div id="collapseTwo" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <RulesTable
+                :rules="hostRules"
+                :customer="selectedCustomer"
+                @rulesChanged="loadData"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+              Duplicate Rules
+            </button>
+          </h2>
+          <div id="collapseThree" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <RulesTable
+                :rules="duplicateRules"
+                :customer="selectedCustomer"
+                :types="['wwn_customer_map']"
+                @rulesChanged="loadData"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       <EntriesTable
         :entries="entries"
         @rulesChanged="loadData"
@@ -165,8 +205,16 @@ export default {
         this.loadingState.loading = false;
       }
     },
-    async donwloadRules() {
+    async downloadRules() {
       const resp = await fcService.getRulesExport();
+      fcService.saveFile(resp);
+    },
+    async downloadCustomerMapRules() {
+      const resp = await fcService.getCustomerMapRulesExport();
+      fcService.saveFile(resp);
+    },
+    async downloadHostWWN() {
+      const resp = await fcService.getHostWWNExport();
       fcService.saveFile(resp);
     }
   },

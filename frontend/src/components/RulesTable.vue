@@ -2,7 +2,6 @@
   <div class="card my-3 w-100" style="min-width: 800px;">
     <div class="card-header d-flex justify-content-between">
       <span><b>{{title}}</b></span>
-      <button class="btn btn-sm btn-success" @click="addNewRule">+ Add Rule</button>
     </div>
     <div class="card-body p-0">
       <table class="table table-striped mb-0" style="table-layout: fixed;">
@@ -47,6 +46,7 @@
       </table>
     </div>
     <div class="card-footer text-end">
+      <button class="btn btn-sm btn-success me-2" @click="addNewRule">+ Add Rule</button>
       <button class="btn btn-primary btn-sm" @click="saveRules">Save</button>
     </div>
   </div>

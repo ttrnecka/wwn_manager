@@ -56,7 +56,6 @@ func (h *RuleHandler) Rules(c echo.Context) error {
 }
 
 func (h *RuleHandler) ExportRules(c echo.Context) error {
-
 	items, err := h.service.All(c.Request().Context())
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
@@ -73,10 +72,40 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 
 	for _, item := range items {
 		itemDTO := mapper.ToRuleDTO(item)
-		writer.Write([]string{strconv.Itoa(itemDTO.Order), itemDTO.Customer, itemDTO.Regex, strconv.Itoa(itemDTO.Group), string(itemDTO.Type)})
+		writer.Write([]string{strconv.Itoa(itemDTO.Order), itemDTO.Customer, itemDTO.Regex, strconv.Itoa(itemDTO.Group), string(itemDTO.Type), itemDTO.Comment})
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), "rules.csv")
+}
+
+func (h *RuleHandler) ExportWWNCustomerMap(c echo.Context) error {
+	items, err := h.service.Find(c.Request().Context(), service.Filter{"type": entity.WWNCustomerMapRule}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get wwn customer rules", err)
+	}
+
+	f, err := os.CreateTemp("", "exportcsv-")
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	writer := csv.NewWriter(f)
+
+	for _, item := range items {
+		entries, err := h.fcWWNEntryService.Find(c.Request().Context(), service.Filter{"duplicate_rule": item.ID}, service.SortOption{"regex": "asc"})
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to get entries for rule", err)
+		}
+		for _, entry := range entries {
+			if !entry.IsPrimaryCustomer {
+				writer.Write([]string{entry.WWN, entry.Customer, entry.Hostname})
+			}
+		}
+	}
+	writer.Flush()
+	return c.Attachment(f.Name(), "customer_wwn_host_override.csv")
 }
 
 func (h *RuleHandler) DeleteRule(c echo.Context) error {
@@ -267,7 +296,7 @@ func applyRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.Hostname = ""
 	entry.Type = "Unknown"
 	entry.NeedsReconcile = false
-	entry.IsPrimaryCustomer = false
+	entry.IsPrimaryCustomer = true
 	entry.DuplicateRule = entity.NilObjectID()
 
 	// RANGE rules

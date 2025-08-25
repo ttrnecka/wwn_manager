@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"os"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
@@ -32,7 +33,7 @@ func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to find entries", err)
 	}
 
-	var itemDTO []dto.FCWWNEntryDTO
+	itemDTO := make([]dto.FCWWNEntryDTO, 0)
 
 	for _, item := range items {
 		itemDTO = append(itemDTO, mapper.ToFCWWNEntryDTO(item))
@@ -115,6 +116,31 @@ func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
 	return c.JSON(http.StatusOK, customers)
 }
 
+func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
+	items, err := h.service.All(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
+	}
+
+	f, err := os.CreateTemp("", "exportcsv-")
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	writer := csv.NewWriter(f)
+
+	for _, item := range items {
+		itemDTO := mapper.ToFCWWNEntryDTO(item)
+		if itemDTO.IsPrimaryCustomer {
+			writer.Write([]string{itemDTO.Hostname, itemDTO.WWN, itemDTO.WWN})
+		}
+	}
+	writer.Flush()
+	return c.Attachment(f.Name(), "host_wwn.csv")
+}
+
 func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.FCWWNEntry, error) {
 	src, err := file.Open()
 	if err != nil {
@@ -136,7 +162,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 		if err != nil {
 			return nil, fmt.Errorf("failed to read entry file: %w", err)
 		}
-		if len(line) < 4 {
+		if len(line) < 5 {
 			continue
 		}
 
@@ -145,6 +171,9 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 		zone := line[2]
 		alias := line[3]
 		loadedHostname := line[4]
+		if loadedHostname == "No Matching Rule" {
+			loadedHostname = ""
+		}
 
 		// Create or update FCWWNEntry
 		if cMap, ok := wwnEntryMap[customer]; ok {

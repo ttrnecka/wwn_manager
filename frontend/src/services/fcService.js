@@ -47,6 +47,14 @@ export default {
     return axios.get(`${API}/rules/export`, {responseType: "blob"});
   },
 
+  getCustomerMapRulesExport() {
+    return axios.get(`${API}/rules/export/map`, {responseType: "blob"});
+  },
+
+  getHostWWNExport() {
+    return axios.get(`${API}/entries/export/map`, {responseType: "blob"});
+  },
+
   saveFile(resp) {
     const disposition = resp.headers["content-disposition"];
     let filename = "downloaded-file";
