@@ -16,12 +16,12 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="rule in sortedRules" :key="rule.id">
+          <tr v-for="rule in tableData" :key="rule.id">
             <td class="col-1">
               <input type="number" v-model.number="rule.order" min="1" 
                     class="form-control form-control-sm" 
-                    @focus="rule._oldOrder = rule.order" 
-                    @blur="updateOrder(rule, rule.order)"
+                    @focus="startEdit"
+                    @blur="stopEdit"
                     :disabled="noEditRule(rule)"/>
             </td>
             <td class="col-2">
@@ -69,6 +69,8 @@ export default {
     return {
       localRules: JSON.parse(JSON.stringify(this.rules)), // local copy
       nameMap: {"zone": "Zone", "alias": "Alias", "wwn_host_map": "WWN", "wwn_range_array": "WWN Range - Array", "wwn_range_backup": "WWN Range - Backup", "wwn_range_host": "WWN Range - Host", "wwn_range_other": "WWN Range - Other", "wwn_customer_map": "WWN Primary Customer"},
+      isEditing: false,
+      displayedRules: [],
     };
   },
   watch: {
@@ -78,11 +80,20 @@ export default {
         this.localRules = JSON.parse(JSON.stringify(newVal));
       },
     },
+    isEditing: {
+      handler(newVal) {
+        if (newVal) {
+          this.displayedRules =  [...this.sortedRules]
+        }
+      }
+    }
   },
   computed: {
     sortedRules() {
-      // Sort by order ascending
       return [...this.localRules].sort((a, b) => a.order - b.order);
+    },
+    tableData() {
+      return this.isEditing ? this.displayedRules : this.sortedRules;
     },
     title() {
       let c = this.customer === GLOBAL_CUSTOMER ? "Global " : "";
@@ -139,16 +150,11 @@ export default {
         {title: 'Delete this rule?', confirmButtonText: 'Yes, delete it!'}
       )
     },
-    updateOrder(rule, newOrder) {
-      if (newOrder < 1) newOrder = 1;
-      const oldOrder = rule._oldOrder || 1;
-      // Find if any other rule already has this order
-      const conflict = this.localRules.find(r => r !== rule && r.order === newOrder);
-      if (conflict) {
-        // Swap their orders
-        conflict.order = oldOrder;
-      }
-      rule._oldOrder = newOrder;
+    startEdit() {
+      this.isEditing = true;
+    },
+    stopEdit() {
+      this.isEditing = false;
     }
   },
 };
