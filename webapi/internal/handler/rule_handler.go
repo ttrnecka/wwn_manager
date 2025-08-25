@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"regexp"
@@ -32,7 +33,7 @@ func (h *RuleHandler) GetRules(c echo.Context) error {
 	customer := c.Param("name")
 	rules, err := h.service.Find(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"order": "asc"})
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+		return errorWithInternal(http.StatusInternalServerError, "Failed to find rules", err)
 	}
 	itemsDTO := []dto.RuleDTO{}
 	for _, item := range rules {
@@ -45,7 +46,7 @@ func (h *RuleHandler) Rules(c echo.Context) error {
 
 	items, err := h.service.All(c.Request().Context())
 	if err != nil {
-		return err
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
 	}
 	itemsDTO := []dto.RuleDTO{}
 	for _, item := range items {
@@ -58,12 +59,12 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 
 	items, err := h.service.All(c.Request().Context())
 	if err != nil {
-		return err
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
 	}
 
 	f, err := os.CreateTemp("", "exportcsv-")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
 	}
 	defer f.Close()
 	defer os.Remove(f.Name())
@@ -82,15 +83,11 @@ func (h *RuleHandler) DeleteRule(c echo.Context) error {
 	probe_id := c.Param("id")
 	_, err := h.service.Get(c.Request().Context(), probe_id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 	err = h.service.Delete(c.Request().Context(), probe_id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		return errorWithInternal(http.StatusInternalServerError, "Failed to delete rules", err)
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -115,16 +112,12 @@ func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
 
 	id, err := h.service.Update(c.Request().Context(), item.ID, &item)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		return errorWithInternal(http.StatusInternalServerError, "Failed to update rule", err)
 	}
 
 	itemTmp, err := h.service.Get(c.Request().Context(), id.Hex())
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get rule", err)
 	}
 
 	itemDTO = mapper.ToRuleDTO(*itemTmp)
@@ -146,18 +139,16 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 
 		_, err := h.service.Update(c.Request().Context(), item.ID, &item)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{
-				"error": err.Error(),
-			})
+			return errorWithInternal(http.StatusInternalServerError, "Failed to update rule", err)
 		}
 	}
 	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
 	}
 	err = h.applyRules(c.Request().Context(), fcWWNEntries)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -180,25 +171,25 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 	// save rules
 	err = h.service.CreateReconcileRules(c.Request().Context(), fcWWNEntry, reconcileDTO)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to create reconcile rules", err)
 	}
 
 	// update entry in db
 	_, err = h.fcWWNEntryService.Update(c.Request().Context(), fcWWNEntry.ID, fcWWNEntry)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to update entry", err)
 	}
 
 	// get all entries for given WWN
 
 	entries, err := h.fcWWNEntryService.Find(c.Request().Context(), service.Filter{"wwn": fcWWNEntry.WWN}, service.SortOption{})
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to file entries", err)
 	}
 
 	err = h.applyRules(c.Request().Context(), entries)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
 	}
 
 	// apply rules for selected entries
@@ -217,7 +208,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 
 	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER}, service.SortOption{"order": "asc"})
 	if err != nil {
-		return err
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
 	}
 
 	ruleMap := make(map[string][]entity.Rule)
@@ -262,11 +253,14 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 
 	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"wwn": bson.M{"$in": wwns}})
 	if err != nil {
-		return err
+		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
 
 	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntries)
-	return err
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
+	}
+	return nil
 }
 
 func applyRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
@@ -281,7 +275,7 @@ RANGE:
 	for _, rule := range rules {
 		r, err := regexp.Compile(rule.Regex)
 		if err != nil {
-			return err
+			return fmt.Errorf("apply-rules - regex %s won't compile: %w", rule.Regex, err)
 		}
 		entry.TypeRule = rule.ID
 		switch rule.Type {
@@ -324,7 +318,7 @@ TOP:
 		}
 		r, err := regexp.Compile(rule.Regex)
 		if err != nil {
-			return err
+			return fmt.Errorf("apply-rules - regex %s won't compile: %w", rule.Regex, err)
 		}
 		entry.HostNameRule = rule.ID
 		switch rule.Type {

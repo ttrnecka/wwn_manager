@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -27,7 +29,7 @@ func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
 
 	items, err := h.service.Find(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"wwn": "asc"})
 	if err != nil {
-		return err
+		return errorWithInternal(http.StatusInternalServerError, "Failed to find entries", err)
 	}
 
 	var itemDTO []dto.FCWWNEntryDTO
@@ -43,15 +45,11 @@ func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
 	probe_id := c.Param("id")
 	_, err := h.service.Get(c.Request().Context(), probe_id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{
-			"error": err.Error(),
-		})
+		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
 	err = h.service.Delete(c.Request().Context(), probe_id)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entry", err)
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -69,17 +67,12 @@ func (h *FCWWNEntryHandler) CreateUpdateFCWWNEntry(c echo.Context) error {
 
 	id, err := h.service.Update(c.Request().Context(), item.ID, &item)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
-
+		return errorWithInternal(http.StatusInternalServerError, "Failed to update entry", err)
 	}
 
 	itemTmp, err := h.service.Get(c.Request().Context(), id.Hex())
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get entry", err)
 	}
 
 	itemDTO = mapper.ToFCWWNEntryDTO(*itemTmp)
@@ -89,11 +82,43 @@ func (h *FCWWNEntryHandler) CreateUpdateFCWWNEntry(c echo.Context) error {
 func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 	file, err := c.FormFile("file")
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+		return errorWithInternal(http.StatusBadRequest, "Failed to load import file from request", err)
 	}
+
+	wwnEntries, err := h.readEntriesFromFile(file)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to read entries from import file", err)
+	}
+
+	err = h.service.DeleteAll(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
+	}
+
+	err = h.service.InsertAll(c.Request().Context(), wwnEntries)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
+	}
+	err = h.service.FlagDuplicateWWNs(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
+}
+
+func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
+	customers, err := h.service.Customers(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get customers", err)
+	}
+	return c.JSON(http.StatusOK, customers)
+}
+
+func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.FCWWNEntry, error) {
 	src, err := file.Open()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
+		return nil, fmt.Errorf("failed to open entry file: %w", err)
 	}
 	defer src.Close()
 
@@ -109,7 +134,7 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 			break
 		}
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
+			return nil, fmt.Errorf("failed to read entry file: %w", err)
 		}
 		if len(line) < 4 {
 			continue
@@ -175,37 +200,5 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 			wwnEntries = append(wwnEntries, e)
 		}
 	}
-
-	err = h.service.DeleteAll(c.Request().Context())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-	}
-
-	err = h.service.InsertAll(c.Request().Context(), wwnEntries)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-	}
-	err = h.service.FlagDuplicateWWNs(c.Request().Context())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-	}
-
-	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
-}
-
-func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
-	customers, err := h.service.Customers(c.Request().Context())
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": err.Error()})
-	}
-	return c.JSON(http.StatusOK, customers)
-}
-
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return wwnEntries, nil
 }

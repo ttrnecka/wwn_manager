@@ -34,7 +34,7 @@ func (e *UserHandler) LoginUser(c echo.Context) error {
 		if errors.Is(err, cdb.ErrNotFound) {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid credentials")
 		}
-		return echo.NewHTTPError(http.StatusInternalServerError, "Unexpected error: ", err)
+		return errorWithInternal(http.StatusInternalServerError, "Unexpected login error: ", err)
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
@@ -45,7 +45,7 @@ func (e *UserHandler) LoginUser(c echo.Context) error {
 	sess := middleware.Session(c)
 	sess.Values["user"] = userDTO
 	if saveErr := sess.Save(c.Request(), c.Response()); saveErr != nil {
-		return saveErr
+		return errorWithInternal(http.StatusInternalServerError, "Unexpected session save error: ", saveErr)
 	}
 	return c.JSON(http.StatusOK, map[string]string{"message": "Login successful", "user": userDTO.Username})
 }
@@ -54,7 +54,7 @@ func (e *UserHandler) LogoutUser(c echo.Context) error {
 	sess := middleware.Session(c)
 	sess.Options.MaxAge = -1
 	if saveErr := sess.Save(c.Request(), c.Response()); saveErr != nil {
-		return saveErr
+		return errorWithInternal(http.StatusInternalServerError, "Unexpected session save error: ", saveErr)
 	}
 	return c.JSON(http.StatusOK, map[string]string{"message": "Logged out"})
 }
