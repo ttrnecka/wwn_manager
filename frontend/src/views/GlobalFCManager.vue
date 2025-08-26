@@ -32,6 +32,10 @@
           Export Rules
         </button>
 
+        <button class="btn btn-primary me-2 mb-2" @click="uploadRules" :disabled="!file">
+          Import Rules
+        </button>
+
         <button class="btn btn-primary me-2 mb-2" @click="downloadCustomerMapRules">
           Export Customer WWNs
         </button>
@@ -177,6 +181,22 @@ export default {
         this.file = null;
         this.fileName = "";
         this.$refs.fileInput.value = null; // Reset file input
+      } catch (err) {
+        console.error("Import failed!", err);
+        this.flash.show("Import failed", "danger");
+      } finally {
+        this.loadingState.loading = false;
+      }
+    },
+    async uploadRules() {
+      if (!this.file) return;
+      this.loadingState.loading = true;
+      try {
+        await fcService.importRules(this.file);
+        this.file = null;
+        this.fileName = "";
+        this.$refs.fileInput.value = null; // Reset file input
+        await this.loadRules();
       } catch (err) {
         console.error("Import failed!", err);
         this.flash.show("Import failed", "danger");

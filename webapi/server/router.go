@@ -53,6 +53,7 @@ func Router() *echo.Echo {
 	api.GET("/customers", fcWWNEntryHandler.ListCustomers)
 	api.GET("/rules", ruleHandler.Rules)
 	api.GET("/rules/export", ruleHandler.ExportRules)
+	api.POST("/rules/import", ruleHandler.ImportHandler)
 	api.GET("/rules/export/map", ruleHandler.ExportWWNCustomerMap)
 	api.POST("/rules/apply", ruleHandler.ApplyRules)
 	api.GET("/entries/export/map", fcWWNEntryHandler.ExportHostWWNMap)

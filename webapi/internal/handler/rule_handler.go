@@ -5,11 +5,14 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/labstack/echo/v4"
@@ -238,6 +241,30 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func (h *RuleHandler) ImportHandler(c echo.Context) error {
+	file, err := c.FormFile("file")
+	if err != nil {
+		return errorWithInternal(http.StatusBadRequest, "Failed to load import file from request", err)
+	}
+
+	rules, err := h.readEntriesFromFile(file)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to read rules from import file", err)
+	}
+
+	err = h.service.DeleteAll(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to delete rules", err)
+	}
+
+	err = h.service.InsertAll(c.Request().Context(), rules)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to insert rules", err)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
+}
+
 func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWWNEntry) error {
 
 	numWorkers := runtime.NumCPU() // one worker per CPU core
@@ -408,9 +435,55 @@ DUP:
 		}
 	}
 	if len(entry.DuplicateCustomers) > 0 && !dupReconciled ||
-		(entry.LoadedHostname != "" && entry.Hostname != entry.LoadedHostname) {
+		(entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname)) {
 		entry.NeedsReconcile = true
 	}
 
 	return nil
+}
+
+func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.Rule, error) {
+	src, err := file.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open entry file: %w", err)
+	}
+	defer src.Close()
+
+	reader := csv.NewReader(src)
+	reader.Comma = ','
+	reader.FieldsPerRecord = -1
+
+	rules := make([]entity.Rule, 0)
+
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to read rule file: %w", err)
+		}
+		if len(line) < 6 {
+			continue
+		}
+
+		order, _ := strconv.Atoi(line[0])
+		customer := line[1]
+		regexp := line[2]
+		group, _ := strconv.Atoi(line[3])
+		rtype := line[4]
+		comment := line[5]
+
+		newRule := entity.Rule{
+			Order:    order,
+			Customer: customer,
+			Regex:    regexp,
+			Group:    group,
+			Type:     entity.RuleType(rtype),
+			Comment:  comment,
+		}
+		rules = append(rules, newRule)
+
+	}
+	return rules, nil
 }

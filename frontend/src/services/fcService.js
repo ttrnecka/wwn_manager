@@ -11,6 +11,14 @@ export default {
     });
   },
 
+  importRules(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axios.post(`${API}/rules/import`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
   getCustomers() {
     return axios.get(`${API}/customers`);
   },
