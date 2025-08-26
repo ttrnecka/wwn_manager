@@ -32,10 +32,10 @@ onMounted(() => {
       <nav class="flex-grow-1">
         <ul class="nav flex-column">
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/global">Global</RouterLink>
+            <RouterLink class="nav-link" to="/">Global</RouterLink>
           </li>
           <li class="nav-item">
-            <RouterLink class="nav-link" to="/">Customers</RouterLink>
+            <RouterLink class="nav-link" to="/customers">Customers</RouterLink>
           </li>
         </ul>
       </nav>

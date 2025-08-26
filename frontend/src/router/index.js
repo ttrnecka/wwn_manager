@@ -11,14 +11,14 @@ const router = createRouter({
     {
       path: '/',
       alias: ['/index.html'],
-      name: 'fcmgr',
-      component: FCManager 
-    },
-    {
-      path: '/global',
-      alias: ['/global.html'],
       name: 'global',
       component: GlobalFCManager 
+    },
+    {
+      path: '/customers',
+      alias: ['/customers.html'],
+      name: 'customers',
+      component: FCManager 
     },
     {
       path: '/:pathMatch(.*)*',
