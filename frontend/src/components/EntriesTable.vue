@@ -96,7 +96,7 @@
                     v-model="modalData.primary_customer"
                     >
             <option selected disabled value="">-- Select Primary Customer --</option>
-            <option v-for="cust,index in modalData?.entry?.duplicate_customers.sort()" :value="cust" :key="index">{{cust}}</option>
+            <option v-for="cust,index in modalData?.entry?.duplicate_customers?.sort()" :value="cust" :key="index">{{cust}}</option>
           </select>
         </div>
         <div v-show="diffHostname(modalData.entry)" class="mb-3">

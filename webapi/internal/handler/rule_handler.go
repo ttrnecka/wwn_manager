@@ -183,6 +183,19 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func (h *RuleHandler) ApplyRules(c echo.Context) error {
+	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+	}
+	err = h.applyRules(c.Request().Context(), fcWWNEntries)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
 func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 	fcWWNEntryId := c.Param("id")
 

@@ -54,6 +54,7 @@ func Router() *echo.Echo {
 	api.GET("/rules", ruleHandler.Rules)
 	api.GET("/rules/export", ruleHandler.ExportRules)
 	api.GET("/rules/export/map", ruleHandler.ExportWWNCustomerMap)
+	api.POST("/rules/apply", ruleHandler.ApplyRules)
 	api.GET("/entries/export/map", fcWWNEntryHandler.ExportHostWWNMap)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)

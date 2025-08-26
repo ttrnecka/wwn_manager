@@ -150,17 +150,24 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 
 	reader := csv.NewReader(src)
 	reader.Comma = ','
+	reader.FieldsPerRecord = -1
 
 	var wwnEntries []entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)
 
+	lineNumber := 0
 	for {
+		lineNumber = lineNumber + 1
 		line, err := reader.Read()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			return nil, fmt.Errorf("failed to read entry file: %w", err)
+		}
+		if lineNumber < 3 {
+			// ignore first 2 lines from ITA csv export
+			continue
 		}
 		if len(line) < 5 {
 			continue

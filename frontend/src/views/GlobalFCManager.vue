@@ -4,7 +4,7 @@
     <FlashMessage />
     <div class="container mt-4" :class="{ 'opacity-50': loadingState.loading, 'pe-none': loadingState.loading }">
       <!-- Import -->
-      <div class="mb-3">
+      <div class="mb-1">
         <!-- Hidden file input -->
         <input
           type="file"
@@ -14,24 +14,28 @@
         />
 
         <!-- Custom button -->
-        <button class="btn btn-outline-secondary me-2 btn-sm" @click="triggerFileInput">
+        <button class="btn btn-outline-secondary me-2 btn-sm mb-2" @click="triggerFileInput">
           Choose File
         </button>
 
         <!-- Display selected file name -->
-        <span class="me-3">{{ fileName || "No file chosen" }}</span>
-        <button class="btn btn-primary me-2 " @click="uploadFile" :disabled="!file">
+        <div class="me-3 d-inline-block">{{ fileName || "No file chosen" }}</div>
+        <button class="btn btn-primary me-2 mb-2" @click="uploadFile" :disabled="!file">
           Import Entries
         </button>
 
-        <button class="btn btn-primary me-2" @click="downloadRules">
+        <button class="btn btn-primary me-2 mb-2" @click="applyRules">
+          Apply Rules
+        </button>
+
+        <button class="btn btn-primary me-2 mb-2" @click="downloadRules">
           Export Rules
         </button>
 
-        <button class="btn btn-primary me-2" @click="downloadCustomerMapRules">
+        <button class="btn btn-primary me-2 mb-2" @click="downloadCustomerMapRules">
           Export Customer WWNs
         </button>
-        <button class="btn btn-primary " @click="downloadHostWWN">
+        <button class="btn btn-primary me-2 mb-2" @click="downloadHostWWN">
           Export Host WWNs
         </button>
       </div>
@@ -106,6 +110,7 @@ import { useFlashStore } from '@/stores/flash'
 import { useRulesStore } from '@/stores/ruleStore';
 import { GLOBAL_CUSTOMER } from '@/config'
 import { provide } from 'vue'
+import { showAlert } from '@/services/alert';
 
 export default {
   name: "GlobalFCManager",
@@ -208,6 +213,12 @@ export default {
     async downloadRules() {
       const resp = await fcService.getRulesExport();
       fcService.saveFile(resp);
+    },
+    async applyRules() {
+      const result = await showAlert(async () => {
+          await fcService.applyRules();
+      },
+      {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
     },
     async downloadCustomerMapRules() {
       const resp = await fcService.getCustomerMapRulesExport();

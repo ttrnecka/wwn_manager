@@ -34,7 +34,9 @@ export default {
   deleteRule(customer, id) {
     return axios.delete(`${API}/customers/${customer}/rules/${id}`);
   },
-
+  applyRules() {
+    return axios.post(`${API}/rules/apply`);
+  },
   setReconcileRules(entry_id,reconcileObj) {
     return axios.post(`${API}/entries/${entry_id}/reconcile`, reconcileObj);
   },
