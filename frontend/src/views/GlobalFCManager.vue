@@ -36,7 +36,7 @@
         </button>
       </div>
       
-      <div class="accordion" id="ruleAccordion">
+      <div class="accordion" id="ruleAccordion" style="min-width: 800px;">
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
@@ -231,5 +231,8 @@ export default {
     display: flex;
     align-items: center;
   }
+}
+.accordion-body {
+  padding: 0 !important;
 }
 </style>

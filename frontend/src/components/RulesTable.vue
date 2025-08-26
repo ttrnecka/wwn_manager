@@ -1,5 +1,5 @@
 <template>
-  <div class="card my-3 w-100" style="min-width: 800px;">
+  <div class="card mb-2 w-100">
     <div class="card-header d-flex justify-content-between">
       <span><b>{{title}}</b></span>
     </div>
