@@ -217,6 +217,7 @@ export default {
     async applyRules() {
       const result = await showAlert(async () => {
           await fcService.applyRules();
+          await this.loadData();
       },
       {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
     },
