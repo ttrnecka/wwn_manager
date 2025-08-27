@@ -14,26 +14,26 @@
         />
 
         <!-- Custom button -->
-        <button class="btn btn-outline-secondary me-2 btn-sm mb-2" @click="triggerFileInput">
+        <!-- <button class="btn btn-outline-secondary me-2 btn-sm mb-2" @click="triggerFileInput">
           Choose File
-        </button>
+        </button> -->
 
         <!-- Display selected file name -->
-        <div class="me-3 d-inline-block">{{ fileName || "No file chosen" }}</div>
-        <button class="btn btn-primary me-2 mb-2" @click="uploadFile" :disabled="!file">
+        <!-- <div class="me-3 d-inline-block">{{ fileName || "No file chosen" }}</div> -->
+        <button class="btn btn-primary me-2 mb-2" @click="triggerFileInput('entries')">
           Import Entries
         </button>
 
+        <button class="btn btn-primary me-2 mb-2" @click="triggerFileInput('rules')">
+          Import Rules
+        </button>
+        
         <button class="btn btn-primary me-2 mb-2" @click="applyRules">
           Apply Rules
         </button>
 
         <button class="btn btn-primary me-2 mb-2" @click="downloadRules">
           Export Rules
-        </button>
-
-        <button class="btn btn-primary me-2 mb-2" @click="uploadRules" :disabled="!file">
-          Import Rules
         </button>
 
         <button class="btn btn-primary me-2 mb-2" @click="downloadCustomerMapRules">
@@ -128,6 +128,7 @@ export default {
     return {
       file: null,
       fileName: "",
+      import_type: 'entries',
       selectedCustomer: GLOBAL_CUSTOMER,
       rules: [],
       entries: [],
@@ -162,12 +163,19 @@ export default {
       if (selected) {
         this.file = selected;
         this.fileName = selected.name;
+        if (this.import_type==='entries') {
+          this.uploadFile();
+        }
+        if (this.import_type==='rules') {
+          this.uploadRules();
+        }
       } else {
         this.file = null;
         this.fileName = "";
       }
     },
-    triggerFileInput() {
+    triggerFileInput(type) {
+      this.import_type=type;
       this.$refs.fileInput.click();
     },
     async uploadFile() {

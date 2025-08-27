@@ -174,6 +174,9 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 		}
 
 		customer := line[0]
+		if customer == "" {
+			customer = entity.UNKNOWN_CUSTOMER
+		}
 		wwn := line[1]
 		zone := line[2]
 		alias := line[3]
