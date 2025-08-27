@@ -417,6 +417,10 @@ TOP:
 		entry.HostNameRule = entity.NilObjectID()
 	}
 
+	// hba_port record - no zoning/aliases - we want to persist it as is
+	if len(entry.Zones) == 0 && len(entry.Aliases) == 0 && entry.LoadedHostname != "" {
+		entry.Hostname = entry.LoadedHostname
+	}
 	// DUP rules
 	dupReconciled := false
 DUP:

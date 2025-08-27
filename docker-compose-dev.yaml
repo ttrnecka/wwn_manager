@@ -1,4 +1,16 @@
 services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 80:80
+    networks:
+      - wwn_mgr_network
+    depends_on:
+      - wwn_webapi
+    restart: always
+    volumes:
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./dist/:/usr/share/nginx/html/wwnmgr/:ro
   wwn_webapi:
     build:
       context: .
@@ -6,12 +18,17 @@ services:
       args:
         IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
     image: wwn_webapi:0.0.1
-    network_mode: "host"
+    networks:
+      - wwn_mgr_network
+    # ports:
+    #   - "8888:8888"
     restart: always
+    depends_on:
+      - mongodb
     volumes:
       - ./logs:/app/logs
     environment:
-      MONGO_URI: mongodb://localhost:27017/
+      MONGO_URI: mongodb://mongodb_wwnmgr:27017/
   frontend-artifacts:
     build:
       context: .
@@ -22,3 +39,17 @@ services:
       - ./dist:/output
     entrypoint: sh -c
     command: ["cp -r /app/dist/* /output/"]
+  mongodb:
+    image: mongo:7
+    container_name: mongodb_wwnmgr
+    restart: always
+    networks:
+      - wwn_mgr_network
+    # ports:
+    #   - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+networks:
+  wwn_mgr_network: {}
+volumes:
+  mongo-data:

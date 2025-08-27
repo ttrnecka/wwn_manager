@@ -240,7 +240,8 @@ export default {
             e.wwn.toLowerCase().includes(term) ||
             e.zones.some((e) => e.toLowerCase().includes(term)) ||
             e.aliases.some((e) => e.toLowerCase().includes(term)) ||
-            (e.hostname || "").toLowerCase().includes(term)
+            (e.hostname || "").toLowerCase().includes(term) ||
+            (e.loaded_hostname || "").toLowerCase().includes(term)
           )
         : [...this.entries];
       if (this.hostOnly) {
