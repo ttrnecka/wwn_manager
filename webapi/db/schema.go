@@ -11,6 +11,45 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func EnsureEntryCollection() error {
+	ctx := context.Background()
+	col := dB.database.Collection("fc_wwn_entries")
+
+	// 1. Create compound index for customer + wwn
+	_, err := col.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "customer", Value: 1},
+			{Key: "wwn", Value: 1},
+		},
+		Options: options.Index().SetUnique(true),
+	})
+	if err != nil {
+		return fmt.Errorf("create index: %w", err)
+	}
+
+	_, err = col.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "wwn", Value: 1},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("create index: %w", err)
+	}
+
+	_, err = col.Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys: bson.D{
+			{Key: "createdAt", Value: -1},
+		},
+	})
+
+	if err != nil {
+		return fmt.Errorf("create index: %w", err)
+	}
+
+	logger.Info().Msgf("Indexes ensured for collection: fc_wwn_entries")
+	return nil
+}
+
 func EnsureUserCollection() error {
 	ctx := context.Background()
 	col := dB.database.Collection("users")

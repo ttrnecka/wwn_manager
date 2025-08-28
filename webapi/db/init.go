@@ -30,5 +30,9 @@ func Init() error {
 	if err := EnsureUserCollection(); err != nil {
 		return fmt.Errorf("setting user collection failed: %w", err)
 	}
+
+	if err := EnsureEntryCollection(); err != nil {
+		return fmt.Errorf("setting fc_wwn_entry collection failed: %w", err)
+	}
 	return nil
 }
