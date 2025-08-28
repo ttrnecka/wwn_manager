@@ -57,8 +57,8 @@ export default {
     return axios.get(`${API}/rules/export`, {responseType: "blob"});
   },
 
-  getCustomerMapRulesExport() {
-    return axios.get(`${API}/rules/export/map`, {responseType: "blob"});
+  getCustomerWWNExport() {
+    return axios.get(`${API}/entries/export/override`, {responseType: "blob"});
   },
 
   getHostWWNExport() {

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
@@ -29,7 +30,14 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 	if reconcileData.PrimaryHostname != "" {
 		// if entry decode host is primary
 		if entry.Hostname == reconcileData.PrimaryHostname {
-			entry.LoadedHostname = ""
+			rules = append(rules, entity.Rule{
+				Customer: entry.Customer,
+				Type:     entity.IgnoreLoaded,
+				Regex:    entry.LoadedHostname,
+				Group:    0,
+				Order:    1,
+				Comment:  fmt.Sprintf("%s hostname reconciliation", reconcileData.PrimaryHostname),
+			})
 		}
 
 		// if entry loaded host is primary

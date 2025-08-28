@@ -68,7 +68,9 @@ export default {
   data() {
     return {
       localRules: JSON.parse(JSON.stringify(this.rules)), // local copy
-      nameMap: {"zone": "Zone", "alias": "Alias", "wwn_host_map": "WWN", "wwn_range_array": "WWN Range - Array", "wwn_range_backup": "WWN Range - Backup", "wwn_range_host": "WWN Range - Host", "wwn_range_other": "WWN Range - Other", "wwn_customer_map": "WWN Primary Customer"},
+      nameMap: {"zone": "Zone", "alias": "Alias", "wwn_host_map": "WWN", "wwn_range_array": "WWN Range - Array", "wwn_range_backup": "WWN Range - Backup", "wwn_range_host": "WWN Range - Host", "wwn_range_other": "WWN Range - Other", "wwn_customer_map": "WWN Primary Customer",
+        "ignore_loaded": "Ignore Loaded Host"
+      },
       isEditing: false,
       displayedRules: [],
     };
@@ -122,7 +124,7 @@ export default {
 
       this.localRules.push({
         id: null, // unsaved
-        type: this.types.includes("wwn_range_array") ? "wwn_range_array" : "alias", 
+        type: this.types.includes("wwn_range_array") ? "wwn_range_array" : (this.types.includes("alias") ? 'alias' : 'ignore_loaded'), 
         regex: "",
         order: maxOrder + 1, // assign next order
         group: 1

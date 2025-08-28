@@ -27,7 +27,7 @@
         <button class="btn btn-primary me-2 mb-2" @click="triggerFileInput('rules')">
           Import Rules
         </button>
-        
+
         <button class="btn btn-primary me-2 mb-2" @click="applyRules">
           Apply Rules
         </button>
@@ -81,15 +81,15 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-              Duplicate Rules
+              Reconcile Rules
             </button>
           </h2>
           <div id="collapseThree" class="accordion-collapse collapse">
             <div class="accordion-body">
               <RulesTable
-                :rules="duplicateRules"
+                :rules="reconcileRules"
                 :customer="selectedCustomer"
-                :types="['wwn_customer_map']"
+                :types="['wwn_customer_map','ignore_loaded']"
                 @rulesChanged="loadData"
               />
             </div>
@@ -134,7 +134,7 @@ export default {
       entries: [],
       rangeRuleNames: ['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other'],
       hostRuleNames: ['alias', 'wwn_host_map', 'zone'],
-      duplicateRuleNames: ['wwn_customer_map'],
+      reconcileRuleNames: ['wwn_customer_map','ignore_loaded'],
       loadingState: {
         loading: false,
       },
@@ -147,8 +147,8 @@ export default {
     hostRules() {
       return this.rules.filter(rule => this.hostRuleNames.includes(rule.type));
     },
-    duplicateRules() {
-      return this.rules.filter(rule => this.duplicateRuleNames.includes(rule.type));
+    reconcileRules() {
+      return this.rules.filter(rule => this.reconcileRuleNames.includes(rule.type));
     },
     rulesStore() {
       return useRulesStore();
@@ -250,7 +250,7 @@ export default {
       {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
     },
     async downloadCustomerMapRules() {
-      const resp = await fcService.getCustomerMapRulesExport();
+      const resp = await fcService.getCustomerWWNExport();
       fcService.saveFile(resp);
     },
     async downloadHostWWN() {

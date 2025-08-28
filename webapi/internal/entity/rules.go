@@ -11,14 +11,15 @@ type RuleType string
 // wwn_match rule is used to match exact WWN to host
 // range_rule is to mark WWN match as certain type - array, backup, HBA
 const (
-	ZoneRule           RuleType = "zone"
-	AliasRule          RuleType = "alias"
-	WWNHostMapRule     RuleType = "wwn_host_map"
-	WWNCustomerMapRule RuleType = "wwn_customer_map"
-	WWNArrayRangeRule  RuleType = "wwn_range_array"
-	WWNBackupRangeRule RuleType = "wwn_range_backup"
-	WWNHostRangeRule   RuleType = "wwn_range_host"
-	WWNOtherRangeRule  RuleType = "wwn_range_other"
+	ZoneRule           RuleType = "zone"             // host rule
+	AliasRule          RuleType = "alias"            // host rule
+	WWNHostMapRule     RuleType = "wwn_host_map"     // host & reconcile rule
+	WWNCustomerMapRule RuleType = "wwn_customer_map" // reconcile rule
+	IgnoreLoaded       RuleType = "ignore_loaded"    // reconcile rule
+	WWNArrayRangeRule  RuleType = "wwn_range_array"  // range rule
+	WWNBackupRangeRule RuleType = "wwn_range_backup" // range rule
+	WWNHostRangeRule   RuleType = "wwn_range_host"   // range rule
+	WWNOtherRangeRule  RuleType = "wwn_range_other"  // range rule
 )
 
 type Rule struct {

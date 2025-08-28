@@ -11,13 +11,42 @@
         </select>
       </div>
       
-      <!-- Rules -->
-      <RulesTable
-        v-if="selectedCustomer"
-        :rules="rules"
-        :customer="selectedCustomer"
-        @rulesChanged="loadData"
-      />
+      <div v-show="selectedCustomer" class="accordion" id="ruleAccordion" style="min-width: 800px;">
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            Host Rules
+            </button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <!-- Rules -->
+              <RulesTable
+                :rules="hostRules"
+                :customer="selectedCustomer"
+                @rulesChanged="loadData"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+              Reconcile Rules
+            </button>
+          </h2>
+          <div id="collapseThree" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <RulesTable
+                :rules="reconcileRules"
+                :customer="selectedCustomer"
+                :types="['wwn_customer_map','ignore_loaded']"
+                @rulesChanged="loadData"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Entries -->
       <EntriesTable
@@ -57,6 +86,8 @@ export default {
       loadingState: {
         loading: false,
       },
+      reconcileRuleNames: ['wwn_customer_map','ignore_loaded'],
+      hostRuleNames: ['alias', 'wwn_host_map', 'zone'],
     };
   },
   computed: {
@@ -65,7 +96,13 @@ export default {
     },
     flash() {
       return useFlashStore();
-    }
+    },
+    reconcileRules() {
+      return this.rules.filter(rule => this.reconcileRuleNames.includes(rule.type));
+    },
+    hostRules() {
+      return this.rules.filter(rule => this.hostRuleNames.includes(rule.type));
+    },
   },
   methods: {
     async loadCustomers() {

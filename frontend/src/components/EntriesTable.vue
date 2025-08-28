@@ -49,13 +49,31 @@
             <td class="col-2">{{ e.wwn }}</td>
             <td class="col-3 no-wrap" :title="e.zones.join(', ')">{{ e.zones.join(', ') }}</td>
             <td class="col-3 no-wrap" :title="e.aliases.join(', ')">{{ e.aliases.join(', ') }}</td>
-            <td :title="getEntryHostnameRule(e)"><strong>{{ e.hostname }}</strong></td>
-            <td><strong>{{ e.loaded_hostname }}</strong></td>
+            <td :title="getEntryHostnameRule(e)">
+              <div class="d-flex justify-content-between">
+              <strong>{{ e.hostname }}</strong>
+              <button :title="`Reconcile with ${e.hostname} as hostname`" 
+                      v-show="showHostMissMatch(e)" 
+                      class="btn btn-outline-primary btn-sm"
+                      @click="fastHostReconcile(e,e.hostname)">
+                <i class="bi bi-arrow-bar-up" role='button'></i>
+              </button>
+              </div>
+            </td>
+            <td><div class="d-flex justify-content-between">
+              <strong>{{ e.loaded_hostname }}</strong>
+              <button :title="`Reconcile with ${e.loaded_hostname} as hostname`" 
+                      v-show="showHostMissMatch(e)" 
+                      class="btn btn-outline-primary btn-sm"
+                      @click="fastHostReconcile(e,e.loaded_hostname)">
+                <i class="bi bi-arrow-bar-up" role='button'></i>
+              </button>
+              </div></td>
             <td class="col-5">
               <button v-show="needToReconcile(e)" class="btn btn-primary btn-sm" @click="openRecModal(e)">
                 Reconcile
               </button>
-              <span v-show="e.duplicate_customers?.length>0 && !needToReconcile(e)" :title="getEntryDuplicateRule(e)">Reconciled</span>
+              <span v-show="hasBeenReconciled(e)" :title="getEntryReconcileRule(e)">Reconciled</span>
             </td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
@@ -85,21 +103,21 @@
         <h6>WWN: {{ modalData?.entry?.wwn }}</h6>
         <h6>Issues:</h6>
         <ul>
-          <li v-for="msg,index in reconcileIssues(modalData.entry)" :key="index">{{msg}}</li>
+          <li v-for="msg,index in reconcileIssues(modalData?.entry)" :key="index">{{msg}}</li>
         </ul>
       </div>
       <form @submit.prevent="">
         <div class="mb-3">
-          <select v-show="modalData?.entry?.duplicate_customers?.length>0 && dupRuleNil(modalData?.entry)" id="primary-customer" 
+          <select v-show="!isDuplicateCustomerReconciled(modalData?.entry)" id="primary-customer" 
                     class="form-select form-select-sm" 
                     aria-label="Select customer" 
                     v-model="modalData.primary_customer"
                     >
             <option selected disabled value="">-- Select Primary Customer --</option>
-            <option v-for="cust,index in modalData?.entry?.duplicate_customers?.sort()" :value="cust" :key="index">{{cust}}</option>
+            <option v-for="cust,index in modalData?.entry?.duplicate_customers?.map(e=>e.customer).sort()" :value="cust" :key="index">{{cust}}</option>
           </select>
         </div>
-        <div v-show="diffHostname(modalData.entry)" class="mb-3">
+        <div v-show="showHostMissMatch(modalData?.entry)" class="mb-3">
           <select   id="primary-hostname" 
                     class="form-select form-select-sm" 
                     aria-label="Select hostname" 
@@ -175,11 +193,15 @@ export default {
         primary_hostname: ""
       }
     },
-    dupRuleNil(entry) {
-      return entry.duplicate_rule === null || entry.duplicate_rule === "000000000000000000000000";
+    recRuleNil(entry) {
+      return entry.reconcile_rules?.length == 0
+    },
+    async fastHostReconcile(entry,hostname) {
+      this.modalData.entry = entry;
+      this.modalData.primary_hostname = hostname;
+      await this.commitReconcile();
     },
     async commitReconcile() {
-      // Placeholder for actual reconcile logic
       try {
         await fcService.setReconcileRules(this.modalData.entry.id, this.modalData);
         this.$emit("rulesChanged");
@@ -192,15 +214,18 @@ export default {
     needToReconcile(entry) {
       return entry.needs_reconcile === true;
     },
+    hasBeenReconciled(entry) {
+      return entry.needs_reconcile === false && (entry.reconcile_rules?.length>0);
+    },
     diffHostname(entry) {
       return entry?.loaded_hostname !== "" && entry?.hostname !== entry?.loaded_hostname;
     },
     reconcileIssues(entry) {
       let msgs = []
-      if (entry?.duplicate_customers?.length > 0) {
+      if (!this.isDuplicateCustomerReconciled(entry)) {
         msgs.push("Multiple customers with the same WWN");
       }
-      if (this.diffHostname(entry)) {
+      if (!this.isHostMissMatchReconciled(entry)) {
         msgs.push("Hostname mismatch");
       }
       return msgs;
@@ -223,14 +248,50 @@ export default {
       }
       return text
     },
-    getEntryDuplicateRule(entry) {
-      let rule = this.rulesStore.getRules.find((r) => r.id === entry.duplicate_rule)
-      let text = "No Rule"
-      if (rule) {
+    getEntryReconcileRule(entry) {
+      let rules = this.rulesStore.getRules.filter((r) => entry.reconcile_rules?.includes(r.id))
+      let texts = [];
+      for (const rule of rules) {
         let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
-        text = `${customer} duplicate rule: ${rule.comment}`
+        let t = "duplicate"
+        if (rule.type === "ignore_loaded") {
+          t = "ignore"
+        }
+        texts.push(`${customer} ${t} rule: ${rule.comment}`)
       }
-      return text
+      if (texts.length>0) {
+        return texts.join(", ")
+      }
+      return "No Rules"
+    },
+    isDuplicateCustomerReconciled(entry) {
+      if (entry === null) return true;
+      if (!Object.hasOwn(entry, "duplicate_customers")) {
+        return true
+      }
+      let rules = this.rulesStore.getRules.filter((r) => entry.reconcile_rules?.includes(r.id))
+      for (const rule of rules) {
+        if (rule.type === "wwn_customer_map") {
+          return true
+        }
+      }
+      return false
+    },
+    isHostMissMatchReconciled(entry) {
+      if (entry === null) return true;
+      if (!this.diffHostname(entry)) {
+        return true
+      }
+      let rules = this.rulesStore.getRules.filter((r) => entry.reconcile_rules?.includes(r.id))
+      for (const rule of rules) {
+        if (rule.type === "ignore_loaded") {
+          return true
+        }
+      }
+      return false
+    },
+    showHostMissMatch(entry) {
+      return this.isDuplicateCustomerReconciled(entry) && !this.isHostMissMatchReconciled(entry)
     },
     applyFilter() {
       const term = this.searchTerm.toLowerCase().trim();

@@ -45,33 +45,37 @@ func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOpti
 
 func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context) error {
 	pipeline := mongo.Pipeline{
-		{{"$group", bson.D{
-			{"_id", "$wwn"},
-			{"customers", bson.D{{"$addToSet", "$customer"}}},
-			{"count", bson.D{{"$sum", 1}}},
+		{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$wwn"},
+			{Key: "customers", Value: bson.D{{Key: "$addToSet", Value: bson.D{
+				{Key: "customer", Value: "$customer"},
+				{Key: "wwn_set", Value: "$wwn_set"},
+				{Key: "hostname", Value: "$hostname"},
+			}}}},
+			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
 		}}},
-		{{"$match", bson.D{
-			{"count", bson.D{{"$gt", 1}}},
+		{{Key: "$match", Value: bson.D{
+			{Key: "count", Value: bson.D{{Key: "$gt", Value: 1}}},
 		}}},
-		{{"$lookup", bson.D{
-			{"from", "fc_wwn_entries"},
-			{"localField", "_id"},
-			{"foreignField", "wwn"},
-			{"as", "docs"},
+		{{Key: "$lookup", Value: bson.D{
+			{Key: "from", Value: "fc_wwn_entries"},
+			{Key: "localField", Value: "_id"},
+			{Key: "foreignField", Value: "wwn"},
+			{Key: "as", Value: "docs"},
 		}}},
-		{{"$unwind", "$docs"}},
-		{{"$replaceRoot", bson.D{
-			{"newRoot", bson.D{
-				{"$mergeObjects", bson.A{"$docs", bson.D{
-					{"duplicate_customers", "$customers"},
+		{{Key: "$unwind", Value: "$docs"}},
+		{{Key: "$replaceRoot", Value: bson.D{
+			{Key: "newRoot", Value: bson.D{
+				{Key: "$mergeObjects", Value: bson.A{"$docs", bson.D{
+					{Key: "duplicate_customers", Value: "$customers"},
 				}}},
 			}},
 		}}},
-		{{"$merge", bson.D{
-			{"into", "fc_wwn_entries"},
-			{"on", "_id"},
-			{"whenMatched", "merge"},
-			{"whenNotMatched", "discard"},
+		{{Key: "$merge", Value: bson.D{
+			{Key: "into", Value: "fc_wwn_entries"},
+			{Key: "on", Value: "_id"},
+			{Key: "whenMatched", Value: "merge"},
+			{Key: "whenNotMatched", Value: "discard"},
 		}}},
 	}
 	_, err := s.Collection().Aggregate(ctx, pipeline)

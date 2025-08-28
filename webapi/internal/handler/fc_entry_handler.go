@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
@@ -141,6 +142,29 @@ func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
 	return c.Attachment(f.Name(), "host_wwn.csv")
 }
 
+func (h *FCWWNEntryHandler) ExportCustomerWWNMap(c echo.Context) error {
+	items, err := h.service.Find(c.Request().Context(), service.Filter{"is_primary_customer": false}, service.SortOption{"wwn": "asc"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
+	}
+
+	f, err := os.CreateTemp("", "exportcsv-")
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	writer := csv.NewWriter(f)
+
+	for _, item := range items {
+		itemDTO := mapper.ToFCWWNEntryDTO(item)
+		writer.Write([]string{itemDTO.WWN, itemDTO.Customer, itemDTO.Hostname})
+	}
+	writer.Flush()
+	return c.Attachment(f.Name(), "customer_wwn_host_override.csv")
+}
+
 func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.FCWWNEntry, error) {
 	src, err := file.Open()
 	if err != nil {
@@ -169,7 +193,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 			// ignore first 2 lines from ITA csv export
 			continue
 		}
-		if len(line) < 5 {
+		if len(line) < 7 {
 			continue
 		}
 
@@ -181,6 +205,12 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 		zone := line[2]
 		alias := line[3]
 		loadedHostname := line[4]
+		isCsvLoad := true
+		if line[5] == "N" {
+			isCsvLoad = false
+		}
+		wwnSet, _ := strconv.Atoi(line[6])
+
 		if loadedHostname == "No Matching Rule" {
 			loadedHostname = ""
 		}
@@ -204,6 +234,8 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 					Zones:          []string{},
 					Aliases:        []string{},
 					LoadedHostname: loadedHostname,
+					IsCSVLoad:      isCsvLoad,
+					WWNSet:         wwnSet,
 				}
 				if zone != "" {
 					newWWNEntry.Zones = append(newWWNEntry.Zones, zone)
@@ -221,6 +253,8 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 				Zones:          []string{},
 				Aliases:        []string{},
 				LoadedHostname: loadedHostname,
+				IsCSVLoad:      isCsvLoad,
+				WWNSet:         wwnSet,
 			}
 			if zone != "" {
 				newWWNEntry.Zones = append(newWWNEntry.Zones, zone)

@@ -81,36 +81,6 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 	return c.Attachment(f.Name(), "rules.csv")
 }
 
-func (h *RuleHandler) ExportWWNCustomerMap(c echo.Context) error {
-	items, err := h.service.Find(c.Request().Context(), service.Filter{"type": entity.WWNCustomerMapRule}, service.SortOption{})
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get wwn customer rules", err)
-	}
-
-	f, err := os.CreateTemp("", "exportcsv-")
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
-	}
-	defer f.Close()
-	defer os.Remove(f.Name())
-
-	writer := csv.NewWriter(f)
-
-	for _, item := range items {
-		entries, err := h.fcWWNEntryService.Find(c.Request().Context(), service.Filter{"duplicate_rule": item.ID}, service.SortOption{"regex": "asc"})
-		if err != nil {
-			return errorWithInternal(http.StatusInternalServerError, "Failed to get entries for rule", err)
-		}
-		for _, entry := range entries {
-			if !entry.IsPrimaryCustomer {
-				writer.Write([]string{entry.WWN, entry.Customer, entry.Hostname})
-			}
-		}
-	}
-	writer.Flush()
-	return c.Attachment(f.Name(), "customer_wwn_host_override.csv")
-}
-
 func (h *RuleHandler) DeleteRule(c echo.Context) error {
 	probe_id := c.Param("id")
 	_, err := h.service.Get(c.Request().Context(), probe_id)
@@ -187,7 +157,24 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 }
 
 func (h *RuleHandler) ApplyRules(c echo.Context) error {
+
+	// pass 1
 	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+	}
+	err = h.applyRules(c.Request().Context(), fcWWNEntries)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
+	}
+	err = h.fcWWNEntryService.FlagDuplicateWWNs(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
+	}
+
+	//pass 2
+	// pass 1
+	fcWWNEntries, err = h.fcWWNEntryService.All(c.Request().Context())
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
 	}
@@ -337,7 +324,7 @@ func applyRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.Type = "Unknown"
 	entry.NeedsReconcile = false
 	entry.IsPrimaryCustomer = true
-	entry.DuplicateRule = entity.NilObjectID()
+	entry.ReconcileRules = entity.NilOjectIdSlice()
 
 	// RANGE rules
 RANGE:
@@ -422,24 +409,83 @@ TOP:
 		entry.Hostname = entry.LoadedHostname
 	}
 	// DUP rules
-	dupReconciled := false
-DUP:
-	for _, rule := range rules {
-		if rule.Type != entity.WWNCustomerMapRule {
-			continue
-		}
-		if entry.WWN == rule.Regex {
-			entry.DuplicateRule = rule.ID
-			entry.IsPrimaryCustomer = false
-			if entry.Customer == rule.Comment {
-				entry.IsPrimaryCustomer = true
-			}
+	dupReconciled := true
+	//autoreconciliation for entries with auto set -> auto is always primary, rest secondary
+	// for secondary hosts we make sure the decode and loaded hostname will be the smae
+	if len(entry.DuplicateCustomers) > 0 {
+		dupReconciled = false
+		entry.IsPrimaryCustomer = false
+		// Auto set it automatically primary customer
+		if entry.WWNSet == entity.WWNSetAuto {
 			dupReconciled = true
-			break DUP
+			entry.IsPrimaryCustomer = true
+		} else {
+			// otherwise check of some other customer is auto
+			// if it is we reconcile it as it should be not primary if auto set exists
+			// as well the loaded hostname belongs to primary so we just flush it form secondary
+			// there will be only one type 2 or type 3 set, not both
+			for _, c := range entry.DuplicateCustomers {
+				if c.WWNSet == entity.WWNSetAuto {
+					dupReconciled = true
+					entry.LoadedHostname = ""
+				}
+				// case where there is manually inserted wwn for but the customer is different but decoded hostname is same
+				if entry.WWNSet == entity.WWNSetSAN &&
+					c.WWNSet == entity.WWNSetManual &&
+					entry.Hostname != "" &&
+					strings.EqualFold(entry.Hostname, c.Hostname) {
+					dupReconciled = true
+					entry.IgnoreEntry = true
+				}
+				//reverse case
+				if entry.WWNSet == entity.WWNSetManual &&
+					c.WWNSet == entity.WWNSetSAN &&
+					entry.Hostname != "" &&
+					strings.EqualFold(entry.Hostname, c.Hostname) {
+					dupReconciled = true
+					entry.IsPrimaryCustomer = true
+				}
+			}
+		}
+	}
+	loadedReconciled := true
+	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) {
+		loadedReconciled = false
+	}
+REC:
+	for _, rule := range rules {
+		switch rule.Type {
+		case entity.WWNCustomerMapRule:
+			if !dupReconciled && entry.WWN == rule.Regex {
+				entry.ReconcileRules = append(entry.ReconcileRules, rule.ID)
+				entry.IsPrimaryCustomer = false
+				if entry.Customer == rule.Comment {
+					entry.IsPrimaryCustomer = true
+				} else {
+					entry.LoadedHostname = ""
+				}
+				dupReconciled = true
+			}
+		case entity.IgnoreLoaded:
+			if !loadedReconciled {
+				r, err := regexp.Compile(rule.Regex)
+				if err != nil {
+					return fmt.Errorf("apply-rec-rules - regex %s won't compile: %w", rule.Regex, err)
+				}
+				match := r.MatchString(entry.LoadedHostname)
+				if match {
+					entry.ReconcileRules = append(entry.ReconcileRules, rule.ID)
+					entry.IgnoreLoaded = true
+					loadedReconciled = true
+				}
+			}
+		}
+		if loadedReconciled && dupReconciled {
+			break REC
 		}
 	}
 	if len(entry.DuplicateCustomers) > 0 && !dupReconciled ||
-		(entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname)) {
+		(!loadedReconciled) {
 		entry.NeedsReconcile = true
 	}
 
