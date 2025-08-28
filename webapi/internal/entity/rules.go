@@ -22,6 +22,18 @@ const (
 	WWNOtherRangeRule  RuleType = "wwn_range_other"  // range rule
 )
 
+var RangeRules []RuleType = []RuleType{
+	WWNArrayRangeRule, WWNBackupRangeRule, WWNHostRangeRule, WWNOtherRangeRule,
+}
+
+var HostRules []RuleType = []RuleType{
+	ZoneRule, AliasRule, WWNHostMapRule,
+}
+
+var ReconcileRules []RuleType = []RuleType{
+	WWNCustomerMapRule, IgnoreLoaded,
+}
+
 type Rule struct {
 	cdb.BaseModel `bson:",inline"`
 	Customer      string   `bson:"customer"`

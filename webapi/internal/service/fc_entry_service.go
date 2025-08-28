@@ -12,7 +12,7 @@ import (
 type FCWWNEntryService interface {
 	GenericService[entity.FCWWNEntry]
 	Customers(context.Context) ([]any, error)
-	FlagDuplicateWWNs(context.Context) error
+	FlagDuplicateWWNs(context.Context, Filter) error
 }
 
 type fcWWNEntryService struct {
@@ -43,7 +43,21 @@ func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOpti
 	return s.GenericService.Find(ctx, filter, opt)
 }
 
-func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context) error {
+func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context, filter Filter) error {
+	filters := bson.D{}
+
+	filters = append(filters, bson.E{
+		Key:   "count",
+		Value: bson.D{{Key: "$gt", Value: 1}},
+	})
+
+	wwns, ok := filter["wwn"]
+	if ok {
+		filters = append(filters, bson.E{
+			Key:   "_id",
+			Value: bson.D{{Key: "$in", Value: wwns}},
+		})
+	}
 	pipeline := mongo.Pipeline{
 		{{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: "$wwn"},
@@ -54,9 +68,7 @@ func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context) error {
 			}}}},
 			{Key: "count", Value: bson.D{{Key: "$sum", Value: 1}}},
 		}}},
-		{{Key: "$match", Value: bson.D{
-			{Key: "count", Value: bson.D{{Key: "$gt", Value: 1}}},
-		}}},
+		{{Key: "$match", Value: filters}},
 		{{Key: "$lookup", Value: bson.D{
 			{Key: "from", Value: "fc_wwn_entries"},
 			{Key: "localField", Value: "_id"},

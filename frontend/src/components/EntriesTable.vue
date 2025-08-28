@@ -218,7 +218,7 @@ export default {
       return entry.needs_reconcile === false && (entry.reconcile_rules?.length>0);
     },
     diffHostname(entry) {
-      return entry?.loaded_hostname !== "" && entry?.hostname !== entry?.loaded_hostname;
+      return entry?.loaded_hostname !== "" && entry?.hostname.toLowerCase() !== entry?.loaded_hostname.toLowerCase();
     },
     reconcileIssues(entry) {
       let msgs = []
@@ -266,6 +266,9 @@ export default {
     },
     isDuplicateCustomerReconciled(entry) {
       if (entry === null) return true;
+      if (!this.needToReconcile(entry)) {
+        return true
+      }
       if (!Object.hasOwn(entry, "duplicate_customers")) {
         return true
       }
@@ -279,6 +282,9 @@ export default {
     },
     isHostMissMatchReconciled(entry) {
       if (entry === null) return true;
+      if (!this.needToReconcile(entry)) {
+        return true
+      }
       if (!this.diffHostname(entry)) {
         return true
       }

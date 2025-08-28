@@ -158,23 +158,7 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 
 func (h *RuleHandler) ApplyRules(c echo.Context) error {
 
-	// pass 1
 	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
-	}
-	err = h.applyRules(c.Request().Context(), fcWWNEntries)
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
-	}
-	err = h.fcWWNEntryService.FlagDuplicateWWNs(c.Request().Context())
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
-	}
-
-	//pass 2
-	// pass 1
-	fcWWNEntries, err = h.fcWWNEntryService.All(c.Request().Context())
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
 	}
@@ -262,12 +246,40 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 	// channel to distribute indices
 	idxCh := make(chan int)
 
-	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER}, service.SortOption{"order": "asc"})
+	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.RangeRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
 	}
 
+	// apply range rules first
+	for range numWorkers {
+		go func() {
+			for i := range idxCh {
+				err = applyRangeRules(&fcWWNEntries[i], globalRules)
+				wg.Done()
+			}
+		}()
+	}
+
+	// send work
+	for i := range fcWWNEntries {
+		idxCh <- i
+	}
+	close(idxCh)
+
+	wg.Wait()
+
+	// now apply host rules
+	wg.Add(len(fcWWNEntries))
+
+	idxCh = make(chan int)
+
 	ruleMap := make(map[string][]entity.Rule)
+
+	globalHostRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.HostRules}}, service.SortOption{"order": "asc"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
+	}
 
 	mutex := sync.Mutex{}
 
@@ -279,16 +291,16 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 				rules, ok := ruleMap[fcWWNEntries[i].Customer]
 				mutex.Unlock()
 				if !ok {
-					rules, err = h.service.Find(ctx, service.Filter{"customer": fcWWNEntries[i].Customer}, service.SortOption{"order": "asc"})
+					rules, err = h.service.Find(ctx, service.Filter{"customer": fcWWNEntries[i].Customer, "type": service.Filter{"$in": entity.HostRules}}, service.SortOption{"order": "asc"})
 					if err != nil {
 						continue
 					}
-					rules = append(rules, globalRules...)
+					rules = append(rules, globalHostRules...)
 					mutex.Lock()
 					ruleMap[fcWWNEntries[i].Customer] = rules
 					mutex.Unlock()
 				}
-				err = applyRules(&fcWWNEntries[i], rules)
+				err = applyHostRules(&fcWWNEntries[i], rules)
 				wg.Done()
 			}
 		}()
@@ -316,15 +328,75 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
+
+	// TODO , apply filter here
+	err = h.fcWWNEntryService.FlagDuplicateWWNs(ctx, service.Filter{"wwn": wwns})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
+	}
+
+	fcWWNEntries, err = h.fcWWNEntryService.Find(ctx, service.Filter{"wwn": bson.M{"$in": wwns}}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to reload entries", err)
+	}
+
+	// apply reconcile rules
+	wg.Add(len(fcWWNEntries))
+
+	idxCh = make(chan int)
+
+	ruleMap = make(map[string][]entity.Rule)
+
+	globalReconcileRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.ReconcileRules}}, service.SortOption{"order": "asc"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
+	}
+
+	// start workers
+	for range numWorkers {
+		go func() {
+			for i := range idxCh {
+				mutex.Lock()
+				rules, ok := ruleMap[fcWWNEntries[i].Customer]
+				mutex.Unlock()
+				if !ok {
+					rules, err = h.service.Find(ctx, service.Filter{"customer": fcWWNEntries[i].Customer, "type": service.Filter{"$in": entity.ReconcileRules}}, service.SortOption{"order": "asc"})
+					if err != nil {
+						continue
+					}
+					rules = append(rules, globalReconcileRules...)
+					mutex.Lock()
+					ruleMap[fcWWNEntries[i].Customer] = rules
+					mutex.Unlock()
+				}
+				err = applyReconcileRules(&fcWWNEntries[i], rules)
+				wg.Done()
+			}
+		}()
+	}
+
+	// send work
+	for i := range fcWWNEntries {
+		idxCh <- i
+	}
+	close(idxCh)
+
+	wg.Wait()
+
+	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"wwn": bson.M{"$in": wwns}})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
+	}
+
+	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntries)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
+	}
+
 	return nil
 }
-
-func applyRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
-	entry.Hostname = ""
+func applyRangeRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.Type = "Unknown"
-	entry.NeedsReconcile = false
-	entry.IsPrimaryCustomer = true
-	entry.ReconcileRules = entity.NilOjectIdSlice()
 
 	// RANGE rules
 RANGE:
@@ -362,11 +434,18 @@ RANGE:
 		}
 		entry.TypeRule = entity.NilObjectID()
 	}
+	return nil
+}
+
+func applyHostRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	// do host check only for host ranges
+	entry.Hostname = ""
+
 	if entry.Type == "Array" || entry.Type == "Backup" || entry.Type == "Other" {
 		return nil
 	}
-	// MAP rules
+
+	// HOST rules
 TOP:
 	for _, rule := range rules {
 		if rule.Group < 0 {
@@ -382,7 +461,7 @@ TOP:
 			for _, zone := range entry.Zones {
 				match := r.FindStringSubmatch(zone)
 				if len(match) > 0 && len(match) >= rule.Group {
-					entry.Hostname = match[rule.Group] // first capture group
+					entry.Hostname = strings.ToLower(match[rule.Group]) // first capture group
 					break TOP
 				}
 			}
@@ -390,24 +469,37 @@ TOP:
 			for _, alias := range entry.Aliases {
 				match := r.FindStringSubmatch(alias)
 				if len(match) > 0 && len(match) >= rule.Group {
-					entry.Hostname = match[rule.Group] // first capture group
+					entry.Hostname = strings.ToLower(match[rule.Group]) // first capture group
 					break TOP
 				}
 			}
 		case entity.WWNHostMapRule:
 			match := r.FindStringSubmatch(entry.WWN)
 			if len(match) > 0 {
-				entry.Hostname = rule.Comment
+				entry.Hostname = strings.ToLower(rule.Comment)
 				break TOP
 			}
 		}
 		entry.HostNameRule = entity.NilObjectID()
 	}
 
-	// hba_port record - no zoning/aliases - we want to persist it as is
 	if len(entry.Zones) == 0 && len(entry.Aliases) == 0 && entry.LoadedHostname != "" {
-		entry.Hostname = entry.LoadedHostname
+		entry.Hostname = strings.ToLower(entry.LoadedHostname)
 	}
+
+	return nil
+}
+
+func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
+	entry.NeedsReconcile = false
+	entry.IsPrimaryCustomer = true
+	entry.ReconcileRules = entity.NilOjectIdSlice()
+
+	// do host check only for host ranges
+	if entry.Type == "Array" || entry.Type == "Backup" || entry.Type == "Other" {
+		return nil
+	}
+
 	// DUP rules
 	dupReconciled := true
 	//autoreconciliation for entries with auto set -> auto is always primary, rest secondary

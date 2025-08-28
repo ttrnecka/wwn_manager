@@ -101,7 +101,7 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
-	err = h.service.FlagDuplicateWWNs(c.Request().Context())
+	err = h.service.FlagDuplicateWWNs(c.Request().Context(), service.Filter{})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
 	}
@@ -193,6 +193,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 			// ignore first 2 lines from ITA csv export
 			continue
 		}
+
 		if len(line) < 7 {
 			continue
 		}
