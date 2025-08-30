@@ -482,9 +482,9 @@ RANGE:
 }
 
 func applyHostRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
-	// do host check only for host ranges
 	entry.Hostname = ""
 
+	// do host check only for host ranges
 	if entry.Type == "Array" || entry.Type == "Backup" || entry.Type == "Other" {
 		return nil
 	}
@@ -527,7 +527,8 @@ TOP:
 		entry.HostNameRule = entity.NilObjectID()
 	}
 
-	if len(entry.Zones) == 0 && len(entry.Aliases) == 0 && entry.LoadedHostname != "" {
+	// for set 2 and 3 there is no zone or alias so we just take loaded hostname as is
+	if entry.WWNSet == entity.WWNSetManual || entry.WWNSet == entity.WWNSetAuto {
 		entry.Hostname = strings.ToLower(entry.LoadedHostname)
 	}
 
@@ -544,7 +545,6 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 		return nil
 	}
 
-	// DUP rules
 	dupReconciled := true
 	//autoreconciliation for entries with auto set -> auto is always primary, rest secondary
 	// for secondary hosts we make sure the decode and loaded hostname will be the smae
