@@ -238,20 +238,18 @@ func (h *RuleHandler) ImportHandler(c echo.Context) error {
 
 func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWWNEntry) error {
 
-	numWorkers := runtime.NumCPU() // one worker per CPU core
-
 	var wg sync.WaitGroup
-	wg.Add(len(fcWWNEntries))
-
-	// channel to distribute indices
-	idxCh := make(chan int)
+	numWorkers := runtime.NumCPU() // one worker per CPU core
 
 	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.RangeRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
 	}
 
-	// apply range rules first
+	// RANGE RULES START
+	wg.Add(len(fcWWNEntries))
+	idxCh := make(chan int)
+
 	for range numWorkers {
 		go func() {
 			for i := range idxCh {
@@ -266,12 +264,11 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		idxCh <- i
 	}
 	close(idxCh)
-
 	wg.Wait()
+	// RANGE RULES STOP
 
-	// now apply host rules
+	// HOST RULES START
 	wg.Add(len(fcWWNEntries))
-
 	idxCh = make(chan int)
 
 	ruleMap := make(map[string][]entity.Rule)
@@ -311,9 +308,10 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		idxCh <- i
 	}
 	close(idxCh)
-
 	wg.Wait()
+	// HOST RULES STOP
 
+	// update entries in db so we can run FlagDuplicateWWNs to get data for reconcile rules
 	wwns := make([]string, 0)
 	for _, e := range fcWWNEntries {
 		wwns = append(wwns, e.WWN)
@@ -329,7 +327,6 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
 
-	// TODO , apply filter here
 	err = h.fcWWNEntryService.FlagDuplicateWWNs(ctx, service.Filter{"wwn": wwns})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
@@ -340,9 +337,8 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		return errorWithInternal(http.StatusInternalServerError, "Failed to reload entries", err)
 	}
 
-	// apply reconcile rules
+	// RECONCILE RULES START
 	wg.Add(len(fcWWNEntries))
-
 	idxCh = make(chan int)
 
 	ruleMap = make(map[string][]entity.Rule)
@@ -380,9 +376,10 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		idxCh <- i
 	}
 	close(idxCh)
-
 	wg.Wait()
+	// RECONCILE RULES STOP
 
+	// update fc wwn entries in db again
 	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"wwn": bson.M{"$in": wwns}})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
@@ -395,6 +392,53 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 
 	return nil
 }
+
+func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.Rule, error) {
+	src, err := file.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open entry file: %w", err)
+	}
+	defer src.Close()
+
+	reader := csv.NewReader(src)
+	reader.Comma = ','
+	reader.FieldsPerRecord = -1
+
+	rules := make([]entity.Rule, 0)
+
+	for {
+		line, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to read rule file: %w", err)
+		}
+		if len(line) < 6 {
+			continue
+		}
+
+		order, _ := strconv.Atoi(line[0])
+		customer := line[1]
+		regexp := line[2]
+		group, _ := strconv.Atoi(line[3])
+		rtype := line[4]
+		comment := line[5]
+
+		newRule := entity.Rule{
+			Order:    order,
+			Customer: customer,
+			Regex:    regexp,
+			Group:    group,
+			Type:     entity.RuleType(rtype),
+			Comment:  comment,
+		}
+		rules = append(rules, newRule)
+
+	}
+	return rules, nil
+}
+
 func applyRangeRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.Type = "Unknown"
 
@@ -582,50 +626,4 @@ REC:
 	}
 
 	return nil
-}
-
-func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.Rule, error) {
-	src, err := file.Open()
-	if err != nil {
-		return nil, fmt.Errorf("failed to open entry file: %w", err)
-	}
-	defer src.Close()
-
-	reader := csv.NewReader(src)
-	reader.Comma = ','
-	reader.FieldsPerRecord = -1
-
-	rules := make([]entity.Rule, 0)
-
-	for {
-		line, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to read rule file: %w", err)
-		}
-		if len(line) < 6 {
-			continue
-		}
-
-		order, _ := strconv.Atoi(line[0])
-		customer := line[1]
-		regexp := line[2]
-		group, _ := strconv.Atoi(line[3])
-		rtype := line[4]
-		comment := line[5]
-
-		newRule := entity.Rule{
-			Order:    order,
-			Customer: customer,
-			Regex:    regexp,
-			Group:    group,
-			Type:     entity.RuleType(rtype),
-			Comment:  comment,
-		}
-		rules = append(rules, newRule)
-
-	}
-	return rules, nil
 }
