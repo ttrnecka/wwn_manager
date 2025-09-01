@@ -196,8 +196,8 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to update entry", err)
 	}
 
+	// howeve we need to pass them again in this case as hostname reconciliation requires customer reconciliation to be done first
 	// get all entries for given WWN
-
 	entries, err := h.fcWWNEntryService.Find(c.Request().Context(), service.Filter{"wwn": fcWWNEntry.WWN}, service.SortOption{})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to file entries", err)
@@ -317,7 +317,12 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		wwns = append(wwns, e.WWN)
 	}
 
-	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"wwn": bson.M{"$in": wwns}})
+	ids := make([]entity.ID, 0)
+	for _, e := range fcWWNEntries {
+		ids = append(ids, e.ID)
+	}
+
+	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"_id": bson.M{"$in": ids}})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
@@ -599,6 +604,8 @@ REC:
 					entry.IsPrimaryCustomer = true
 				} else {
 					entry.LoadedHostname = ""
+					// need to update loadedReconcile if we flushed the name
+					loadedReconciled = true
 				}
 				dupReconciled = true
 			}
