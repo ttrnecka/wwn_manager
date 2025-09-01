@@ -554,13 +554,32 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	//autoreconciliation for entries with auto set -> auto is always primary, rest secondary
 	// for secondary hosts we make sure the decode and loaded hostname will be the smae
 	if len(entry.DuplicateCustomers) > 0 {
+
+		// check if the customer translate to unique host names
+		unique := true
+		seen := make(map[string]struct{})
+		for _, dc := range entry.DuplicateCustomers {
+			if _, exists := seen[strings.ToLower(dc.Hostname)]; exists {
+				unique = false
+			}
+			seen[strings.ToLower(dc.Hostname)] = struct{}{}
+		}
 		dupReconciled = false
 		entry.IsPrimaryCustomer = false
 		// Auto set it automatically primary customer
 		if entry.WWNSet == entity.WWNSetAuto {
 			dupReconciled = true
 			entry.IsPrimaryCustomer = true
+		} else if entry.WWNSet == entity.WWNSetManual {
+			if !unique {
+				dupReconciled = true
+				entry.IsPrimaryCustomer = true
+			}
 		} else {
+			if !unique {
+				entry.LoadedHostname = ""
+				dupReconciled = true
+			}
 			// otherwise check of some other customer is auto
 			// if it is we reconcile it as it should be not primary if auto set exists
 			// as well the loaded hostname belongs to primary so we just flush it form secondary
@@ -569,22 +588,15 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 				if c.WWNSet == entity.WWNSetAuto {
 					dupReconciled = true
 					entry.LoadedHostname = ""
+					if strings.EqualFold(entry.Hostname, c.Hostname) {
+						entry.IgnoreEntry = true
+					}
 				}
 				// case where there is manually inserted wwn for but the customer is different but decoded hostname is same
-				if entry.WWNSet == entity.WWNSetSAN &&
-					c.WWNSet == entity.WWNSetManual &&
+				if c.WWNSet == entity.WWNSetManual &&
 					entry.Hostname != "" &&
 					strings.EqualFold(entry.Hostname, c.Hostname) {
-					dupReconciled = true
 					entry.IgnoreEntry = true
-				}
-				//reverse case
-				if entry.WWNSet == entity.WWNSetManual &&
-					c.WWNSet == entity.WWNSetSAN &&
-					entry.Hostname != "" &&
-					strings.EqualFold(entry.Hostname, c.Hostname) {
-					dupReconciled = true
-					entry.IsPrimaryCustomer = true
 				}
 			}
 		}
