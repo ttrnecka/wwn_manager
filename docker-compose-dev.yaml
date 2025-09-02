@@ -32,9 +32,9 @@ services:
   frontend-artifacts:
     build:
       context: .
-      dockerfile: ./webapi/Dockerfile   # or reuse the same commands as frontend-builder
-      args:
-        IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
+      dockerfile: ./frontend/Dockerfile   # or reuse the same commands as frontend-builder
+      # args:
+      #   IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
     volumes:
       - ./dist:/output
     entrypoint: sh -c
