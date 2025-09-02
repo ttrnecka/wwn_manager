@@ -196,8 +196,8 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to update entry", err)
 	}
 
+	// howeve we need to pass them again in this case as hostname reconciliation requires customer reconciliation to be done first
 	// get all entries for given WWN
-
 	entries, err := h.fcWWNEntryService.Find(c.Request().Context(), service.Filter{"wwn": fcWWNEntry.WWN}, service.SortOption{})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to file entries", err)
@@ -317,7 +317,12 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		wwns = append(wwns, e.WWN)
 	}
 
-	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"wwn": bson.M{"$in": wwns}})
+	ids := make([]entity.ID, 0)
+	for _, e := range fcWWNEntries {
+		ids = append(ids, e.ID)
+	}
+
+	err = h.fcWWNEntryService.DeleteMany(ctx, service.Filter{"_id": bson.M{"$in": ids}})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
@@ -549,13 +554,32 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	//autoreconciliation for entries with auto set -> auto is always primary, rest secondary
 	// for secondary hosts we make sure the decode and loaded hostname will be the smae
 	if len(entry.DuplicateCustomers) > 0 {
+
+		// check if the customer translate to unique host names
+		unique := true
+		seen := make(map[string]struct{})
+		for _, dc := range entry.DuplicateCustomers {
+			if _, exists := seen[strings.ToLower(dc.Hostname)]; exists {
+				unique = false
+			}
+			seen[strings.ToLower(dc.Hostname)] = struct{}{}
+		}
 		dupReconciled = false
 		entry.IsPrimaryCustomer = false
 		// Auto set it automatically primary customer
 		if entry.WWNSet == entity.WWNSetAuto {
 			dupReconciled = true
 			entry.IsPrimaryCustomer = true
+		} else if entry.WWNSet == entity.WWNSetManual {
+			if !unique {
+				dupReconciled = true
+				entry.IsPrimaryCustomer = true
+			}
 		} else {
+			if !unique {
+				entry.LoadedHostname = ""
+				dupReconciled = true
+			}
 			// otherwise check of some other customer is auto
 			// if it is we reconcile it as it should be not primary if auto set exists
 			// as well the loaded hostname belongs to primary so we just flush it form secondary
@@ -564,22 +588,15 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 				if c.WWNSet == entity.WWNSetAuto {
 					dupReconciled = true
 					entry.LoadedHostname = ""
+					if strings.EqualFold(entry.Hostname, c.Hostname) {
+						entry.IgnoreEntry = true
+					}
 				}
 				// case where there is manually inserted wwn for but the customer is different but decoded hostname is same
-				if entry.WWNSet == entity.WWNSetSAN &&
-					c.WWNSet == entity.WWNSetManual &&
+				if c.WWNSet == entity.WWNSetManual &&
 					entry.Hostname != "" &&
 					strings.EqualFold(entry.Hostname, c.Hostname) {
-					dupReconciled = true
 					entry.IgnoreEntry = true
-				}
-				//reverse case
-				if entry.WWNSet == entity.WWNSetManual &&
-					c.WWNSet == entity.WWNSetSAN &&
-					entry.Hostname != "" &&
-					strings.EqualFold(entry.Hostname, c.Hostname) {
-					dupReconciled = true
-					entry.IsPrimaryCustomer = true
 				}
 			}
 		}
@@ -599,6 +616,8 @@ REC:
 					entry.IsPrimaryCustomer = true
 				} else {
 					entry.LoadedHostname = ""
+					// need to update loadedReconcile if we flushed the name
+					loadedReconciled = true
 				}
 				dupReconciled = true
 			}
