@@ -56,6 +56,29 @@ func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
+	probe_id := c.Param("id")
+	_, err := h.service.Get(c.Request().Context(), probe_id)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusNotFound, err)
+	}
+	err = h.service.SoftDelete(c.Request().Context(), probe_id)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to soft delete entry", err)
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+func (h *FCWWNEntryHandler) RestoreFCWWNEntry(c echo.Context) error {
+	probe_id := c.Param("id")
+
+	err := h.service.Restore(c.Request().Context(), probe_id)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to restore entry", err)
+	}
+	return c.NoContent(http.StatusOK)
+}
+
 func (h *FCWWNEntryHandler) CreateUpdateFCWWNEntry(c echo.Context) error {
 	var itemDTO dto.FCWWNEntryDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&itemDTO); err != nil {

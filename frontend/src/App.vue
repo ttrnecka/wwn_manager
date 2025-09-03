@@ -37,6 +37,9 @@ onMounted(() => {
           <li class="nav-item">
             <RouterLink class="nav-link" to="/customers">Customers</RouterLink>
           </li>
+          <li class="nav-item">
+            <RouterLink class="nav-link" to="/summary">Summary</RouterLink>
+          </li>
         </ul>
       </nav>
 

@@ -18,10 +18,13 @@ type GenericService[T any] interface {
 	Get(context.Context, string) (*T, error)
 	DeleteAll(context.Context) error
 	Delete(context.Context, string) error
+	SoftDelete(context.Context, string) error
+	Restore(context.Context, string) error
 	Update(context.Context, primitive.ObjectID, *T) (primitive.ObjectID, error)
 	RegisterDependencies(...DependencyDeleteFunc)
 	Collection() *mongo.Collection
 	Find(context.Context, Filter, SortOption) ([]T, error)
+	FindWithSoftDeleted(context.Context, Filter, SortOption) ([]T, error)
 	InsertAll(context.Context, []T) error
 	DeleteMany(context.Context, Filter) error
 }
@@ -56,6 +59,18 @@ func (s *genericService[T]) Find(ctx context.Context, filter Filter, opt SortOpt
 	return s.MainRepo.Find(ctx, filter, mopts...)
 }
 
+func (s *genericService[T]) FindWithSoftDeleted(ctx context.Context, filter Filter, opt SortOption) ([]T, error) {
+	var mopts []*options.FindOptions
+	for k, v := range opt {
+		order := 1
+		if v == "desc" {
+			order = -1
+		}
+		mopts = append(mopts, options.Find().SetSort(bson.M{k: order}))
+	}
+	return s.MainRepo.FindWithSoftDeleted(ctx, filter, mopts...)
+}
+
 func (s *genericService[T]) Get(ctx context.Context, id string) (*T, error) {
 	idp, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -74,6 +89,30 @@ func (s *genericService[T]) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return s.MainRepo.HardDeleteByID(ctx, idp)
+}
+
+func (s *genericService[T]) SoftDelete(ctx context.Context, id string) error {
+	idp, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	// err = s.DeleteDependencies(ctx, idp)
+	// if err != nil {
+	// 	return err
+	// }
+	return s.MainRepo.SoftDeleteByID(ctx, idp)
+}
+
+func (s *genericService[T]) Restore(ctx context.Context, id string) error {
+	idp, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	// err = s.DeleteDependencies(ctx, idp)
+	// if err != nil {
+	// 	return err
+	// }
+	return s.MainRepo.RestoreByID(ctx, idp)
 }
 
 func (s *genericService[T]) DeleteMany(ctx context.Context, filter Filter) error {

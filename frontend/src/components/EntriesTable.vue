@@ -14,6 +14,12 @@
           <b>Reconcile Only</b>
         </label>
       </span>
+      <span>
+        <input class="form-check-input me-1" type="checkbox" v-model="noHostDetected" id="nohost-detected">
+        <label class="form-check-label" for="nohost-detected">
+          <b>No Host Detected</b>
+        </label>
+      </span>
       <input v-model="searchTerm" @input="applyFilter"
              class="form-control w-50" placeholder="Filter by WWN, Zone, Alias, Hostname" />
     </div>
@@ -40,6 +46,7 @@
             <th>Hostname (Generated)</th>
             <th>Hostname (Loaded)</th>
             <th class="col-5">Reconciliation</th>
+            <th class="col-6"></th>
           </tr>
         </thead>
         <tbody>
@@ -75,9 +82,16 @@
               </button>
               <span v-show="hasBeenReconciled(e)" :title="getEntryReconcileRule(e)">Reconciled</span>
             </td>
+            <td class="col-6">
+              <button :title="`Mark for Deletion`"  
+                      class="btn btn-outline-danger btn-sm"
+                      @click="">
+                <i class="bi bi-trash text-danger" role='button'></i>
+              </button>
+            </td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
-            <td colspan="4" class="text-center">No entries found</td>
+            <td colspan="8" class="text-center">No entries found</td>
           </tr>
         </tbody>
       </table>
@@ -151,6 +165,7 @@ export default {
     return {
       hostOnly: false,
       reconcileOnly: false,
+      noHostDetected: false,
       searchTerm: "",
       currentPage: 1,
       filteredEntries: [],
@@ -178,7 +193,8 @@ export default {
   watch: {
     entries: { handler: "applyFilter", immediate: true },
     hostOnly: { handler: "applyFilter", immediate: true },
-    reconcileOnly: { handler: "applyFilter", immediate: true }
+    reconcileOnly: { handler: "applyFilter", immediate: true },
+    noHostDetected: { handler: "applyFilter", immediate: true }
   },
   methods: {
     openRecModal(entry) {
@@ -317,6 +333,9 @@ export default {
       if (this.reconcileOnly) {
         this.filteredEntries = this.filteredEntries.filter(e => e.needs_reconcile === true)
       }
+      if (this.noHostDetected) {
+        this.filteredEntries = this.filteredEntries.filter(e => e.hostname === "")
+      }
       this.currentPage = 1;
     },
     changePage(page) {
@@ -350,4 +369,5 @@ export default {
     td.col-3, th.col-3 { width: auto;}
     td.col-4, th.col-4 { width: auto;}
     td.col-5, th.col-5 { max-width: 100px; width: 100px; }
+    td.col-6, th.col-6 { max-width: 50px; width: 50px; }
 </style>

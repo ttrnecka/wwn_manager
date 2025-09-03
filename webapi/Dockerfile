@@ -1,20 +1,15 @@
 FROM golang:1.23-alpine AS backend-build
-ARG IMPORT_ZSCALER_CERT=false
 
 COPY zscaler/zscaler-root-ca.crt /tmp/zscaler-root-ca.crt
 
 ENV CGO_ENABLED=0
+ENV GOPROXY=direct
 
 RUN apk --no-cache add --no-check-certificate ca-certificates && update-ca-certificates
+RUN  cp /tmp/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-ca.crt && \
+      update-ca-certificates;
 
-RUN if [ "$IMPORT_ZSCALER_CERT" = "true" ]; then \
-      cp /tmp/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-ca.crt && \
-      update-ca-certificates; \
-    else \
-      echo "Skipping Zscaler cert install"; \
-    fi
-
-RUN apk update && apk add bash dos2unix 2>/dev/null
+RUN apk update && apk add bash dos2unix git 2>/dev/null
 
 WORKDIR /app
 

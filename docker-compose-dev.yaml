@@ -15,13 +15,9 @@ services:
     build:
       context: .
       dockerfile: ./webapi/Dockerfile
-      args:
-        IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
     image: wwn_webapi:0.0.1
     networks:
       - wwn_mgr_network
-    # ports:
-    #   - "8888:8888"
     restart: always
     depends_on:
       - mongodb
@@ -32,9 +28,7 @@ services:
   frontend-artifacts:
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile   # or reuse the same commands as frontend-builder
-      # args:
-      #   IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
+      dockerfile: ./frontend/Dockerfile 
     volumes:
       - ./dist:/output
     entrypoint: sh -c

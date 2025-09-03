@@ -42,6 +42,12 @@ export default {
   deleteRule(customer, id) {
     return axios.delete(`${API}/customers/${customer}/rules/${id}`);
   },
+  softDeleteEntry(id) {
+    return axios.post(`${API}/entries/${id}/softdelete`);
+  },
+  restoreEntry(id) {
+    return axios.post(`${API}/entries/${id}/restore`);
+  },
   applyRules() {
     return axios.post(`${API}/rules/apply`);
   },

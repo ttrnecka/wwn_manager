@@ -61,6 +61,8 @@ func Router() *echo.Echo {
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
 	api.DELETE("/customers/:name/rules/:id", ruleHandler.DeleteRule)
 	api.POST("/entries/:id/reconcile", ruleHandler.SetupAndApplyReconcileRules)
+	api.POST("/entries/:id/softdelete", fcWWNEntryHandler.SoftDeleteFCWWNEntry)
+	api.POST("/entries/:id/restore", fcWWNEntryHandler.RestoreFCWWNEntry)
 	api.GET("/customers/:name/entries", fcWWNEntryHandler.FCWWNEntries)
 
 	return e
