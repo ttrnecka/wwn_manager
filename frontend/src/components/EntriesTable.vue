@@ -85,7 +85,7 @@
             <td class="col-6">
               <button :title="`Mark for Deletion`"  
                       class="btn btn-outline-danger btn-sm"
-                      @click="">
+                      @click="deleteEntry(e)">
                 <i class="bi bi-trash text-danger" role='button'></i>
               </button>
             </td>
@@ -161,6 +161,7 @@ export default {
     entries: { type: Array, default: () => [] },
     pageSize: { type: Number, default: 100 }
   },
+  inject: ['loadingState'],
   data() {
     return {
       hostOnly: false,
@@ -191,7 +192,7 @@ export default {
     }
   },
   watch: {
-    entries: { handler: "applyFilter", immediate: true },
+    entries: { handler: "applyFilter", immediate: true, deep: true },
     hostOnly: { handler: "applyFilter", immediate: true },
     reconcileOnly: { handler: "applyFilter", immediate: true },
     noHostDetected: { handler: "applyFilter", immediate: true }
@@ -211,6 +212,18 @@ export default {
     },
     recRuleNil(entry) {
       return entry.reconcile_rules?.length == 0
+    },
+    async deleteEntry(e) {
+      try {
+        this.loadingState.loading = true;
+        await fcService.softDeleteEntry(e.id);
+        this.$emit('remove', e.id)
+      }  catch (err) {
+        console.error("Entry deletion failed!", err);
+        this.flash.show("Entry deletion failed", "danger");
+      } finally {
+        this.loadingState.loading = false;
+      }
     },
     async fastHostReconcile(entry,hostname) {
       this.modalData.entry = entry;

@@ -99,6 +99,7 @@
       <EntriesTable
         :entries="entries"
         @rulesChanged="loadData"
+        @remove="removeEntry"
       />
     </div>
   </div>
@@ -158,6 +159,20 @@ export default {
     }
   },
   methods: {
+    removeById(array, id) {
+      const index = array.findIndex(item => item.id === id)
+      if (index !== -1) {
+        array.splice(index, 1)
+      }
+    },
+    removeEntry(id) {
+      // this.removeById(this.entries,id);
+      const index = this.entries.findIndex(item => item.id === id)
+      if (index !== -1) {
+        this.entries.splice(index, 1)
+        console.log(id);
+      }
+    },
     handleFileChange(event) {
       const selected = event.target.files[0];
       if (selected) {
