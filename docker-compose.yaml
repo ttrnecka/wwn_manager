@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: ./webapi/Dockerfile
-      args:
-        IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
     image: wwn_webapi:0.0.1
     ports:
       - "8889:8888"
@@ -18,13 +16,12 @@ services:
   frontend-artifacts:
     build:
       context: .
-      dockerfile: ./webapi/Dockerfile 
-      args:
-        IMPORT_ZSCALER_CERT: ${IMPORT_ZSCALER_CERT:-false}
+      dockerfile: ./frontend/Dockerfile
     volumes:
       - ./dist:/output
     entrypoint: sh -c
     command: ["cp -r /app/dist/* /output/"]
 networks:
   xapoc_agent_poc_network:
+
     external: true
