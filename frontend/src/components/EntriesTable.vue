@@ -213,11 +213,17 @@ export default {
     recRuleNil(entry) {
       return entry.reconcile_rules?.length == 0
     },
+    removeById(array, id) {
+      const index = array.findIndex(item => item.id === id)
+      if (index !== -1) {
+        array.splice(index, 1)
+      }
+    },
     async deleteEntry(e) {
       try {
         this.loadingState.loading = true;
         await fcService.softDeleteEntry(e.id);
-        this.$emit('remove', e.id)
+        this.removeById(this.entries,e.id);
       }  catch (err) {
         console.error("Entry deletion failed!", err);
         this.flash.show("Entry deletion failed", "danger");

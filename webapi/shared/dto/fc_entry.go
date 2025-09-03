@@ -1,6 +1,10 @@
 package dto
 
-import "github.com/ttrnecka/wwn_identity/webapi/internal/entity"
+import (
+	"time"
+
+	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
+)
 
 type FCWWNEntryDTO struct {
 	ID                 string                     `json:"id"`
@@ -21,6 +25,7 @@ type FCWWNEntryDTO struct {
 	DuplicateCustomers []entity.DuplicateCustomer `json:"duplicate_customers,omitempty"`
 	IgnoreLoaded       bool                       `json:"ignore_loaded"`
 	IgnoreEntry        bool                       `json:"ignore_entry"`
+	DeletedAt          *time.Time                 `json:"deleted_at,omitempty"`
 }
 
 type EntryReconcileDTO struct {

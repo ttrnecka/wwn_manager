@@ -27,11 +27,32 @@ func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService) *F
 }
 
 func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
+	mode := c.QueryParam("softdeleted")
+	if mode != "" {
+		return h.FCWWNEntriesWithSoftDeleted(c)
+	}
 	customer := c.Param("name")
 
 	items, err := h.service.Find(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"wwn": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to find entries", err)
+	}
+
+	itemDTO := make([]dto.FCWWNEntryDTO, 0)
+
+	for _, item := range items {
+		itemDTO = append(itemDTO, mapper.ToFCWWNEntryDTO(item))
+	}
+
+	return c.JSON(http.StatusOK, itemDTO)
+}
+
+func (h *FCWWNEntryHandler) FCWWNEntriesWithSoftDeleted(c echo.Context) error {
+	customer := c.Param("name")
+
+	items, err := h.service.FindWithSoftDeleted(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"wwn": "asc"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to find softdeleted entries", err)
 	}
 
 	itemDTO := make([]dto.FCWWNEntryDTO, 0)

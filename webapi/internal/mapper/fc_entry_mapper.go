@@ -30,6 +30,7 @@ func ToFCWWNEntryEntity(p dto.FCWWNEntryDTO) entity.FCWWNEntry {
 		id, _ := primitive.ObjectIDFromHex(r)
 		entry.ReconcileRules = append(entry.ReconcileRules, id)
 	}
+	entry.DeletedAt = p.DeletedAt
 	return entry
 }
 
@@ -53,6 +54,9 @@ func ToFCWWNEntryDTO(p entity.FCWWNEntry) dto.FCWWNEntryDTO {
 		IgnoreLoaded:       p.IgnoreLoaded,
 		IgnoreEntry:        p.IgnoreEntry,
 	}
+	// if p.DeletedAt != nil {
+	entry.DeletedAt = p.DeletedAt
+	// }
 
 	for _, r := range p.ReconcileRules {
 		entry.ReconcileRules = append(entry.ReconcileRules, r.Hex())

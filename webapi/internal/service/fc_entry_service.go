@@ -43,6 +43,17 @@ func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOpti
 	return s.GenericService.Find(ctx, filter, opt)
 }
 
+func (s fcWWNEntryService) FindWithSoftDeleted(ctx context.Context, filter Filter, opt SortOption) ([]entity.FCWWNEntry, error) {
+	customer, ok := filter["customer"]
+	if ok {
+		if customer == entity.GLOBAL_CUSTOMER {
+			delete(filter, "customer")
+		}
+	}
+
+	return s.GenericService.FindWithSoftDeleted(ctx, filter, opt)
+}
+
 func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context, filter Filter) error {
 	filters := bson.D{}
 

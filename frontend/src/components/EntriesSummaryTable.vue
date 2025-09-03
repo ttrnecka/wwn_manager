@@ -24,6 +24,7 @@
             <th class="col-2" >Hostname</th>
             <th class="col-2">WWN</th>
             <th class="col-2">Hostname (Loaded)</th>
+            <th class="col-6"></th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +36,13 @@
             <td class="col-2">{{ e.wwn }}</td>
             <td class="col-2">
               {{ e.loaded_hostname }}
+            </td>
+            <td class="col-6">
+              <button v-show="is_soft_deleted(e)" :title="`Restore`"  
+                      class="btn btn-outline-primary btn-sm"
+                      @click="restoreEntry(e)">
+                <i class="bi bi-chevron-up" role='button'></i>
+              </button>
             </td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
@@ -69,6 +77,7 @@ export default {
     entries: { type: Array, default: () => [] },
     pageSize: { type: Number, default: 100 }
   },
+  inject: ['loadingState'],
   data() {
     return {
       searchTerm: "",
@@ -87,10 +96,11 @@ export default {
     }
   },
   watch: {
-    entries: { handler: "applyFilter", immediate: true },
+    entries: { handler: "applyFilter", immediate: true }
   },
   methods: {
     applyFilter() {
+      console.log('running filter');
       const term = this.searchTerm.toLowerCase().trim();
       this.filteredEntries = term
         ? this.entries.filter(e =>
@@ -105,7 +115,25 @@ export default {
       if (page >= 1 && page <= Math.ceil(this.filteredEntries.length / this.pageSize)) {
         this.currentPage = page;
       }
-    }
+    },
+    is_soft_deleted(entry) {
+      if ('deleted_at' in entry) {
+        return true;
+      }
+      return false;
+    },
+    async restoreEntry(e) {
+      try {
+        this.loadingState.loading = true;
+        await fcService.restoreEntry(e.id);
+        this.$emit('remove',e.id)
+      }  catch (err) {
+        console.error("Entry deletion failed!", err);
+        this.flash.show("Entry deletion failed", "danger");
+      } finally {
+        this.loadingState.loading = false;
+      }
+    },
   }
 };
 </script>
@@ -129,4 +157,5 @@ export default {
     td.col-3, th.col-3 { width: auto;}
     td.col-4, th.col-4 { width: auto;}
     td.col-5, th.col-5 { max-width: 100px; width: 100px; }
+    td.col-6, th.col-6 { max-width: 50px; width: 50px; }
 </style>

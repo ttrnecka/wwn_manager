@@ -43,6 +43,7 @@
             <div class="accordion-body">
               <EntriesSummaryTable 
                 :entries="deletedPrimaryEntries"
+                @remove="removeEntry"
               />
             </div>
           </div>
@@ -127,14 +128,14 @@ export default {
       return useFlashStore();
     },
     newPrimaryEntries() {
-      return this.entries.filter(e => this.is_primary(e) && this.is_new(e));
+      return this.entries.filter(e => this.is_primary(e) && this.is_new(e) && !this.is_soft_deleted(e));
     },
     changedPrimaryEntries() {
-      return this.entries.filter(e => this.is_primary(e) && this.diffHostname(e));
+      return this.entries.filter(e => this.is_primary(e) && this.diffHostname(e) && !this.is_soft_deleted(e));
     },
     // TODO - add softdeletion
     deletedPrimaryEntries() {
-      return []
+      return this.entries.filter(e => this.is_soft_deleted(e));
     },
     // TOD - add filter to tell new and changed apart
     newSecondaryEntries() {
@@ -162,9 +163,24 @@ export default {
     is_secondary(entry) {
       return !entry.is_primary_customer && !entry.ignore_entry && entry.wwn_set !== 3
     },
+    is_soft_deleted(entry) {
+      if ('deleted_at' in entry) {
+        return true;
+      }
+      return false;
+    },
+    removeEntry(id) {
+      this.removeById(this.entries,id);
+    },
+    removeById(array, id) {
+      const index = array.findIndex(item => item.id === id)
+      if (index !== -1) {
+        array.splice(index, 1)
+      }
+    },
     async loadEntries() {
       if (!this.selectedCustomer) return;
-      const res = await fcService.getEntries(this.selectedCustomer);
+      const res = await fcService.getEntriesWithSoftDeleted(this.selectedCustomer);
       this.entries = res.data.filter(e => ['Host','Other'].includes(e.type)).sort((a,b) => {
           if (a.customer < b.customer ) return -1;
           if (a.customer > b.customer ) return 1;

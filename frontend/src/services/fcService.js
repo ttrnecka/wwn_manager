@@ -59,6 +59,10 @@ export default {
     return axios.get(`${API}/customers/${customer}/entries`);
   },
 
+  getEntriesWithSoftDeleted(customer) {
+    return axios.get(`${API}/customers/${customer}/entries?softdeleted=yes`);
+  },
+
   getRulesExport() {
     return axios.get(`${API}/rules/export`, {responseType: "blob"});
   },

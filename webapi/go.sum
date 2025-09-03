@@ -183,6 +183,10 @@ github.com/ttrnecka/agent_poc/common v0.0.0-20250822063804-3c30ca1c6d8e h1:pkK+H
 github.com/ttrnecka/agent_poc/common v0.0.0-20250822063804-3c30ca1c6d8e/go.mod h1:XVwQvbdT0slL4Tx6Doi2HBytpImEcG3nr/mdQRcf+ew=
 github.com/ttrnecka/agent_poc/common v0.0.0-20250902121926-40b16c9758c4 h1:OdoSS4O3GXVFj5LNrZxGkDyKqgwh4alyHiJ3qfZBKpc=
 github.com/ttrnecka/agent_poc/common v0.0.0-20250902121926-40b16c9758c4/go.mod h1:XVwQvbdT0slL4Tx6Doi2HBytpImEcG3nr/mdQRcf+ew=
+github.com/ttrnecka/agent_poc/common v0.0.0-20250903123941-4726921b1fe3 h1:GaEDICTYsvxTSx7Do8d8OJZ7YVbmmUf2avmtEX8lqTw=
+github.com/ttrnecka/agent_poc/common v0.0.0-20250903123941-4726921b1fe3/go.mod h1:XVwQvbdT0slL4Tx6Doi2HBytpImEcG3nr/mdQRcf+ew=
+github.com/ttrnecka/agent_poc/common v0.0.0-20250903125113-9f4c628664d2 h1:MivRusVc3jrgz19FH1pjSTkTerNminqr9j8ZfIF1vhA=
+github.com/ttrnecka/agent_poc/common v0.0.0-20250903125113-9f4c628664d2/go.mod h1:XVwQvbdT0slL4Tx6Doi2HBytpImEcG3nr/mdQRcf+ew=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20250816113952-880a7370ee68 h1:BXu3kM+4RbF/UVsC2VQu3VSr3SK4GNb7CPlaqqOt370=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20250816113952-880a7370ee68/go.mod h1:qJawWigOhbPhWfM4NRjysFh1SHBzhp3qFrroH3FgFjs=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e h1:KO9bsq+JmEIAo83r1rEr7XtSYCaAsI314H+US0Sd6QA=
