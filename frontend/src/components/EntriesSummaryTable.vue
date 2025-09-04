@@ -100,7 +100,6 @@ export default {
   },
   methods: {
     applyFilter() {
-      console.log('running filter');
       const term = this.searchTerm.toLowerCase().trim();
       this.filteredEntries = term
         ? this.entries.filter(e =>

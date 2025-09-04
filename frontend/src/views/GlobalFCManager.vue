@@ -186,13 +186,13 @@ export default {
         if (this.selectedCustomer) {
           await this.loadEntries();
         }
-        this.file = null;
-        this.fileName = "";
-        this.$refs.fileInput.value = null; // Reset file input
       } catch (err) {
         console.error("Import failed!", err);
         this.flash.show("Import failed", "danger");
       } finally {
+        this.file = null;
+        this.fileName = "";
+        this.$refs.fileInput.value = null; // Reset file input
         this.loadingState.loading = false;
       }
     },
@@ -201,14 +201,14 @@ export default {
       this.loadingState.loading = true;
       try {
         await fcService.importRules(this.file);
-        this.file = null;
-        this.fileName = "";
-        this.$refs.fileInput.value = null; // Reset file input
         await this.loadRules();
       } catch (err) {
         console.error("Import failed!", err);
         this.flash.show("Import failed", "danger");
       } finally {
+        this.file = null;
+        this.fileName = "";
+        this.$refs.fileInput.value = null; // Reset file input
         this.loadingState.loading = false;
       }
     },
