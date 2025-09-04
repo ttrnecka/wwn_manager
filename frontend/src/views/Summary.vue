@@ -8,7 +8,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-            New Primary HBA Records ({{ newPrimaryEntries.length }})
+            New WWN Records ({{ newPrimaryEntries.length }})
             </button>
           </h2>
           <div id="collapseOne" class="accordion-collapse collapse">
@@ -22,7 +22,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-              Changed Primary HBA Records ({{ changedPrimaryEntries.length }})
+              Changed WWN Records ({{ changedPrimaryEntries.length }})
             </button>
           </h2>
           <div id="collapseTwo" class="accordion-collapse collapse">
@@ -36,7 +36,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-              Deleted Primary HBA Records ({{ deletedPrimaryEntries.length }})
+              Deleted WWN Records ({{ deletedPrimaryEntries.length }})
             </button>
           </h2>
           <div id="collapseThree" class="accordion-collapse collapse">
@@ -51,7 +51,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
-            New Secondary HBA Records ({{ newSecondaryEntries.length }})
+            New Override WWN Records ({{ newSecondaryEntries.length }})
             </button>
           </h2>
           <div id="collapseFour" class="accordion-collapse collapse">
@@ -65,7 +65,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-            Changed Secondary HBA Records ({{ changedSecondaryEntries.length }})
+            Changed Override WWN Records ({{ changedSecondaryEntries.length }})
             </button>
           </h2>
           <div id="collapseFive" class="accordion-collapse collapse">
@@ -79,7 +79,7 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="true" aria-controls="collcollapseSixpseFive">
-            Deleted Secondary HBA Records ({{ deletedSecondaryEntries.length }})
+            Deleted Override WWN Records ({{ deletedSecondaryEntries.length }})
             </button>
           </h2>
           <div id="collapseSix" class="accordion-collapse collapse">
