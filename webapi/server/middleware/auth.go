@@ -18,11 +18,19 @@ func SessionManager() echo.MiddlewareFunc {
 			}
 			sess.Options = &sessions.Options{
 				Path:     "/",
-				MaxAge:   86400 * 1,
+				MaxAge:   3600 * 1,
 				HttpOnly: true,
 			}
 			c.Set(SESSION_STORE, sess)
-			return next(c)
+			if err := next(c); err != nil {
+				return err
+			}
+
+			// Always save to refresh cookie age
+			if err := sess.Save(c.Request(), c.Response()); err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to save session: %v", err)
+			}
+			return nil
 		}
 	}
 }

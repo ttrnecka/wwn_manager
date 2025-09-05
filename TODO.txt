@@ -1,0 +1,21 @@
+Short term TODO
+Snapshot - to compare changes
+Summary export
+Lock export behind control
+- no unknow
+- no reconcile needed
+- explictely approved (baseline)
+- shorten cookie lifetime and update it upon each request
+- add WWN validation
+- finish About page
+
+Long term TODO
+Account solution - local account or AD?
+DB password + configuration file with encrypted password
+Vulnerability checks - CI
+Static code analysis? gosec, govulncheck, staticcheck in CI.
+Dependency scanning: npm audit/pnpm audit, govulncheck, Dependabot/Renovate.
+
+DONE
+Web logging to file
+Session sliding refresh shorter expiration

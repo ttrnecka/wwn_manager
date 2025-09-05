@@ -15,7 +15,9 @@ import (
 func Router() *echo.Echo {
 	e := echo.New()
 
-	e.Use(middleware.Logger())
+	e.Use(mid.RequestBodyCaptureMiddleware())
+	e.Use(mid.ResponseBodyCaptureMiddleware())
+	e.Use(mid.RequestLogger(logger))
 	e.Use(middleware.CORS())
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))

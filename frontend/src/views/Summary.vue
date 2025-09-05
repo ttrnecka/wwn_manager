@@ -133,11 +133,11 @@ export default {
     changedPrimaryEntries() {
       return this.entries.filter(e => this.is_primary(e) && this.diffHostname(e) && !this.is_soft_deleted(e));
     },
-    // TODO - add softdeletion
+    // TODO - update once we hae a baseline
     deletedPrimaryEntries() {
       return this.entries.filter(e => this.is_soft_deleted(e));
     },
-    // TOD - add filter to tell new and changed apart
+    // TODO - add filter to tell new and changed apart once we have a baseline
     newSecondaryEntries() {
       return this.entries.filter(e => this.is_secondary(e));
     },

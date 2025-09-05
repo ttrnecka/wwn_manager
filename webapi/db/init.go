@@ -22,17 +22,23 @@ func init() {
 func Init() error {
 	d, err := Connect()
 	if err != nil {
-		return fmt.Errorf("initializing db failed: %w", err)
+		err = fmt.Errorf("initializing db failed: %w", err)
+		logger.Error().Err(err).Msg("")
+		return err
 	}
 	dB = d
 
 	// Ensure all indexes before starting application logic
 	if err := EnsureUserCollection(); err != nil {
-		return fmt.Errorf("setting user collection failed: %w", err)
+		err = fmt.Errorf("setting user collection failed: %w", err)
+		logger.Error().Err(err).Msg("")
+		return err
 	}
 
 	if err := EnsureEntryCollection(); err != nil {
-		return fmt.Errorf("setting fc_wwn_entry collection failed: %w", err)
+		err = fmt.Errorf("setting fc_wwn_entry collection failed: %w", err)
+		logger.Error().Err(err).Msg("")
+		return err
 	}
 	return nil
 }
