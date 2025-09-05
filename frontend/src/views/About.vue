@@ -1,12 +1,12 @@
 <template>
   <div>
-    <h2>Goal</h2>
+    <h2 class="blue">Goal</h2>
     <p>
       Main goal of the WWN manager is to tackle the issue of identifying the hosts in SAN environment
       with the secondary goal of being able to handle multitenant environments with potentially duplicate WWN.
     </p>
 
-    <h2>Design</h2>
+    <h2 class="blue">Design</h2>
     <p>
       To identify the hostname the idea is to use SAN zoning, alias or WWN data. Every WWN in SAN may be associated
       with mutliple zones and preferably one alias. Zones and aliases follow naming convention that helps to identify
@@ -15,7 +15,7 @@
       the tool to generate a list of WWNs and hostnames to be used in external tool for mapping WWNs to hosts.
     </p>
 
-    <h3>WWN source</h3>
+    <h3 class="blue">WWN source</h3>
     <p>
       WWNs are imported to the tool in specific format containig following fields:
       <ul>
@@ -25,10 +25,10 @@
       <li>Alias</li>
       <li>Existing hostname</li>
       <li>Flag if the WNW is loaded by CSV in the external tool or detected</li>
-      <li>WWN set type</li>
+      <li>WWN set</li>
       </ul>
 
-      WWN set type:
+      WWN set:
       <ul>
       <li>1 - WWN loaded from SAN configuration</li>
       <li>2 - WWN manually loaded into the source system</li>
@@ -40,14 +40,14 @@
       </p>
     </p>
 
-    <h3>Range Rules</h3>
+    <h3 class="blue">Range Rules</h3>
     <p>
       Range rules are rules applied on global level. Their purpose is to separate host WWNs from WWNs used for array, backup or 
       other non-host purposes. They use regular expresion to match given WWN to one type of array, backup, host or other. The
       range rules are applied first. Range rules are tested based on the defined order with first one matching being the rule to apply.
     </p>
 
-    <h3>Host Rules</h3>
+    <h3 class="blue">Host Rules</h3>
     <p>
       Host rules are applied only to host WWNs and user regular expression with match group(s) to pluck the subset of the zone or alias name
       as the hostname for the given WWN. Zone and alias based rules need to contain match group(s) and specify which match 
@@ -56,7 +56,7 @@
       tenant rules being applied before global rules and first one matching being the one to apply.
     </p>
     
-    <h3>Reconciliation Rules</h3>
+    <h3 class="blue">Reconciliation Rules</h3>
     <p>
       These are special rules to handle duplicate WWNs accross multiple tenants or handle name missmatch between
       current hostname and hostname decoded using the host rules. These rules are applied after host rules. Additionaly there is 
@@ -66,7 +66,7 @@
       reconciliation needs to be done in the interface.
     </p>
 
-    <h4>Default Reconciliation Rules</h4>
+    <h4 class="blue">Default Reconciliation Rules</h4>
     <p>
       <ul>
         <li>
@@ -89,7 +89,7 @@
         </li>
       </ul>
     </p>
-    <h4>Custom Reconciliation Rules</h4>
+    <h4 class="blue">Custom Reconciliation Rules</h4>
     <ul>
       <li>
         WWN Primary Customer - maps WWN to a customer record to be used in standard export. Creating this rule for 1 record will cause all
@@ -103,7 +103,7 @@
       </li>
     </ul>
 
-    <h2>Usage</h2>
+    <h2 class="blue">Usage</h2>
 
     Here is the basic usage loop for the tool:
 
@@ -141,3 +141,10 @@
     </ul>
   </div>
 </template>
+
+<style>
+body {
+  font-size:15px;
+}
+
+</style>
