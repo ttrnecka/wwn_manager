@@ -2,10 +2,9 @@ Short term TODO
 Snapshot - to compare changes
 Summary export
 Lock export behind control
-- no unknow
+- no unknown
 - no reconcile needed
 - explictely approved (baseline)
-- shorten cookie lifetime and update it upon each request
 - add WWN validation
 - finish About page
 
