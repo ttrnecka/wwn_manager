@@ -100,9 +100,8 @@ import fcService from "@/services/fcService";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import EntriesSummaryTable from "@/components/EntriesSummaryTable.vue";
-import { provide } from 'vue'
-import { showAlert } from '@/services/alert';
 
+import { useEntryStore } from '@/stores/entryStore';
 import { useFlashStore } from '@/stores/flash'
 import { GLOBAL_CUSTOMER } from '@/config'
 
@@ -126,6 +125,9 @@ export default {
   computed: {
     flash() {
       return useFlashStore();
+    },
+    entryStore() {
+      return useEntryStore();
     },
     newPrimaryEntries() {
       return this.entries.filter(e => this.is_primary(e) && this.is_new(e) && !this.is_soft_deleted(e));

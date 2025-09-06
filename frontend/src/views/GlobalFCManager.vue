@@ -112,6 +112,7 @@ import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import { useFlashStore } from '@/stores/flash'
 import { useRulesStore } from '@/stores/ruleStore';
+import { useEntryStore } from '@/stores/entryStore';
 import { GLOBAL_CUSTOMER } from '@/config'
 import { provide } from 'vue'
 import { showAlert } from '@/services/alert';
@@ -152,6 +153,9 @@ export default {
     },
     rulesStore() {
       return useRulesStore();
+    },
+    entryStore() {
+      return useEntryStore();
     },
     flash() {
       return useFlashStore();
@@ -220,10 +224,10 @@ export default {
       const res2 = await fcService.getAllRules();
       this.rulesStore.setAllRules(res2.data);
     },
-    async loadEntries() {
+    async loadEntries(dirty=true) {
       if (!this.selectedCustomer) return;
-      const res = await fcService.getEntries(this.selectedCustomer);
-      this.entries = res.data;
+      this.entryStore.dirty = dirty;
+      this.entries = await this.entryStore.getEntries(this.selectedCustomer)
     },
     async loadData() {
       this.loadingState.loading = true;
