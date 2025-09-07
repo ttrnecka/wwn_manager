@@ -66,9 +66,8 @@
 
 <script>
 import PagingControls from "./PagingControls.vue";
-import { GLOBAL_CUSTOMER } from '@/config'
-import fcService from "@/services/fcService";
 import { useFlashStore } from '@/stores/flash'
+import { useApiStore } from '@/stores/apiStore';
 
 export default {
   name: "EntriesSummaryTable",
@@ -77,7 +76,7 @@ export default {
     entries: { type: Array, default: () => [] },
     pageSize: { type: Number, default: 100 }
   },
-  inject: ['loadingState'],
+  // inject: ['loadingState'],
   data() {
     return {
       searchTerm: "",
@@ -86,6 +85,9 @@ export default {
     };
   },
   computed: {
+    apiStore() {
+      return useApiStore();
+    },
     pagedEntries() {
       const start = (this.currentPage - 1) * this.pageSize;
       const end = start + this.pageSize;
@@ -122,16 +124,8 @@ export default {
       return false;
     },
     async restoreEntry(e) {
-      try {
-        this.loadingState.loading = true;
-        await fcService.restoreEntry(e.id);
-        this.$emit('remove',e.id)
-      }  catch (err) {
-        console.error("Entry deletion failed!", err);
-        this.flash.show("Entry deletion failed", "danger");
-      } finally {
-        this.loadingState.loading = false;
-      }
+      await this.apiStore.restoreEntry(e.id);
+      this.$emit("entry-restored")
     },
   }
 };

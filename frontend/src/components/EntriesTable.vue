@@ -148,7 +148,7 @@
 
 <script>
 import PagingControls from "./PagingControls.vue";
-import { useRulesStore } from '@/stores/ruleStore';
+import { useApiStore } from '@/stores/apiStore';
 import { GLOBAL_CUSTOMER } from '@/config'
 import ReconciliationModal from './ReconciliationModal.vue';
 import fcService from "@/services/fcService";
@@ -161,7 +161,7 @@ export default {
     entries: { type: Array, default: () => [] },
     pageSize: { type: Number, default: 100 }
   },
-  inject: ['loadingState'],
+  // inject: ['loadingState'],
   data() {
     return {
       hostOnly: false,
@@ -179,8 +179,8 @@ export default {
     };
   },
   computed: {
-    rulesStore() {
-      return useRulesStore();
+    apiStore() {
+      return useApiStore();
     },
     pagedEntries() {
       const start = (this.currentPage - 1) * this.pageSize;
@@ -213,23 +213,8 @@ export default {
     recRuleNil(entry) {
       return entry.reconcile_rules?.length == 0
     },
-    removeById(array, id) {
-      const index = array.findIndex(item => item.id === id)
-      if (index !== -1) {
-        array.splice(index, 1)
-      }
-    },
     async deleteEntry(e) {
-      try {
-        this.loadingState.loading = true;
-        await fcService.softDeleteEntry(e.id);
-        this.removeById(this.entries,e.id);
-      }  catch (err) {
-        console.error("Entry deletion failed!", err);
-        this.flash.show("Entry deletion failed", "danger");
-      } finally {
-        this.loadingState.loading = false;
-      }
+      await this.apiStore.removeEntry(e.id);
     },
     async fastHostReconcile(entry,hostname) {
       this.modalData.entry = entry;
@@ -239,7 +224,7 @@ export default {
     async commitReconcile() {
       try {
         await fcService.setReconcileRules(this.modalData.entry.id, this.modalData);
-        this.$emit("rulesChanged");
+        await apiStore.reload();
       } catch (err) {
         console.error("Reconciliation failed!", err);
         this.flash.show("Reconciliation failed", "danger");
@@ -266,7 +251,7 @@ export default {
       return msgs;
     },
     getEntryTypeRule(entry) {
-      let rule = this.rulesStore.getRules.find((r) => r.id === entry.type_rule)
+      let rule = this.apiStore.rules.find((r) => r.id === entry.type_rule)
       let text = "No Rule"
       if (rule) {
         let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
@@ -275,7 +260,7 @@ export default {
       return text
     },
     getEntryHostnameRule(entry) {
-      let rule = this.rulesStore.getRules.find((r) => r.id === entry.hostname_rule)
+      let rule = this.apiStore.rules.find((r) => r.id === entry.hostname_rule)
       let text = "No Rule"
       if (rule) {
         let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
@@ -284,7 +269,7 @@ export default {
       return text
     },
     getEntryReconcileRule(entry) {
-      let rules = this.rulesStore.getRules.filter((r) => entry.reconcile_rules?.includes(r.id))
+      let rules = this.apiStore.rules.filter((r) => entry.reconcile_rules?.includes(r.id))
       let texts = [];
       for (const rule of rules) {
         let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
@@ -307,7 +292,7 @@ export default {
       if (!Object.hasOwn(entry, "duplicate_customers")) {
         return true
       }
-      let rules = this.rulesStore.getRules.filter((r) => entry.reconcile_rules?.includes(r.id))
+      let rules = this.apiStore.rules.filter((r) => entry.reconcile_rules?.includes(r.id))
       for (const rule of rules) {
         if (rule.type === "wwn_customer_map") {
           return true
@@ -323,7 +308,7 @@ export default {
       if (!this.diffHostname(entry)) {
         return true
       }
-      let rules = this.rulesStore.getRules.filter((r) => entry.reconcile_rules?.includes(r.id))
+      let rules = this.apiStore.rules.filter((r) => entry.reconcile_rules?.includes(r.id))
       for (const rule of rules) {
         if (rule.type === "ignore_loaded") {
           return true
@@ -339,6 +324,7 @@ export default {
       this.filteredEntries = term
         ? this.entries.filter(e =>
             e.type.toLowerCase().includes(term) ||
+            e.customer.toLowerCase().includes(term) ||
             e.wwn.toLowerCase().includes(term) ||
             e.zones.some((e) => e.toLowerCase().includes(term)) ||
             e.aliases.some((e) => e.toLowerCase().includes(term)) ||

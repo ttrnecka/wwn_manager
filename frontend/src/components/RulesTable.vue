@@ -64,7 +64,6 @@ export default {
     types: { type: Array, default: () => ["alias","wwn_host_map","zone"] },
     customer: { type: String },
   },
-  inject: ['loadingState'],
   data() {
     return {
       localRules: JSON.parse(JSON.stringify(this.rules)), // local copy
@@ -139,7 +138,6 @@ export default {
     },
     async deleteRule(rule) {
       const result = await showAlert(async () => {
-            console.log("Deleting rule", rule);
             if (rule.id) {
               // Existing rule in backend
               await fcService.deleteRule(this.customer, rule.id);

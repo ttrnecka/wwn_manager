@@ -2,21 +2,19 @@
 import { RouterLink, RouterView } from 'vue-router'
 import { onMounted, computed, watch } from 'vue'
 import Header from './components/Header.vue'
-import { useDataStore } from '@/stores/dataStore'
+import { useUserStore } from '@/stores/userStore'
 import router from '@/router'
 
-const dataStore = useDataStore()
+const userStore = useUserStore()
 
-watch(() => dataStore.isLoggedIn, (val) => {
-  if (val) {
-    dataStore.getData()
-  } else {
+watch(() => userStore.isLoggedIn, (val) => {
+  if (!val) {
     router.push('/login')
   }
 })
 
 onMounted(() => {
-  dataStore.fetchUser();
+  userStore.fetchUser();
 })
 
 </script>
@@ -48,8 +46,8 @@ onMounted(() => {
 
       <div class="mt-auto mx-2 mb-2">
         <button
-          v-if="dataStore.isLoggedIn"
-          @click="dataStore.logoutUser"
+          v-if="userStore.isLoggedIn"
+          @click="userStore.logoutUser"
           class="btn btn-outline-primary btn-sm w-100"
         >
           Logout

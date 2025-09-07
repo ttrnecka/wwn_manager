@@ -1,11 +1,11 @@
 <template>
   <div>
-    <LoadingOverlay :active="loadingState.loading" color="primary" size="3rem" />
+    <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage ref="flash" />
-    <div class="container mt-4" :class="{ 'opacity-50': loadingState.loading, 'pe-none': loadingState.loading }">
+    <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
       <!-- Customers -->
       <div class="mb-3">
-        <select v-model="selectedCustomer" class="form-select" @change="loadData">
+        <select v-model="selectedCustomer" class="form-select">
           <option disabled value="">-- select customer --</option>
           <option v-for="c in customers" :key="c" :value="c">{{ c }}</option>
         </select>
@@ -24,7 +24,7 @@
               <RulesTable
                 :rules="hostRules"
                 :customer="selectedCustomer"
-                @rulesChanged="loadData"
+                @rulesChanged="reloadRules"
               />
             </div>
           </div>
@@ -41,7 +41,7 @@
                 :rules="reconcileRules"
                 :customer="selectedCustomer"
                 :types="['wwn_customer_map','ignore_loaded']"
-                @rulesChanged="loadData"
+                @rulesChanged="reloadRules"
               />
             </div>
           </div>
@@ -52,7 +52,6 @@
       <EntriesTable
         v-if="selectedCustomer"
         :entries="entries"
-        @rulesChanged="loadData"
       />
     </div>
   </div>
@@ -65,23 +64,15 @@ import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import { useFlashStore } from '@/stores/flash'
-import { useRulesStore } from '@/stores/ruleStore';
-import { useEntryStore } from '@/stores/entryStore';
+import { useApiStore } from '@/stores/apiStore';
 
 export default {
   name: "FCManager",
   components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage },
-  provide() {
-    return {
-      loadingState: this.loadingState
-    };
-  },
   data() {
     return {
       customers: [],
       selectedCustomer: "",
-      rules: [],
-      entries: [],
       loadingState: {
         loading: false,
       },
@@ -90,52 +81,30 @@ export default {
     };
   },
   computed: {
-    rulesStore() {
-      return useRulesStore();
-    },
-    entryStore() {
-      return useEntryStore();
+    apiStore() {
+      return useApiStore();
     },
     flash() {
       return useFlashStore();
     },
     reconcileRules() {
-      return this.rules.filter(rule => this.reconcileRuleNames.includes(rule.type));
+      return this.apiStore.reconcileRules.filter(rule => rule.customer === this.selectedCustomer);
     },
     hostRules() {
-      return this.rules.filter(rule => this.hostRuleNames.includes(rule.type));
+      return this.apiStore.hostRules.filter(rule => rule.customer === this.selectedCustomer);
+    },
+    entries() {
+      return this.apiStore.entries.filter(e => e.customer === this.selectedCustomer);
     },
   },
   methods: {
+    async reloadRules() {
+      this.apiStore.dirty.rules=true;
+      await this.apiStore.loadRules();
+    },
     async loadCustomers() {
       const res = await fcService.getCustomers();
       this.customers = res.data;
-    },
-    async loadRules() {
-      if (!this.selectedCustomer) return;
-      const res = await fcService.getRules(this.selectedCustomer);
-      this.rulesStore.setScopedRules(res.data);
-      this.rules = res.data;
-      const res2 = await fcService.getAllRules();
-      this.rulesStore.setAllRules(res2.data);
-    },
-    async loadEntries(dirty=true) {
-      if (!this.selectedCustomer) return;
-      this.entryStore.dirty = dirty;
-      this.entries = await this.entryStore.getEntries(this.selectedCustomer)
-    },
-    async loadData() {
-      this.loadingState.loading = true;
-      try {
-        await this.loadRules();
-        await this.loadEntries();
-        // this.flash.show("Data load succeeded", "success");
-      } catch (err) {
-        console.error("Data load failed", err);
-        this.flash.show("Data load failed", "danger");
-      } finally {
-        this.loadingState.loading = false;
-      }
     },
   },
   mounted() {

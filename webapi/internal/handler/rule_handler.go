@@ -144,15 +144,18 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 			return errorWithInternal(http.StatusInternalServerError, "Failed to update rule", err)
 		}
 	}
-	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
-	}
-	err = h.applyRules(c.Request().Context(), fcWWNEntries)
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
-	}
+	// fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
+	// if err != nil {
+	// 	return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+	// }
 
+	// apply := c.QueryParam("apply")
+	// if apply != "false" {
+	// 	err = h.applyRules(c.Request().Context(), fcWWNEntries)
+	// 	if err != nil {
+	// 		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
+	// 	}
+	// }
 	return c.NoContent(http.StatusOK)
 }
 
@@ -203,13 +206,16 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to file entries", err)
 	}
 
-	err = h.applyRules(c.Request().Context(), entries)
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
+	apply := c.QueryParam("apply")
+	if apply != "false" {
+		err = h.applyRules(c.Request().Context(), entries)
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
+		}
 	}
 
-	// apply rules for selected entries
-	return c.NoContent(http.StatusOK)
+	return c.JSON(http.StatusOK, entries)
+	// return c.NoContent(http.StatusOK)
 }
 
 func (h *RuleHandler) ImportHandler(c echo.Context) error {

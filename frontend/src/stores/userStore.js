@@ -3,7 +3,7 @@ import { ref, reactive,computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getUser, logOut, logIn } from '@/services/auth'
 
-export const useDataStore = defineStore('data', () => {
+export const useUserStore = defineStore('data', () => {
   const router = useRouter()
 
   const loggedIn = ref(false)

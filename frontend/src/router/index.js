@@ -4,7 +4,8 @@ import GlobalFCManager  from '../views/GlobalFCManager.vue'
 import About  from '../views/About.vue'
 import Summary  from '../views/Summary.vue'
 import Login from '../views/Login.vue'
-import { useDataStore } from '@/stores/dataStore'
+import { useUserStore } from '@/stores/userStore'
+import { useApiStore } from '@/stores/apiStore'
 
 
 const router = createRouter({
@@ -14,19 +15,21 @@ const router = createRouter({
       path: '/',
       alias: ['/index.html'],
       name: 'global',
-      component: GlobalFCManager 
+      component: GlobalFCManager,
+      meta: { requiresData: true },
     },
     {
       path: '/customers',
       alias: ['/customers.html'],
       name: 'customers',
-      component: FCManager 
+      component: FCManager,
+      meta: { requiresData: true },
     },
     {
       path: '/summary',
       alias: ['/summary.html'],
       name: 'summary',
-      component: Summary 
+      component: Summary,
     },
     {
       path: '/about',
@@ -43,8 +46,8 @@ const router = createRouter({
     path: '/login',
       component: Login,
       beforeEnter: (to, from, next) => {
-        const dataStore = useDataStore()
-        if (dataStore.isLoggedIn) {
+        const userStore = useUserStore()
+        if (userStore.isLoggedIn) {
           next('/') // redirect if already logged in
         } else {
           next()
@@ -52,6 +55,13 @@ const router = createRouter({
       }
     }
   ]
+})
+
+router.beforeEach(async (to, from, next) => {
+  if (to.meta.requiresData) {
+    useApiStore().init();
+  }
+  next()
 })
 
 export default router

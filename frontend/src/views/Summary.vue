@@ -1,8 +1,8 @@
 <template>
   <div>
-    <LoadingOverlay :active="loadingState.loading" color="primary" size="3rem" />
+    <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage />
-    <div class="container mt-4" :class="{ 'opacity-50': loadingState.loading, 'pe-none': loadingState.loading }">
+    <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
       
       <div class="accordion" id="summary" style="min-width: 800px;">
         <div class="accordion-item">
@@ -43,7 +43,7 @@
             <div class="accordion-body">
               <EntriesSummaryTable 
                 :entries="deletedPrimaryEntries"
-                @remove="removeEntry"
+                @entryRestored="loadData"
               />
             </div>
           </div>
@@ -86,6 +86,7 @@
             <div class="accordion-body">
               <EntriesSummaryTable 
                 :entries="deletedSecondaryEntries"
+                @entryRestored="loadData"
               />
             </div>
           </div>
@@ -101,33 +102,27 @@ import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import EntriesSummaryTable from "@/components/EntriesSummaryTable.vue";
 
-import { useEntryStore } from '@/stores/entryStore';
+import { useApiStore } from '@/stores/apiStore';
 import { useFlashStore } from '@/stores/flash'
 import { GLOBAL_CUSTOMER } from '@/config'
+import { markRaw } from 'vue'
 
 export default {
   name: "Summary",
   components: { LoadingOverlay, FlashMessage, EntriesSummaryTable },
-  provide() {
-    return {
-      loadingState: this.loadingState
-    };
-  },
   data() {
     return {
-      entries: [],
-      loadingState: {
-        loading: false,
-      },
+      // entries: [],
       selectedCustomer: GLOBAL_CUSTOMER,
+      entries: markRaw([]),
     };
   },
   computed: {
     flash() {
       return useFlashStore();
     },
-    entryStore() {
-      return useEntryStore();
+    apiStore() {
+      return useApiStore();
     },
     newPrimaryEntries() {
       return this.entries.filter(e => this.is_primary(e) && this.is_new(e) && !this.is_soft_deleted(e));
@@ -183,7 +178,8 @@ export default {
     async loadEntries() {
       if (!this.selectedCustomer) return;
       const res = await fcService.getEntriesWithSoftDeleted(this.selectedCustomer);
-      this.entries = res.data.filter(e => ['Host','Other'].includes(e.type)).sort((a,b) => {
+      this.entries = res.data.filter(e => ['Host','Other'].includes(e.type))
+      .sort((a,b) => {
           if (a.customer < b.customer ) return -1;
           if (a.customer > b.customer ) return 1;
 
@@ -197,14 +193,14 @@ export default {
       );
     },
     async loadData() {
-      this.loadingState.loading = true;
+      this.apiStore.loading = true;
       try {
         await this.loadEntries();
       } catch (err) {
         console.error("Data load failed", err);
         this.flash.show("Data load failed", "danger");
       } finally {
-        this.loadingState.loading = false;
+        this.apiStore.loading = false;
       }
     },
   },

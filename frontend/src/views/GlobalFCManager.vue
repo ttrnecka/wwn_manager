@@ -1,9 +1,8 @@
 <template>
   <div>
-    <LoadingOverlay :active="loadingState.loading" color="primary" size="3rem" />
+    <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage />
-    <div class="container mt-4" :class="{ 'opacity-50': loadingState.loading, 'pe-none': loadingState.loading }">
-      <!-- Import -->
+    <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
       <div class="mb-1">
         <!-- Hidden file input -->
         <input
@@ -13,13 +12,6 @@
           @change="handleFileChange"
         />
 
-        <!-- Custom button -->
-        <!-- <button class="btn btn-outline-secondary me-2 btn-sm mb-2" @click="triggerFileInput">
-          Choose File
-        </button> -->
-
-        <!-- Display selected file name -->
-        <!-- <div class="me-3 d-inline-block">{{ fileName || "No file chosen" }}</div> -->
         <button class="btn btn-primary me-2 mb-2" @click="triggerFileInput('entries')">
           Import Entries
         </button>
@@ -54,10 +46,10 @@
           <div id="collapseOne" class="accordion-collapse collapse">
             <div class="accordion-body">
               <RulesTable
-                :rules="rangeRules"
+                :rules="apiStore.rangeRules"
                 :customer="selectedCustomer"
                 :types="['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other']"
-                @rulesChanged="loadData"
+                @rulesChanged="reloadRules"
               />
             </div>
           </div>
@@ -71,9 +63,9 @@
           <div id="collapseTwo" class="accordion-collapse collapse">
             <div class="accordion-body">
               <RulesTable
-                :rules="hostRules"
+                :rules="apiStore.hostRules"
                 :customer="selectedCustomer"
-                @rulesChanged="loadData"
+                @rulesChanged="reloadRules"
               />
             </div>
           </div>
@@ -87,18 +79,17 @@
           <div id="collapseThree" class="accordion-collapse collapse">
             <div class="accordion-body">
               <RulesTable
-                :rules="reconcileRules"
+                :rules="apiStore.reconcileRules"
                 :customer="selectedCustomer"
                 :types="['wwn_customer_map','ignore_loaded']"
-                @rulesChanged="loadData"
+                @rulesChanged="reloadRules"
               />
             </div>
           </div>
         </div>
       </div>
       <EntriesTable
-        :entries="entries"
-        @rulesChanged="loadData"
+        :entries="apiStore.entries"
       />
     </div>
   </div>
@@ -110,58 +101,32 @@ import RulesTable from "@/components/RulesTable.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
-import { useFlashStore } from '@/stores/flash'
-import { useRulesStore } from '@/stores/ruleStore';
-import { useEntryStore } from '@/stores/entryStore';
+import { useApiStore } from '@/stores/apiStore';
 import { GLOBAL_CUSTOMER } from '@/config'
-import { provide } from 'vue'
 import { showAlert } from '@/services/alert';
 
 export default {
   name: "GlobalFCManager",
   components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage },
-  provide() {
-    return {
-      loadingState: this.loadingState
-    };
-  },
   data() {
     return {
       file: null,
       fileName: "",
       import_type: 'entries',
       selectedCustomer: GLOBAL_CUSTOMER,
-      rules: [],
-      entries: [],
-      rangeRuleNames: ['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other'],
-      hostRuleNames: ['alias', 'wwn_host_map', 'zone'],
-      reconcileRuleNames: ['wwn_customer_map','ignore_loaded'],
-      loadingState: {
-        loading: false,
-      },
+      rulesDirty: false
     };
   },
   computed: {
-    rangeRules() {
-      return this.rules.filter(rule => this.rangeRuleNames.includes(rule.type));
+    apiStore() {
+      return useApiStore();
     },
-    hostRules() {
-      return this.rules.filter(rule => this.hostRuleNames.includes(rule.type));
-    },
-    reconcileRules() {
-      return this.rules.filter(rule => this.reconcileRuleNames.includes(rule.type));
-    },
-    rulesStore() {
-      return useRulesStore();
-    },
-    entryStore() {
-      return useEntryStore();
-    },
-    flash() {
-      return useFlashStore();
-    }
   },
   methods: {
+    async reloadRules() {
+      this.apiStore.dirty.rules=true;
+      await this.apiStore.loadRules();
+    },
     handleFileChange(event) {
       const selected = event.target.files[0];
       if (selected) {
@@ -184,63 +149,23 @@ export default {
     },
     async uploadFile() {
       if (!this.file) return;
-      this.loadingState.loading = true;
-      try {
-        await fcService.importFile(this.file);
-        if (this.selectedCustomer) {
-          await this.loadEntries();
-        }
-      } catch (err) {
-        console.error("Import failed!", err);
-        this.flash.show("Import failed", "danger");
-      } finally {
-        this.file = null;
-        this.fileName = "";
-        this.$refs.fileInput.value = null; // Reset file input
-        this.loadingState.loading = false;
-      }
+      await this.apiStore.importEntries(this.file);
+      this.file = null;
+      this.fileName = "";
+      this.$refs.fileInput.value = null;
     },
     async uploadRules() {
       if (!this.file) return;
-      this.loadingState.loading = true;
-      try {
-        await fcService.importRules(this.file);
-        await this.loadRules();
-      } catch (err) {
-        console.error("Import failed!", err);
-        this.flash.show("Import failed", "danger");
-      } finally {
-        this.file = null;
-        this.fileName = "";
-        this.$refs.fileInput.value = null; // Reset file input
-        this.loadingState.loading = false;
-      }
-    },
-    async loadRules() {
-      if (!this.selectedCustomer) return;
-      const res = await fcService.getRules(this.selectedCustomer);
-      this.rulesStore.setScopedRules(res.data);
-      this.rules = res.data;
-      const res2 = await fcService.getAllRules();
-      this.rulesStore.setAllRules(res2.data);
-    },
-    async loadEntries(dirty=true) {
-      if (!this.selectedCustomer) return;
-      this.entryStore.dirty = dirty;
-      this.entries = await this.entryStore.getEntries(this.selectedCustomer)
+      this.apiStore.loading = true;
+      await this.apiStore.importRules(this.file);
+      this.file = null;
+      this.fileName = "";
+      this.$refs.fileInput.value = null; 
     },
     async loadData() {
-      this.loadingState.loading = true;
-      try {
-        await this.loadRules();
-        await this.loadEntries();
-        // this.flash.show("Data load succeeded", "success");
-      } catch (err) {
-        console.error("Data load failed", err);
-        this.flash.show("Data load failed", "danger");
-      } finally {
-        this.loadingState.loading = false;
-      }
+      this.apiStore.dirty.entries=true;
+      this.apiStore.dirty.rules=true;
+      await this.apiStore.init();
     },
     async downloadRules() {
       const resp = await fcService.getRulesExport();
@@ -261,9 +186,6 @@ export default {
       const resp = await fcService.getHostWWNExport();
       fcService.saveFile(resp);
     }
-  },
-  mounted() {
-    this.loadData();
   },
 };
 </script>

@@ -25,16 +25,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useDataStore } from '@/stores/dataStore'
+import { useUserStore } from '@/stores/userStore'
 
-const dataStore = useDataStore()
+const userStore = useUserStore()
 
 const username = ref('')
 const password = ref('')
 const focusInput = ref(null)
 
 const submitLogin = async () => {
-  await dataStore.loginUser(username.value,password.value)
+  await userStore.loginUser(username.value,password.value)
 }
 
 onMounted(() => {
