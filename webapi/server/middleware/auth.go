@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -21,14 +22,18 @@ func SessionManager() echo.MiddlewareFunc {
 				MaxAge:   3600 * 1,
 				HttpOnly: true,
 			}
+			sess.Values["_refresh"] = time.Now().UnixNano()
 			c.Set(SESSION_STORE, sess)
+
+			// Ensure the session is always saved *before* headers are sent
+			c.Response().Before(func() {
+				if err := sess.Save(c.Request(), c.Response()); err != nil {
+					c.Logger().Errorf("failed to save session: %v", err)
+				}
+			})
+
 			if err := next(c); err != nil {
 				return err
-			}
-
-			// Always save to refresh cookie age
-			if err := sess.Save(c.Request(), c.Response()); err != nil {
-				return echo.NewHTTPError(http.StatusInternalServerError, "failed to save session: %v", err)
 			}
 			return nil
 		}
