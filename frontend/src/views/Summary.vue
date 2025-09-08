@@ -7,6 +7,20 @@
       <div class="accordion" id="summary" style="min-width: 800px;">
         <div class="accordion-item">
           <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseZero" aria-expanded="true" aria-controls="collapseZero">
+            Unaltered WWN Records ({{ notChangedEntries().length }})
+            </button>
+          </h2>
+          <div id="collapseZero" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <EntriesSummaryTable 
+                :entries="notChangedEntries()"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
             New WWN Records ({{ newPrimaryEntries().length }})
             </button>
@@ -141,19 +155,22 @@ export default {
     },
   },
   methods: {
+    notChangedEntries() {
+      return this.entries.filter(e => this.isPrimary(e) && this.isNotChanged(e) && !this.isSoftDeleted(e));
+    },
     newPrimaryEntries() {
-      return this.entries.filter(e => this.is_primary(e) && this.is_new(e) && !this.is_soft_deleted(e));
+      return this.entries.filter(e => this.isPrimary(e) && this.isNew(e) && !this.isSoftDeleted(e));
     },
     changedPrimaryEntries() {
-      return this.entries.filter(e => this.is_primary(e) && this.diffHostname(e) && !this.is_soft_deleted(e));
+      return this.entries.filter(e => this.isPrimary(e) && this.diffHostname(e) && !this.isSoftDeleted(e));
     },
     // TODO - update once we hae a baseline
     deletedPrimaryEntries() {
-      return this.entries.filter(e => this.is_soft_deleted(e));
+      return this.entries.filter(e => this.isSoftDeleted(e));
     },
     // TODO - add filter to tell new and changed apart once we have a baseline
     newSecondaryEntries() {
-      return this.entries.filter(e => this.is_secondary(e) && !this.is_soft_deleted(e));
+      return this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
     },
     // TODO - update once we have baseline
     changedSecondaryEntries() {
@@ -164,21 +181,24 @@ export default {
       return []
     },
     ignoredEntries() {
-      return this.entries.filter(e => !this.is_soft_deleted(e) && e.ignore_entry)
+      return this.entries.filter(e => !this.isSoftDeleted(e) && e.ignore_entry)
     },
     diffHostname(entry) {
       return entry?.loaded_hostname !== "" && entry?.hostname.toLowerCase() !== entry?.loaded_hostname.toLowerCase();
     },
-    is_new(entry) {
+    isNotChanged(entry) {
+      return entry?.loaded_hostname !== "" && entry?.hostname.toLowerCase() == entry?.loaded_hostname.toLowerCase();
+    },
+    isNew(entry) {
       return entry.loaded_hostname === "" && entry.hostname !== ""
     },
-    is_primary(entry) {
+    isPrimary(entry) {
       return entry.is_primary_customer && !entry.ignore_entry && entry.wwn_set !== 3
     },
-    is_secondary(entry) {
+    isSecondary(entry) {
       return !entry.is_primary_customer && !entry.ignore_entry && entry.wwn_set !== 3
     },
-    is_soft_deleted(entry) {
+    isSoftDeleted(entry) {
       if ('deleted_at' in entry) {
         return true;
       }
