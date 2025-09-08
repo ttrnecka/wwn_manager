@@ -70,6 +70,9 @@ func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context, filter Filter)
 		})
 	}
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{
+			{Key: "deletedAt", Value: bson.D{{Key: "$exists", Value: false}}},
+		}}},
 		{{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: "$wwn"},
 			{Key: "customers", Value: bson.D{{Key: "$addToSet", Value: bson.D{

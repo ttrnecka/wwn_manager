@@ -3,6 +3,7 @@ import fcService from "@/services/fcService";
 import { GLOBAL_CUSTOMER } from '@/config'
 import { useFlashStore } from '@/stores/flash'
 import { markRaw } from 'vue'
+import router from '@/router'
 
 export const useApiStore = defineStore('api', {
   state: () => ({
@@ -35,8 +36,14 @@ export const useApiStore = defineStore('api', {
     hostRules(state) {
       return state.rules.filter(rule => state.hostRuleNames.includes(rule.type));
     },
+    globalHostRules(state) {
+      return this.hostRules.filter(rule => rule.customer === GLOBAL_CUSTOMER);
+    },
     reconcileRules(state) {
       return state.rules.filter(rule => state.reconcileRuleNames.includes(rule.type));
+    },
+    globalReconcileRules(state) {
+      return this.reconcileRules.filter(rule => rule.customer === GLOBAL_CUSTOMER);
     },
     flash() {
       return useFlashStore();

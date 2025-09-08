@@ -79,10 +79,24 @@ func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
 
 func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 	probe_id := c.Param("id")
-	_, err := h.service.Get(c.Request().Context(), probe_id)
+	entry, err := h.service.Get(c.Request().Context(), probe_id)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
+
+	entries, err := h.service.Find(c.Request().Context(), service.Filter{"wwn": entry.WWN}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to find common entries", err)
+	}
+
+	for _, e := range entries {
+		e.DuplicateCustomers = nil
+		_, err := h.service.Update(c.Request().Context(), e.ID, &e)
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to flush duplicate customers from entry", err)
+		}
+	}
+
 	err = h.service.SoftDelete(c.Request().Context(), probe_id)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to soft delete entry", err)

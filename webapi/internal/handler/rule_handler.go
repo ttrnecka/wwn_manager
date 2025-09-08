@@ -569,10 +569,11 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 			if _, exists := seen[strings.ToLower(dc.Hostname)]; exists {
 				unique = false
 			}
-			if utils.ContainsIgnoreCase(entry.Hostname, dc.Hostname) || utils.ContainsIgnoreCase(dc.Hostname, entry.Hostname) {
-				unique = false
-			}
 			seen[strings.ToLower(dc.Hostname)] = struct{}{}
+		}
+
+		if utils.HasSubstringKeys(seen) {
+			unique = false
 		}
 		dupReconciled = false
 		entry.IsPrimaryCustomer = false
@@ -586,10 +587,6 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 				entry.IsPrimaryCustomer = true
 			}
 		} else {
-			if !unique {
-				entry.LoadedHostname = ""
-				dupReconciled = true
-			}
 			// otherwise check of some other customer is auto
 			// if it is we reconcile it as it should be not primary if auto set exists
 			// as well the loaded hostname belongs to primary so we just flush it form secondary
@@ -607,12 +604,18 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 					entry.Hostname != "" &&
 					(strings.EqualFold(entry.Hostname, c.Hostname) || utils.ContainsIgnoreCase(c.Hostname, entry.Hostname)) {
 					entry.IgnoreEntry = true
+					entry.LoadedHostname = ""
+					dupReconciled = true
 				}
+			}
+			if !entry.IgnoreEntry && !unique {
+				entry.LoadedHostname = ""
+				dupReconciled = true
 			}
 		}
 	}
 	loadedReconciled := true
-	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) {
+	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) && !utils.ContainsIgnoreCase(entry.LoadedHostname, entry.Hostname) {
 		loadedReconciled = false
 	}
 REC:

@@ -106,6 +106,7 @@ import { useApiStore } from '@/stores/apiStore';
 import { useFlashStore } from '@/stores/flash'
 import { GLOBAL_CUSTOMER } from '@/config'
 import { markRaw } from 'vue'
+import router from '@/router'
 
 export default {
   name: "Summary",
@@ -196,7 +197,15 @@ export default {
       this.apiStore.loading = true;
       try {
         await this.loadEntries();
+        this.apiStore.dirty.entries=true;
       } catch (err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
         console.error("Data load failed", err);
         this.flash.show("Data load failed", "danger");
       } finally {

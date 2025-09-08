@@ -63,7 +63,7 @@
           <div id="collapseTwo" class="accordion-collapse collapse">
             <div class="accordion-body">
               <RulesTable
-                :rules="apiStore.hostRules"
+                :rules="apiStore.globalHostRules"
                 :customer="selectedCustomer"
                 @rulesChanged="reloadRules"
               />
@@ -79,7 +79,7 @@
           <div id="collapseThree" class="accordion-collapse collapse">
             <div class="accordion-body">
               <RulesTable
-                :rules="apiStore.reconcileRules"
+                :rules="apiStore.globalReconcileRules"
                 :customer="selectedCustomer"
                 :types="['wwn_customer_map','ignore_loaded']"
                 @rulesChanged="reloadRules"
