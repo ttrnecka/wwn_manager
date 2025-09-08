@@ -16,28 +16,26 @@
     </p>
 
     <h3 class="blue">WWN source</h3>
-    <p>
       WWNs are imported to the tool in specific format containig following fields:
-      <ul>
-      <li>Customer</li>
-      <li>WWN</li>
-      <li>Zone</li>
-      <li>Alias</li>
-      <li>Existing hostname</li>
-      <li>Flag if the WNW is loaded by CSV in the external tool or detected</li>
-      <li>WWN set</li>
-      </ul>
+    <ul>
+    <li>Customer</li>
+    <li>WWN</li>
+    <li>Zone</li>
+    <li>Alias</li>
+    <li>Existing hostname</li>
+    <li>Flag if the WNW is loaded by CSV in the external tool or detected</li>
+    <li>WWN set</li>
+    </ul>
 
-      WWN set:
-      <ul>
-      <li>1 - WWN loaded from SAN configuration</li>
-      <li>2 - WWN manually loaded into the source system</li>
-      <li>3 - WWN automatically loaded into the source system</li>
-      </ul>
-      <p>
-        Set 1 records come with zone and alias info, while set 2 and 3 do not. Hence if set 1 belongs to more zones/aliases they should be 
-        included on a separate lines in the import file. There can be only one set 2 or set 3 type record for any given WWN and multiple set 1 records
-      </p>
+    WWN set:
+    <ul>
+    <li>1 - WWN loaded from SAN configuration</li>
+    <li>2 - WWN manually loaded into the source system</li>
+    <li>3 - WWN automatically loaded into the source system</li>
+    </ul>
+    <p>
+      Set 1 records come with zone and alias info, while set 2 and 3 do not. Hence if set 1 belongs to more zones/aliases they should be 
+      included on a separate lines in the import file. There can be only one set 2 or set 3 type record for any given WWN and multiple set 1 records
     </p>
 
     <h3 class="blue">Range Rules</h3>
@@ -67,28 +65,26 @@
     </p>
 
     <h4 class="blue">Default Reconciliation Rules</h4>
-    <p>
-      <ul>
-        <li>
-          Rule 1 - if WWN is automatically discovered (set 3) and it belongs to mutliple customers, then it will be included in the standard export. 
-          All other records with the same WWN are automatically included in the override export. Additionaly, if any record's decoded 
-          hostname matches the automaticaly discovered record hostname, then such record is ignored from any export to avoid duplicate data.
-        </li>
-        <li>
-          Rule 2 - if WWN is manually imported (set 2) and it belongs to multiple customers, if any record's decoded hostname matches its hostname,
-          then the manually imported WWN is included in the standard export, the matching record not exported and all other records are 
-          included in the override export.
-        </li>
-        <li>
-          Rule 3 - same scenario as Rule 2 but all hostnames are unique, then manual reconciliation is required, to decide which record goes
-          to which export.
-        </li>
-        <li>
-          Rule 4 - if WWN is loaded from SAN (set 1) and it belongs to mutliple customers where are all loaded from SAN, then manual 
-          reconciliation is needed to decide which record goes to which export.
-        </li>
-      </ul>
-    </p>
+    <ul>
+      <li>
+        Rule 1 - if WWN is automatically discovered (set 3) and it belongs to mutliple customers, then it will be included in the standard export. 
+        All other records with the same WWN are automatically included in the override export. Additionaly, if any record's decoded 
+        hostname matches the automaticaly discovered record hostname, then such record is ignored from any export to avoid duplicate data.
+      </li>
+      <li>
+        Rule 2 - if WWN is manually imported (set 2) and it belongs to multiple customers, if any record's decoded hostname matches its hostname,
+        then the manually imported WWN is included in the standard export, the matching record not exported and all other records are 
+        included in the override export.
+      </li>
+      <li>
+        Rule 3 - same scenario as Rule 2 but all hostnames are unique, then manual reconciliation is required, to decide which record goes
+        to which export.
+      </li>
+      <li>
+        Rule 4 - if WWN is loaded from SAN (set 1) and it belongs to mutliple customers where are all loaded from SAN, then manual 
+        reconciliation is needed to decide which record goes to which export.
+      </li>
+    </ul>
     <h4 class="blue">Custom Reconciliation Rules</h4>
     <ul>
       <li>

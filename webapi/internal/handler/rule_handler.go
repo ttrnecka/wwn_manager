@@ -19,6 +19,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
+	"github.com/ttrnecka/wwn_identity/webapi/internal/utils"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -568,6 +569,9 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 			if _, exists := seen[strings.ToLower(dc.Hostname)]; exists {
 				unique = false
 			}
+			if utils.ContainsIgnoreCase(entry.Hostname, dc.Hostname) || utils.ContainsIgnoreCase(dc.Hostname, entry.Hostname) {
+				unique = false
+			}
 			seen[strings.ToLower(dc.Hostname)] = struct{}{}
 		}
 		dupReconciled = false
@@ -594,14 +598,14 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 				if c.WWNSet == entity.WWNSetAuto {
 					dupReconciled = true
 					entry.LoadedHostname = ""
-					if strings.EqualFold(entry.Hostname, c.Hostname) {
+					if strings.EqualFold(entry.Hostname, c.Hostname) || utils.ContainsIgnoreCase(c.Hostname, entry.Hostname) {
 						entry.IgnoreEntry = true
 					}
 				}
 				// case where there is manually inserted wwn for but the customer is different but decoded hostname is same
 				if c.WWNSet == entity.WWNSetManual &&
 					entry.Hostname != "" &&
-					strings.EqualFold(entry.Hostname, c.Hostname) {
+					(strings.EqualFold(entry.Hostname, c.Hostname) || utils.ContainsIgnoreCase(c.Hostname, entry.Hostname)) {
 					entry.IgnoreEntry = true
 				}
 			}

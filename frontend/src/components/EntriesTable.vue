@@ -224,7 +224,7 @@ export default {
     async commitReconcile() {
       try {
         await fcService.setReconcileRules(this.modalData.entry.id, this.modalData);
-        await apiStore.reload();
+        await this.apiStore.reload();
       } catch (err) {
         console.error("Reconciliation failed!", err);
         this.flash.show("Reconciliation failed", "danger");

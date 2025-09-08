@@ -8,13 +8,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-            New WWN Records ({{ newPrimaryEntries.length }})
+            New WWN Records ({{ newPrimaryEntries().length }})
             </button>
           </h2>
           <div id="collapseOne" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="newPrimaryEntries"
+                :entries="newPrimaryEntries()"
               />
             </div>
           </div>
@@ -22,13 +22,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
-              Changed WWN Records ({{ changedPrimaryEntries.length }})
+              Changed WWN Records ({{ changedPrimaryEntries().length }})
             </button>
           </h2>
           <div id="collapseTwo" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="changedPrimaryEntries"
+                :entries="changedPrimaryEntries()"
               />
             </div>
           </div>
@@ -36,14 +36,14 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-              Deleted WWN Records ({{ deletedPrimaryEntries.length }})
+              Deleted WWN Records ({{ deletedPrimaryEntries().length }})
             </button>
           </h2>
           <div id="collapseThree" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="deletedPrimaryEntries"
-                @entryRestored="loadData"
+                :entries="deletedPrimaryEntries()"
+                @entry-restored="loadData"
               />
             </div>
           </div>
@@ -51,13 +51,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
-            New Override WWN Records ({{ newSecondaryEntries.length }})
+            New Override WWN Records ({{ newSecondaryEntries().length }})
             </button>
           </h2>
           <div id="collapseFour" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="newSecondaryEntries"
+                :entries="newSecondaryEntries()"
               />
             </div>
           </div>
@@ -65,13 +65,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-            Changed Override WWN Records ({{ changedSecondaryEntries.length }})
+            Changed Override WWN Records ({{ changedSecondaryEntries().length }})
             </button>
           </h2>
           <div id="collapseFive" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="changedSecondaryEntries"
+                :entries="changedSecondaryEntries()"
               />
             </div>
           </div>
@@ -79,13 +79,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="true" aria-controls="collcollapseSixpseFive">
-            Deleted Override WWN Records ({{ deletedSecondaryEntries.length }})
+            Deleted Override WWN Records ({{ deletedSecondaryEntries().length }})
             </button>
           </h2>
           <div id="collapseSix" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="deletedSecondaryEntries"
+                :entries="deletedSecondaryEntries()"
                 @entryRestored="loadData"
               />
             </div>
@@ -124,6 +124,8 @@ export default {
     apiStore() {
       return useApiStore();
     },
+  },
+  methods: {
     newPrimaryEntries() {
       return this.entries.filter(e => this.is_primary(e) && this.is_new(e) && !this.is_soft_deleted(e));
     },
@@ -146,8 +148,6 @@ export default {
     deletedSecondaryEntries() {
       return []
     },
-  },
-  methods: {
     diffHostname(entry) {
       return entry?.loaded_hostname !== "" && entry?.hostname.toLowerCase() !== entry?.loaded_hostname.toLowerCase();
     },

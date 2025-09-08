@@ -12,12 +12,12 @@ export const useApiStore = defineStore('api', {
       rules: true,
       entries: true
     },
+    entries: markRaw([]),
     entriesVersion: 0,
     rangeRuleNames: ['wwn_range_array', 'wwn_range_backup', 'wwn_range_host', 'wwn_range_other'],
     hostRuleNames: ['alias', 'wwn_host_map', 'zone'],
     reconcileRuleNames: ['wwn_customer_map','ignore_loaded'],
   }),
-  entries: markRaw([]),
   getters: {
     getEntries(state) {
       return async (customer) => {
@@ -37,28 +37,6 @@ export const useApiStore = defineStore('api', {
     },
     reconcileRules(state) {
       return state.rules.filter(rule => state.reconcileRuleNames.includes(rule.type));
-    },
-    newPrimaryEntries(state) {
-      return this.entries.filter(e => this.is_primary(e) && this.is_new(e) && !this.is_soft_deleted(e));
-    },
-    changedPrimaryEntries(state) {
-      return this.entries.filter(e => this.is_primary(e) && this.diffHostname(e) && !this.is_soft_deleted(e));
-    },
-    // TODO - update once we hae a baseline
-    deletedPrimaryEntries(state) {
-      return this.entries.filter(e => this.is_soft_deleted(e));
-    },
-    // TODO - add filter to tell new and changed apart once we have a baseline
-    newSecondaryEntries(state) {
-      return this.entries.filter(e => this.is_secondary(e));
-    },
-    // TODO - update once we have baseline
-    changedSecondaryEntries(state) {
-      return []
-    },
-    // TODO - update once we have baseline
-    deletedSecondaryEntries(state) {
-      return []
     },
     flash() {
       return useFlashStore();
