@@ -78,7 +78,7 @@
         </div>
         <div class="accordion-item">
           <h2 class="accordion-header">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="true" aria-controls="collcollapseSixpseFive">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
             Deleted Override WWN Records ({{ deletedSecondaryEntries().length }})
             </button>
           </h2>
@@ -87,6 +87,20 @@
               <EntriesSummaryTable 
                 :entries="deletedSecondaryEntries()"
                 @entryRestored="loadData"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSeven" aria-expanded="true" aria-controls="collapseSeven">
+            Ignored WWN Records ({{ ignoredEntries().length }})
+            </button>
+          </h2>
+          <div id="collapseSeven" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <EntriesSummaryTable 
+                :entries="ignoredEntries()"
               />
             </div>
           </div>
@@ -139,7 +153,7 @@ export default {
     },
     // TODO - add filter to tell new and changed apart once we have a baseline
     newSecondaryEntries() {
-      return this.entries.filter(e => this.is_secondary(e));
+      return this.entries.filter(e => this.is_secondary(e) && !this.is_soft_deleted(e));
     },
     // TODO - update once we have baseline
     changedSecondaryEntries() {
@@ -148,6 +162,9 @@ export default {
     // TODO - update once we have baseline
     deletedSecondaryEntries() {
       return []
+    },
+    ignoredEntries() {
+      return this.entries.filter(e => !this.is_soft_deleted(e) && e.ignore_entry)
     },
     diffHostname(entry) {
       return entry?.loaded_hostname !== "" && entry?.hostname.toLowerCase() !== entry?.loaded_hostname.toLowerCase();

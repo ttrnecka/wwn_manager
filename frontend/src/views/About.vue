@@ -73,8 +73,8 @@
       </li>
       <li>
         Rule 2 - if WWN is manually imported (set 2) and it belongs to multiple customers, if any record's decoded hostname matches its hostname,
-        then the manually imported WWN is included in the standard export, the matching record not exported and all other records are 
-        included in the override export.
+        then the manually imported WWN is included in the standard export, the matching record is ignored from any export to avoid duplicate data
+        and all other records are included in the override export.
       </li>
       <li>
         Rule 3 - same scenario as Rule 2 but all hostnames are unique, then manual reconciliation is required, to decide which record goes

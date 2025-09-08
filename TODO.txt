@@ -1,7 +1,7 @@
 Short term TODO
 Snapshot - to compare changes
 Summary export
-Summary - add ignored
+Make it clear when the rules needs to be reapplied
 Lock export behind control
 - no unknown
 - no reconcile needed
@@ -20,5 +20,6 @@ DONE
 Web logging to file
 Session sliding refresh shorter expiration
 Summary - handle similar name
+Summary - add ignored
 Records removal with duplicated customers
     - delete duplicate customer for each same wwn (not needed - and rerun rules)
