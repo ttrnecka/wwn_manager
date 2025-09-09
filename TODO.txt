@@ -11,6 +11,7 @@ explicit approval creates baseline/snapshot
 Add WWN validation
 Finish About page
 
+
 Long term TODO
 Account solution - local account or AD?
 DB password + configuration file with encrypted password
@@ -25,3 +26,4 @@ Summary - handle similar name
 Summary - add ignored
 Records removal with duplicated customers
     - delete duplicate customer for each same wwn (not needed - and rerun rules)
+REfresh rules after import

@@ -119,6 +119,7 @@ export const useApiStore = defineStore('api', {
       this.loading = true;
       try {
         await fcService.importRules(file);
+        this.dirty.rules=true;
         await this.loadRules();
       } catch (err) {
         console.error("Import failed!", err);

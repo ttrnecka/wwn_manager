@@ -59,7 +59,7 @@ onMounted(() => {
     <main class="flex-grow-1 d-flex flex-column p-3 overflow-auto">
       <!-- Header -->
       <header class="d-flex justify-content-between align-items-center mb-3">
-        <Header msg="WWN Manager Demo" />
+        <Header msg="WWN Manager" />
       </header>
 
       <!-- Main content -->
