@@ -4,22 +4,22 @@ import (
 	"fmt"
 
 	cdb "github.com/ttrnecka/agent_poc/common/db"
-	"github.com/ttrnecka/wwn_identity/webapi/db"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Snapshot struct {
 	cdb.BaseModel `bson:",inline"`
-	SnapshotID    string `bson:"snapshot_id"`
+	SnapshotID    int64 `bson:"snapshot_id"`
 }
 
-func (s Snapshot) CollectionName() string {
-	return fmt.Sprintf("fc_wwn_entries_%s", s.SnapshotID)
+func (s Snapshot) EntryCollectionName() string {
+	return fmt.Sprintf("%s_%d", FCWWNEntriesCollectionName, s.SnapshotID)
 }
 
-func Snapshots() *cdb.CRUD[Snapshot] {
-	return cdb.NewCRUD[Snapshot](db.Database(), "snapshots")
+func Snapshots(db *mongo.Database) *cdb.CRUD[Snapshot] {
+	return cdb.NewCRUD[Snapshot](db, "snapshots")
 }
 
-func GetSnapshot(s Snapshot) *cdb.CRUD[FCWWNEntry] {
-	return cdb.NewCRUD[FCWWNEntry](db.Database(), s.CollectionName())
+func (s Snapshot) GetEntries(db *mongo.Database) *cdb.CRUD[FCWWNEntry] {
+	return cdb.NewCRUD[FCWWNEntry](db, s.EntryCollectionName())
 }

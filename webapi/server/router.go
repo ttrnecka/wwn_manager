@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/ttrnecka/wwn_identity/webapi/db"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/handler"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
@@ -24,10 +25,10 @@ func Router() *echo.Echo {
 	e.Use(mid.SessionManager())
 
 	// db layer
-	users := entity.Users()
-	fcWWNEntries := entity.FCWWNEntries()
-	rule := entity.Rules()
-	snapshot := entity.Snapshots()
+	users := entity.Users(db.Database())
+	fcWWNEntries := entity.FCWWNEntries(db.Database())
+	rule := entity.Rules(db.Database())
+	snapshot := entity.Snapshots(db.Database())
 
 	// repositories
 	usersRepo := repository.NewUserRepository(users)
@@ -39,7 +40,7 @@ func Router() *echo.Echo {
 	userSvc := service.NewUserService(usersRepo)
 	fcwWWNEntrySvc := service.NewFCWWNEntryService(fcWWNEntryRepo)
 	ruleSvc := service.NewRuleService(ruleRepo)
-	snapshotSvc := service.NewSnapshotService(snapshotRepo)
+	snapshotSvc := service.NewSnapshotService(snapshotRepo, fcWWNEntryRepo)
 
 	//handlers
 	userHandler := handler.NewUserHandler(userSvc)

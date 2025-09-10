@@ -2,7 +2,7 @@ package entity
 
 import (
 	cdb "github.com/ttrnecka/agent_poc/common/db"
-	"github.com/ttrnecka/wwn_identity/webapi/db"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type User struct {
@@ -12,6 +12,6 @@ type User struct {
 	Password      string `bson:"password,omitempty"`
 }
 
-func Users() *cdb.CRUD[User] {
-	return cdb.NewCRUD[User](db.Database(), "users")
+func Users(db *mongo.Database) *cdb.CRUD[User] {
+	return cdb.NewCRUD[User](db, "users")
 }

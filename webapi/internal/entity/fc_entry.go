@@ -2,14 +2,15 @@ package entity
 
 import (
 	cdb "github.com/ttrnecka/agent_poc/common/db"
-	"github.com/ttrnecka/wwn_identity/webapi/db"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
-	WWNSetSAN    int = 1
-	WWNSetManual int = 2
-	WWNSetAuto   int = 3
+	WWNSetSAN                  int = 1
+	WWNSetManual               int = 2
+	WWNSetAuto                 int = 3
+	FCWWNEntriesCollectionName     = "fc_wwn_entries"
 )
 
 type DuplicateCustomer struct {
@@ -40,6 +41,6 @@ type FCWWNEntry struct {
 	// DuplicateCustomers2 []map[string]string `bson:"duplicate_customers2"`
 }
 
-func FCWWNEntries() *cdb.CRUD[FCWWNEntry] {
-	return cdb.NewCRUD[FCWWNEntry](db.Database(), "fc_wwn_entries")
+func FCWWNEntries(db *mongo.Database) *cdb.CRUD[FCWWNEntry] {
+	return cdb.NewCRUD[FCWWNEntry](db, FCWWNEntriesCollectionName)
 }

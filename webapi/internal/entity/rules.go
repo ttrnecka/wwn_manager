@@ -2,7 +2,7 @@ package entity
 
 import (
 	cdb "github.com/ttrnecka/agent_poc/common/db"
-	"github.com/ttrnecka/wwn_identity/webapi/db"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type RuleType string
@@ -44,6 +44,6 @@ type Rule struct {
 	Comment       string   `bson:"comment"`
 }
 
-func Rules() *cdb.CRUD[Rule] {
-	return cdb.NewCRUD[Rule](db.Database(), "rules")
+func Rules(db *mongo.Database) *cdb.CRUD[Rule] {
+	return cdb.NewCRUD[Rule](db, "rules")
 }
