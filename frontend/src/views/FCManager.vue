@@ -3,6 +3,9 @@
     <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage ref="flash" />
     <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
+      <div class="mb-1">
+        <RulesControls @rules-applied="loadData"/>
+      </div> 
       <!-- Customers -->
       <div class="mb-3">
         <select v-model="selectedCustomer" class="form-select">
@@ -60,6 +63,7 @@
 <script>
 import fcService from "@/services/fcService";
 import RulesTable from "@/components/RulesTable.vue";
+import RulesControls from "@/components/RulesControls.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
@@ -68,7 +72,7 @@ import { useApiStore } from '@/stores/apiStore';
 
 export default {
   name: "FCManager",
-  components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage },
+  components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage, RulesControls },
   data() {
     return {
       customers: [],
@@ -105,6 +109,11 @@ export default {
     async loadCustomers() {
       const res = await fcService.getCustomers();
       this.customers = res.data;
+    },
+    async loadData() {
+      this.apiStore.dirty.entries=true;
+      this.apiStore.dirty.rules=true;
+      await this.apiStore.init();
     },
   },
   mounted() {

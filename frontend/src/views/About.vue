@@ -134,36 +134,114 @@
 
     <ul>
       <li>
-        Import latest entries from the source
+        Import entries
       </li>
       <li>
-        Import latest rule set from repository
+        Import rules
       </li>
       <li>
-        Identify any Unknow type records and if any create new range rules to tell if they are host, array, backup or other
+        Update range rules
       </li>
       <li>
-        Click Apply rules
+        Reconcile records
       </li>
       <li>
-        Reconcile all records that need reconciliation
+        Review all changes
       </li>
       <li>
-        In Summary view review all changes
+        Update host rules
       </li>
       <li>
-        If needed update global or tenant host rules to capture correct name
+        Commit
       </li>
       <li>
-        Once happy with all rules and everything is reconciled click Commit in the Summary view
-      </li>
-      <li>
-        This will take snapshot of current data for future reference and allows to download Host WWN amd Override WWN files
-      </li>
-      <li>
-        Download the Host WWN and Override WWN and import it into the external tool as needed.
+        Export the Host WWN and Override WWN
       </li>
     </ul>
+
+  <h3 class="blue">Import Entries</h3>
+  <ul>
+    <li>Locate the <b>Host WWN Identification Feed</b> report</li>
+    <li>Run it and export it as CSV</li>
+    <li>Click <b>Import Entries</b> button on the <b>Global</b> page and select the csv file</li>
+  </ul>
+
+  <h3 class="blue">Import Rules</h3>
+
+  Follow this if you do not have latest rules set already:
+
+  <ul>
+    <li>Download the rules.csv from the repository (location TBD)</li>
+    <li>Click <b>Import Rules</b> button on the <b>Global</b> page and select the csv file</li>
+  </ul>
+
+  <h3 class="blue">Update Range Rules</h3>
+
+  After new import it is required to verify that there are no WWNs with <b>Unknown</b> type:
+
+  <ul>
+    <li>Click <b>Apply Rules</b> button on the <b>Global</b> page</li>
+    <li>Type <b>Unknown</b> in the search box on the <b>Global</b> page</li>
+    <li>If entries are listed, try to identify if they are backup, array, host or others, based on the zones and aliases they are in</li>
+    <li>Once done, either update existing Range Rules or create new one</li>
+      <ul>
+        <li>Expand the <b>Range Rules</b> section on the <b>Global page</b></li>
+        <li>Update regular expresion for existing rule or click <b>Add Rule</b> button at the bottom of the table and fill input appropriately</li>
+      </ul>
+    <li>Repeat all steps until there is no <b>Unknown</b> record</li>
+  </ul>
+
+  <h3 class="blue">Reconcile Records</h3>
+
+  <ul>
+    <li>Click <b>Reconcle Only</b> checkbox on the <b>Global</b> page</li>
+    <li>For every displayed line, do one of the following</li>
+      <ul>
+        <li>Click <button class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-bar-up" role="button"></i></button> next to a hostname to select that hostname for the given WWN</li>
+        <li>Click <b>Reconcile</b> button to bring up modal and select the primary customer (record that will be exported)</li>
+      </ul>
+    <li>Repeat all steps until there is no entry in the list</li>
+  </ul>
+
+  <h3 class="blue">Review All Changes</h3>
+
+  <ul>
+    <li>Navigate to the <b>Summary</b> page</li>
+    <li>Review all sections - especially the new, changed and deleted sections</li>
+    <ul>
+      <li><b>Unaltered WWN records</b> - records where host to WWN mapping did not change after the rules have been applied</li>
+      <li><b>New WWN records</b> - records where WWN to host mapping currently does not exist in the source tool</li>
+      <li><b>Changed WWN records</b> - records where host is different than host already in the tool after all rules have been applied</li>
+      <li><b>Deleted WWN records</b> - records that exist in the source but have been marked for deletion in the next export</li>
+      <li><b>New Override WWN records</b> - new duplicate records that will go to override table, compared agaist previous snapshot</li>
+      <li><b>Changed Override WWN records</b> - changed duplicate records in override table where the host is different than in last snapshot </li>
+      <li><b>Deleted Override WWN records</b> - records that have been marked for deletion in the next override export</li>
+      <li><b>Ignored WWN records</b> - records that have both same WWN and similar decoded hostname with another WWN record, where the other record has been prioritized by the default reconciliation rules</li>
+    </ul>
+  </ul>
+
+  <h3 class="blue">Update Host Rules</h3>
+
+  If, after reviewing the changes, some of the hosts are not captured properly create or update tenant host rules.
+
+  <ul>
+    <li>Navigate to <b>Customers</b> section and select the customer you want to edit</li>
+    <li>Expand the <b>Host Rules</b> section</li>
+    <li>Update regular expresion for existing rule or click <b>Add Rule</b> button at the bottom of the table and fill input appropriately</li>
+      <ul>
+        <li><b>Regexp</b> field must contain regular expression with capture group</li>
+        <li><b>Group</b> should contain number specifying the capture group that contains the hostname</li>
+        <li>Make sure the more specific rules are lower order that more general rules</li>
+      </ul>
+    <li>Click <b>Save</b> the rules</li>
+    <li>Click <b>Apply Rules</b> and review the changes</li>
+  </ul>
+
+  <h3 class="blue">Commit</h3>
+  TBD
+
+  <h3 class="blue">Export the Host WWN and Override WWN</h3>
+  TBD
   </div>
 </template>
 

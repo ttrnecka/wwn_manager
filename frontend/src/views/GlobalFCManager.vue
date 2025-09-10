@@ -16,17 +16,7 @@
           Import Entries
         </button>
 
-        <button class="btn btn-primary me-2 mb-2" @click="triggerFileInput('rules')">
-          Import Rules
-        </button>
-
-        <button class="btn btn-primary me-2 mb-2" @click="applyRules">
-          Apply Rules
-        </button>
-
-        <button class="btn btn-primary me-2 mb-2" @click="downloadRules">
-          Export Rules
-        </button>
+        <RulesControls @rules-applied="loadData"/>
 
         <button class="btn btn-primary me-2 mb-2" @click="downloadCustomerMapRules">
           Export Customer WWNs
@@ -98,6 +88,7 @@
 <script>
 import fcService from "@/services/fcService";
 import RulesTable from "@/components/RulesTable.vue";
+import RulesControls from "@/components/RulesControls.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
@@ -107,7 +98,7 @@ import { showAlert } from '@/services/alert';
 
 export default {
   name: "GlobalFCManager",
-  components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage },
+  components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage, RulesControls },
   data() {
     return {
       file: null,
@@ -135,9 +126,6 @@ export default {
         if (this.import_type==='entries') {
           this.uploadFile();
         }
-        if (this.import_type==='rules') {
-          this.uploadRules();
-        }
       } else {
         this.file = null;
         this.fileName = "";
@@ -154,29 +142,10 @@ export default {
       this.fileName = "";
       this.$refs.fileInput.value = null;
     },
-    async uploadRules() {
-      if (!this.file) return;
-      this.apiStore.loading = true;
-      await this.apiStore.importRules(this.file);
-      this.file = null;
-      this.fileName = "";
-      this.$refs.fileInput.value = null; 
-    },
     async loadData() {
       this.apiStore.dirty.entries=true;
       this.apiStore.dirty.rules=true;
       await this.apiStore.init();
-    },
-    async downloadRules() {
-      const resp = await fcService.getRulesExport();
-      fcService.saveFile(resp);
-    },
-    async applyRules() {
-      const result = await showAlert(async () => {
-          await fcService.applyRules();
-          await this.loadData();
-      },
-      {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
     },
     async downloadCustomerMapRules() {
       const resp = await fcService.getCustomerWWNExport();

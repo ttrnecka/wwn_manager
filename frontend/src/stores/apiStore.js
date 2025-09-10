@@ -55,8 +55,8 @@ export const useApiStore = defineStore('api', {
        await this.loadEntries(GLOBAL_CUSTOMER);
     },
     async reload() {
-      this.apiStore.dirty.rules=true;
-      this.apiStore.dirty.entries=true;
+      this.dirty.rules=true;
+      this.dirty.entries=true;
       await this.init();
     },
     async loadEntries(customer) {
