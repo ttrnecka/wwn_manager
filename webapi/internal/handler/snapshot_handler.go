@@ -31,6 +31,34 @@ func (h *SnapshotHandler) Snapshots(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemsDTO)
 }
 
+func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
+
+	entries, err := h.entryService.Find(c.Request().Context(), service.Filter{"type": "Unknown"}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to check unknown type entries", err)
+	}
+	if len(entries) > 0 {
+		return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, Unknown type entries exist", err)
+	}
+
+	entries, err = h.entryService.Find(c.Request().Context(), service.Filter{"needs_reconcile": true}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to check entries requiring reconciliation", err)
+	}
+	if len(entries) > 0 {
+		return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, entries that require reconciliation exist", err)
+	}
+
+	snapshot, err := h.service.MakeSnapshot(c.Request().Context())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		// return errorWithInternal(http.StatusInternalServerError, "Failed to create snapshot", err)
+	}
+	itemDTO := mapper.ToSnapshotDTO(*snapshot)
+
+	return c.JSON(http.StatusOK, itemDTO)
+}
+
 func (h *SnapshotHandler) GetSnapshotEntries(c echo.Context) error {
 	snapshot_id := c.Param("id")
 	snapshot, err := h.service.Get(c.Request().Context(), snapshot_id)

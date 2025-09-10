@@ -72,6 +72,7 @@ func Router() *echo.Echo {
 	api.POST("/entries/:id/restore", fcWWNEntryHandler.RestoreFCWWNEntry)
 	api.GET("/customers/:name/entries", fcWWNEntryHandler.FCWWNEntries)
 	api.GET("/snapshots", snapshotHandler.Snapshots)
+	api.POST("/snapshots", snapshotHandler.CreateSnapshot)
 
 	return e
 
