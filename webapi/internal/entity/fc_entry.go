@@ -20,24 +20,25 @@ type DuplicateCustomer struct {
 }
 
 type FCWWNEntry struct {
-	cdb.BaseModel      `bson:",inline"`
-	Customer           string               `bson:"customer"`
-	WWN                string               `bson:"wwn"`
-	Zones              []string             `bson:"zones"`
-	Aliases            []string             `bson:"aliases"`
-	Hostname           string               `bson:"hostname,omitempty"`
-	LoadedHostname     string               `bson:"loaded_hostname"`
-	IsCSVLoad          bool                 `bson:"is_csv_load"`
-	WWNSet             int                  `bson:"wwn_set"`
-	Type               string               `bson:"type,omitempty"`
-	TypeRule           primitive.ObjectID   `bson:"type_rule,omitempty"`
-	HostNameRule       primitive.ObjectID   `bson:"hostname_rule,omitempty"`
-	ReconcileRules     []primitive.ObjectID `bson:"reconcile_rules,omitempty"`
-	NeedsReconcile     bool                 `bson:"needs_reconcile"`
-	IsPrimaryCustomer  bool                 `bson:"is_primary_customer"`
-	DuplicateCustomers []DuplicateCustomer  `bson:"duplicate_customers"`
-	IgnoreLoaded       bool                 `bson:"ignore_loaded"`
-	IgnoreEntry        bool                 `bson:"ignore_entry"`
+	cdb.BaseModel            `bson:",inline"`
+	Customer                 string               `bson:"customer"`
+	WWN                      string               `bson:"wwn"`
+	Zones                    []string             `bson:"zones"`
+	Aliases                  []string             `bson:"aliases"`
+	Hostname                 string               `bson:"hostname,omitempty"`
+	LoadedHostname           string               `bson:"loaded_hostname"`
+	IsCSVLoad                bool                 `bson:"is_csv_load"`
+	WWNSet                   int                  `bson:"wwn_set"`
+	Type                     string               `bson:"type,omitempty"`
+	TypeRule                 primitive.ObjectID   `bson:"type_rule,omitempty"`
+	HostNameRule             primitive.ObjectID   `bson:"hostname_rule,omitempty"`
+	ReconcileRules           []primitive.ObjectID `bson:"reconcile_rules,omitempty"`
+	DefaultReconcileMessages []RuleType           `bson:"default_reconcile_messages,omitempty"`
+	NeedsReconcile           bool                 `bson:"needs_reconcile"`
+	IsPrimaryCustomer        bool                 `bson:"is_primary_customer"`
+	DuplicateCustomers       []DuplicateCustomer  `bson:"duplicate_customers"`
+	IgnoreLoaded             bool                 `bson:"ignore_loaded"`
+	IgnoreEntry              bool                 `bson:"ignore_entry"`
 	// DuplicateCustomers2 []map[string]string `bson:"duplicate_customers2"`
 }
 

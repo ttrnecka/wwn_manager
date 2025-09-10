@@ -23,7 +23,7 @@
             <th class="col-2">Customer</th>
             <th class="col-2" >Hostname</th>
             <th class="col-2">WWN</th>
-            <th class="col-2">Hostname (Loaded)</th>
+            <th class="col-3">Hostname (Loaded)</th>
             <th class="col-6"></th>
           </tr>
         </thead>
@@ -34,15 +34,18 @@
               {{ e.hostname }}
             </td>
             <td class="col-2">{{ e.wwn }}</td>
-            <td class="col-2">
+            <td class="col-3">
               {{ e.loaded_hostname }}
             </td>
             <td class="col-6">
+            <div class ="d-flex justify-content-end">
               <button v-show="is_soft_deleted(e)" :title="`Restore`"  
-                      class="btn btn-outline-primary btn-sm"
+                      class="btn btn-outline-primary btn-sm me-1"
                       @click="restoreEntry(e)">
                 <i class="bi bi-chevron-up" role='button'></i>
               </button>
+              <RuleDetails :entry="e"/>
+            </div>
             </td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
@@ -66,12 +69,13 @@
 
 <script>
 import PagingControls from "./PagingControls.vue";
+import RuleDetails from "./RuleDetails.vue";
 import { useFlashStore } from '@/stores/flash'
 import { useApiStore } from '@/stores/apiStore';
 
 export default {
   name: "EntriesSummaryTable",
-  components: { PagingControls },
+  components: { PagingControls, RuleDetails },
   props: {
     entries: { type: Array, default: () => [] },
     pageSize: { type: Number, default: 100 }
@@ -150,5 +154,5 @@ export default {
     td.col-3, th.col-3 { width: auto;}
     td.col-4, th.col-4 { width: auto;}
     td.col-5, th.col-5 { max-width: 100px; width: 100px; }
-    td.col-6, th.col-6 { max-width: 50px; width: 50px; }
+    td.col-6, th.col-6 { max-width: 80px; width: 80px; }
 </style>

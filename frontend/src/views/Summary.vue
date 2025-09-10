@@ -234,6 +234,7 @@ export default {
       this.apiStore.loading = true;
       try {
         await this.loadEntries();
+        await this.apiStore.loadRules();
         this.apiStore.dirty.entries=true;
       } catch (err) {
         const status = err.response?.status;

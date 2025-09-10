@@ -551,6 +551,7 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.NeedsReconcile = false
 	entry.IsPrimaryCustomer = true
 	entry.ReconcileRules = entity.NilOjectIdSlice()
+	entry.DefaultReconcileMessages = []entity.RuleType{}
 
 	// do host check only for host ranges
 	if entry.Type == "Array" || entry.Type == "Backup" || entry.Type == "Other" {
@@ -581,10 +582,12 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 		if entry.WWNSet == entity.WWNSetAuto {
 			dupReconciled = true
 			entry.IsPrimaryCustomer = true
+			entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRulePrimary)
 		} else if entry.WWNSet == entity.WWNSetManual {
 			if !unique {
 				dupReconciled = true
 				entry.IsPrimaryCustomer = true
+				entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRulePrimary)
 			}
 		} else {
 			// otherwise check of some other customer is auto
@@ -597,6 +600,7 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 					entry.LoadedHostname = ""
 					if strings.EqualFold(entry.Hostname, c.Hostname) || utils.ContainsIgnoreCase(c.Hostname, entry.Hostname) {
 						entry.IgnoreEntry = true
+						entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRuleIgnore)
 					}
 				}
 				// case where there is manually inserted wwn for but the customer is different but decoded hostname is same
@@ -606,11 +610,13 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 					entry.IgnoreEntry = true
 					entry.LoadedHostname = ""
 					dupReconciled = true
+					entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRuleIgnore)
 				}
 			}
 			if !entry.IgnoreEntry && !unique {
 				entry.LoadedHostname = ""
 				dupReconciled = true
+				entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRuleOverride)
 			}
 		}
 	}

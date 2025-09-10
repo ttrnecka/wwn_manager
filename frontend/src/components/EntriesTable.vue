@@ -51,12 +51,12 @@
         </thead>
         <tbody>
           <tr v-for="e in pagedEntries" :key="e.id" :class="{reconcile: needToReconcile(e)}">
-            <td class="col-1" :title="getEntryTypeRule(e)">{{ e.type }}</td>
+            <td class="col-1">{{ e.type }}</td>
             <td class="col-2">{{ e.customer }}</td>
             <td class="col-2">{{ e.wwn }}</td>
             <td class="col-3 no-wrap" :title="e.zones.join(', ')">{{ e.zones.join(', ') }}</td>
             <td class="col-3 no-wrap" :title="e.aliases.join(', ')">{{ e.aliases.join(', ') }}</td>
-            <td :title="getEntryHostnameRule(e)">
+            <td>
               <div class="d-flex justify-content-between">
               <strong>{{ e.hostname }}</strong>
               <button :title="`Reconcile with ${e.hostname} as hostname`" 
@@ -80,14 +80,17 @@
               <button v-show="needToReconcile(e)" class="btn btn-primary btn-sm" @click="openRecModal(e)">
                 Reconcile
               </button>
-              <span v-show="hasBeenReconciled(e)" :title="getEntryReconcileRule(e)">Reconciled</span>
+              <span v-show="hasBeenReconciled(e)">Reconciled</span>
             </td>
-            <td class="col-6">
-              <button :title="`Mark for Deletion`"  
-                      class="btn btn-outline-danger btn-sm"
-                      @click="deleteEntry(e)">
-                <i class="bi bi-trash text-danger" role='button'></i>
-              </button>
+            <td class="">
+              <div class="d-flex justify-content-end">
+                <button :title="`Mark for Deletion`"  
+                        class="btn btn-outline-danger btn-sm me-1"
+                        @click="deleteEntry(e)">
+                  <i class="bi bi-trash text-danger" role='button'></i>
+                </button>
+                <RuleDetails :entry="e"/>
+              </div>
             </td>
           </tr>
           <tr v-if="pagedEntries.length === 0">
@@ -153,10 +156,11 @@ import { GLOBAL_CUSTOMER } from '@/config'
 import ReconciliationModal from './ReconciliationModal.vue';
 import fcService from "@/services/fcService";
 import { useFlashStore } from '@/stores/flash'
+import RuleDetails from "./RuleDetails.vue";
 
 export default {
   name: "EntriesTable",
-  components: { PagingControls, ReconciliationModal },
+  components: { PagingControls, ReconciliationModal,RuleDetails },
   props: {
     entries: { type: Array, default: () => [] },
     pageSize: { type: Number, default: 100 }
@@ -250,40 +254,6 @@ export default {
       }
       return msgs;
     },
-    getEntryTypeRule(entry) {
-      let rule = this.apiStore.rules.find((r) => r.id === entry.type_rule)
-      let text = "No Rule"
-      if (rule) {
-        let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
-        text = `${customer} range rule number ${rule.order}: ${rule.comment}`
-      }
-      return text
-    },
-    getEntryHostnameRule(entry) {
-      let rule = this.apiStore.rules.find((r) => r.id === entry.hostname_rule)
-      let text = "No Rule"
-      if (rule) {
-        let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
-        text = `${customer} host rule number ${rule.order}: ${rule.comment}`
-      }
-      return text
-    },
-    getEntryReconcileRule(entry) {
-      let rules = this.apiStore.rules.filter((r) => entry.reconcile_rules?.includes(r.id))
-      let texts = [];
-      for (const rule of rules) {
-        let customer = rule.customer === GLOBAL_CUSTOMER ? "Global" : rule.customer
-        let t = "duplicate"
-        if (rule.type === "ignore_loaded") {
-          t = "ignore"
-        }
-        texts.push(`${customer} ${t} rule: ${rule.comment}`)
-      }
-      if (texts.length>0) {
-        return texts.join(", ")
-      }
-      return "No Rules"
-    },
     isDuplicateCustomerReconciled(entry) {
       if (entry === null) return true;
       if (!this.needToReconcile(entry)) {
@@ -374,5 +344,5 @@ export default {
     td.col-3, th.col-3 { width: auto;}
     td.col-4, th.col-4 { width: auto;}
     td.col-5, th.col-5 { max-width: 100px; width: 100px; }
-    td.col-6, th.col-6 { max-width: 50px; width: 50px; }
+    td.col-6, th.col-6 { max-width: 80px; width: 80px; }
 </style>
