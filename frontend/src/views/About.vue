@@ -146,6 +146,9 @@
         Reconcile records
       </li>
       <li>
+        Delete records
+      </li>
+      <li>
         Review all changes
       </li>
       <li>
@@ -201,6 +204,16 @@
         <li>Click <b>Reconcile</b> button to bring up modal and select the primary customer (record that will be exported)</li>
       </ul>
     <li>Repeat all steps until there is no entry in the list</li>
+  </ul>
+
+  <h3 class="blue">Delete Records</h3>
+
+  Follow this if you want to delete any record so it is not exported again:
+
+  <ul>
+    <li>In <b>Global</b> or <b>Customer</b> page find the WWN and click <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash text-danger" role='button'></i></button> to delete the record.</li>
+    <li>Once the record is deleted you can revert it in the <b>Summary</b> view in the <b>Deleted WWN Records</b> or <b>Deleted Override WWN Records</b> sections by clicking <button class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-chevron-up" role='button'></i></button> button.</li>
   </ul>
 
   <h3 class="blue">Review All Changes</h3>
