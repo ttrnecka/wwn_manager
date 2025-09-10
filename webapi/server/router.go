@@ -27,21 +27,25 @@ func Router() *echo.Echo {
 	users := entity.Users()
 	fcWWNEntries := entity.FCWWNEntries()
 	rule := entity.Rules()
+	snapshot := entity.Snapshots()
 
 	// repositories
 	usersRepo := repository.NewUserRepository(users)
 	fcWWNEntryRepo := repository.NewFCWWNEntryRepository(fcWWNEntries)
 	ruleRepo := repository.NewRuleRepository(rule)
+	snapshotRepo := repository.NewSnapshotRepository(snapshot)
 
 	// services
 	userSvc := service.NewUserService(usersRepo)
 	fcwWWNEntrySvc := service.NewFCWWNEntryService(fcWWNEntryRepo)
 	ruleSvc := service.NewRuleService(ruleRepo)
+	snapshotSvc := service.NewSnapshotService(snapshotRepo)
 
 	//handlers
 	userHandler := handler.NewUserHandler(userSvc)
 	fcWWNEntryHandler := handler.NewFCWWNEntryHandler(fcwWWNEntrySvc, ruleSvc)
 	ruleHandler := handler.NewRuleHandler(ruleSvc, fcwWWNEntrySvc)
+	snapshotHandler := handler.NewSnapshotHandler(snapshotSvc, fcwWWNEntrySvc)
 
 	e.POST("/api/login", userHandler.LoginUser)
 	e.GET("/api/logout", userHandler.LogoutUser)
@@ -66,6 +70,7 @@ func Router() *echo.Echo {
 	api.POST("/entries/:id/softdelete", fcWWNEntryHandler.SoftDeleteFCWWNEntry)
 	api.POST("/entries/:id/restore", fcWWNEntryHandler.RestoreFCWWNEntry)
 	api.GET("/customers/:name/entries", fcWWNEntryHandler.FCWWNEntries)
+	api.GET("/snapshots", snapshotHandler.Snapshots)
 
 	return e
 

@@ -17,3 +17,10 @@ func NewSnapshotService(p repository.SnapshotRepository) SnapshotService {
 	return &snapshotService{
 		GenericService: NewGenericService(p)}
 }
+
+func (s snapshotService) MakeSnapshot() (*entity.Snapshot, error) {
+	//TODO
+	// make function that coppies whole fc_wwn_entries to new collection
+	// sets up indices on it, then creates snapshot record referincing it and returns the snapshot reference
+	return nil, nil
+}
