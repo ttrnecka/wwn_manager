@@ -5,6 +5,9 @@ Lock export behind control
 - and explicitely approved
 Add WWN validation
 Ability to manualy add WWNs
+Export reconcile records
+When record is reconcile do not move the page and scroll
+IgnoreLoaded host should consider both loaded and ecoded in the filter and not impact any other line
 
 Long term TODO
 Account solution - local account or AD?

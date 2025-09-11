@@ -75,6 +75,10 @@ export default {
     return axios.get(`${API}/entries/export/map`, {responseType: "blob"});
   },
 
+  getReconcileWWNExport() {
+    return axios.get(`${API}/entries/export/reconcile`, {responseType: "blob"});
+  },
+
   getSnapshots() {
     return axios.get(`${API}/snapshots`);
   },

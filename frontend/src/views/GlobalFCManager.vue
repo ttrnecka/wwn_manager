@@ -17,6 +17,10 @@
         </button>
 
         <RulesControls @rules-applied="loadData"/>
+
+        <button class="btn btn-primary me-2 mb-2" @click="downloadReconcileWWN">
+          Export To Be Reconciled Records
+        </button>
       </div>
       
       <div class="accordion" id="ruleAccordion" style="min-width: 800px;">
@@ -107,6 +111,10 @@ export default {
     },
   },
   methods: {
+    async downloadReconcileWWN() {
+      const resp = await fcService.getReconcileWWNExport();
+      fcService.saveFile(resp);
+    },
     async reloadRules() {
       this.apiStore.dirty.rules=true;
       await this.apiStore.loadRules();

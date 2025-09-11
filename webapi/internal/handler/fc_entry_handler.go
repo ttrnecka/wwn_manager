@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
@@ -184,7 +185,7 @@ func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
 			"ignore_entry":        false,
 		}, service.SortOption{"wwn": "asc"})
 	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
 	}
 
 	f, err := os.CreateTemp("", "exportcsv-")
@@ -204,6 +205,36 @@ func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), "host_wwn.csv")
+}
+
+func (h *FCWWNEntryHandler) ExportReconcileEntries(c echo.Context) error {
+	items, err := h.service.Find(c.Request().Context(),
+		service.Filter{
+			"type":            service.Filter{"$in": []string{"Host", "Other"}},
+			"wwn_set":         service.Filter{"$in": []int{1, 2}},
+			"needs_reconcile": true,
+			"ignore_entry":    false,
+		}, service.SortOption{"wwn": "asc"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get reconcile entries", err)
+	}
+
+	f, err := os.CreateTemp("", "reconcilecsv-")
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
+	}
+	defer f.Close()
+	defer os.Remove(f.Name())
+
+	writer := csv.NewWriter(f)
+
+	writer.Write([]string{"Customer", "WWN", "Zones", "Aliases", "Hostname (Generated)", "Hostname (Loaded)"})
+	for _, item := range items {
+		itemDTO := mapper.ToFCWWNEntryDTO(item)
+		writer.Write([]string{itemDTO.Customer, itemDTO.WWN, strings.Join(itemDTO.Zones, ","), strings.Join(itemDTO.Aliases, ","), itemDTO.Hostname, itemDTO.LoadedHostname})
+	}
+	writer.Flush()
+	return c.Attachment(f.Name(), "records_to_reconcile.csv")
 }
 
 func (h *FCWWNEntryHandler) ExportCustomerWWNMap(c echo.Context) error {

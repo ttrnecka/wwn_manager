@@ -65,6 +65,7 @@ func Router() *echo.Echo {
 	api.GET("/entries/export/map", fcWWNEntryHandler.ExportHostWWNMap)
 	api.GET("/entries/export/override", fcWWNEntryHandler.ExportCustomerWWNMap)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
+	api.GET("/entries/export/reconcile", fcWWNEntryHandler.ExportReconcileEntries)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
 	api.DELETE("/customers/:name/rules/:id", ruleHandler.DeleteRule)
 	api.POST("/entries/:id/reconcile", ruleHandler.SetupAndApplyReconcileRules)
