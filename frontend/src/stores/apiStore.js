@@ -8,6 +8,8 @@ import router from '@/router'
 export const useApiStore = defineStore('api', {
   state: () => ({
     rules: [],
+    snapshots: [],
+    snapshotEntries: markRaw([]),
     loading: false,
     dirty: {
       rules: true,
@@ -26,6 +28,13 @@ export const useApiStore = defineStore('api', {
         return state.entries;
       }
     },
+    getSnapshotEntries(state) {
+      return async (snapId) => {
+        await state.loadSnapshotEntries(snapId);
+        return state.snapshotEntries;
+      }
+    },
+    
     async getRules(state) {
       await state.loadRules()
       return state.rules;
@@ -47,6 +56,12 @@ export const useApiStore = defineStore('api', {
     },
     flash() {
       return useFlashStore();
+    },
+    hasUnknowns(state) {
+      return state.entries.length===0 || state.entries.find((e) => e.type === 'Unknown') !== undefined
+    },
+    hasUnreconciled(state) {
+      return state.entries.length===0 || state.entries.find((e) => e.needs_reconcile === true) !== undefined
     }
   },
   actions: {
@@ -98,6 +113,44 @@ export const useApiStore = defineStore('api', {
         }
         console.log("Loading rules failed:",error)
         this.flash.show("Loading rules failed", "danger");
+      } finally {
+        this.loading = false;
+      }
+    },
+    async loadSnapshots() {
+      try {  
+        this.loading = true;
+        const res = await fcService.getSnapshots();
+        this.snapshots = res.data;
+      } catch(err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.log("Loading snapshots failed:",error)
+        this.flash.show("Loading snapshots failed", "danger");
+      } finally {
+        this.loading = false;
+      }
+    },
+    async loadSnapshotEntries(id) {
+      try {  
+        this.loading = true;
+        const res = await fcService.getSnapshot(id);
+        this.snapshotEntries = markRaw(res.data);
+      } catch(err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.log("Loading snapshot failed:",error)
+        this.flash.show("Loading snapshot failed", "danger");
       } finally {
         this.loading = false;
       }

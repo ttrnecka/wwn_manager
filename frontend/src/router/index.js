@@ -30,6 +30,7 @@ const router = createRouter({
       alias: ['/summary.html'],
       name: 'summary',
       component: Summary,
+      meta: { requiresData: true },
     },
     {
       path: '/about',

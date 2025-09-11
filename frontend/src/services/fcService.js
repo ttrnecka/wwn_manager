@@ -75,6 +75,18 @@ export default {
     return axios.get(`${API}/entries/export/map`, {responseType: "blob"});
   },
 
+  getSnapshots() {
+    return axios.get(`${API}/snapshots`);
+  },
+
+  getSnapshot(id) {
+    return axios.get(`${API}/snapshots/${id}`);
+  },
+
+  makeSnapshot(comment) {
+    return axios.post(`${API}/snapshots`,{comment: comment});
+  },
+
   saveFile(resp) {
     const disposition = resp.headers["content-disposition"];
     let filename = "downloaded-file";

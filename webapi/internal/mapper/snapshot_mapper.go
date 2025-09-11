@@ -9,6 +9,7 @@ import (
 func ToSnapshotEntity(s dto.SnapshotDTO) entity.Snapshot {
 	snapshot := entity.Snapshot{
 		SnapshotID: s.SnapshotID,
+		Comment:    s.Comment,
 	}
 	snapshot.ID, _ = primitive.ObjectIDFromHex(s.ID)
 	return snapshot
@@ -18,5 +19,6 @@ func ToSnapshotDTO(s entity.Snapshot) dto.SnapshotDTO {
 	return dto.SnapshotDTO{
 		ID:         s.ID.Hex(),
 		SnapshotID: s.SnapshotID,
+		Comment:    s.Comment,
 	}
 }

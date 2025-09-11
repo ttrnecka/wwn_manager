@@ -3,7 +3,9 @@
     <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage />
     <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
-      
+      <div class="mb-1">
+        <SnapshotsControls @snapshot-selected="loadSnapshot"/>
+      </div>
       <div class="accordion" id="summary" style="min-width: 800px;">
         <div class="accordion-item">
           <h2 class="accordion-header">
@@ -64,14 +66,28 @@
         </div>
         <div class="accordion-item">
           <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree2" aria-expanded="true" aria-controls="collapseThree2">
+            Unaltered Override WWN Records ({{ sameOverridesSnapshot.length }})
+            </button>
+          </h2>
+          <div id="collapseThree2" class="accordion-collapse collapse">
+            <div class="accordion-body">
+              <EntriesSummaryTable 
+                :entries="sameOverridesSnapshot"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="true" aria-controls="collapseFour">
-            New Override WWN Records ({{ newSecondaryEntries().length }})
+            New Override WWN Records ({{ newOverrideSnapshot.length }})
             </button>
           </h2>
           <div id="collapseFour" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="newSecondaryEntries()"
+                :entries="newOverrideSnapshot"
               />
             </div>
           </div>
@@ -79,13 +95,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="true" aria-controls="collapseFive">
-            Changed Override WWN Records ({{ changedSecondaryEntries().length }})
+            Changed Override WWN Records ({{ changedOverridesSnapshot.length }})
             </button>
           </h2>
           <div id="collapseFive" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="changedSecondaryEntries()"
+                :entries="changedOverridesSnapshot"
               />
             </div>
           </div>
@@ -93,13 +109,13 @@
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="true" aria-controls="collapseSix">
-            Deleted Override WWN Records ({{ deletedSecondaryEntries().length }})
+            Deleted Override WWN Records ({{ deletedOverrideSnapshot.length }})
             </button>
           </h2>
           <div id="collapseSix" class="accordion-collapse collapse">
             <div class="accordion-body">
               <EntriesSummaryTable 
-                :entries="deletedSecondaryEntries()"
+                :entries="deletedOverrideSnapshot"
                 @entryRestored="loadData"
               />
             </div>
@@ -129,6 +145,7 @@ import fcService from "@/services/fcService";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import EntriesSummaryTable from "@/components/EntriesSummaryTable.vue";
+import SnapshotsControls from "@/components/SnapshotsControls.vue";
 
 import { useApiStore } from '@/stores/apiStore';
 import { useFlashStore } from '@/stores/flash'
@@ -138,12 +155,13 @@ import router from '@/router'
 
 export default {
   name: "Summary",
-  components: { LoadingOverlay, FlashMessage, EntriesSummaryTable },
+  components: { LoadingOverlay, FlashMessage, EntriesSummaryTable, SnapshotsControls },
   data() {
     return {
       // entries: [],
       selectedCustomer: GLOBAL_CUSTOMER,
       entries: markRaw([]),
+      snapshotEntries: markRaw([])
     };
   },
   computed: {
@@ -153,6 +171,36 @@ export default {
     apiStore() {
       return useApiStore();
     },
+    deletedFromSnapshot() {
+      // return [];
+      const set = new Set(this.entries.map(item => `${item.customer}|${item.wwn}`));
+      return this.snapshotEntries.filter(item => !set.has(`${item.customer}|${item.wwn}`) && !this.isSoftDeleted(item));
+    },
+    sameOverridesSnapshot() {
+      const entries = this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      const set = new Set(entries.map(item => `${item.customer}|${item.wwn}|${item.hostname}`));
+      const sentries = this.snapshotEntries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      return sentries.filter(item => set.has(`${item.customer}|${item.wwn}|${item.hostname}`));
+    },
+    changedOverridesSnapshot() {
+      const entries = this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      const set1 = new Set(entries.map(item => `${item.customer}|${item.wwn}|${item.hostname}`));
+      const set2 = new Set(entries.map(item => `${item.customer}|${item.wwn}`));
+      const sentries = this.snapshotEntries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      return entries.filter(item => set2.has(`${item.customer}|${item.wwn}`) && !set1.has(`${item.customer}|${item.wwn}|${item.hostname}`));
+    },
+    newOverrideSnapshot() {
+      const entries = this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      const sentries = this.snapshotEntries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      const set = new Set(sentries.map(item => `${item.customer}|${item.wwn}`));
+      return entries.filter(item => !set.has(`${item.customer}|${item.wwn}`));
+    },
+    deletedOverrideSnapshot() {
+      const entries = this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      const sentries = this.snapshotEntries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
+      const set = new Set(entries.map(item => `${item.customer}|${item.wwn}`));
+      return sentries.filter(item => !set.has(`${item.customer}|${item.wwn}`));
+    }
   },
   methods: {
     notChangedEntries() {
@@ -164,21 +212,11 @@ export default {
     changedPrimaryEntries() {
       return this.entries.filter(e => this.isPrimary(e) && this.diffHostname(e) && !this.isSoftDeleted(e));
     },
-    // TODO - update once we hae a baseline
     deletedPrimaryEntries() {
-      return this.entries.filter(e => this.isSoftDeleted(e));
+      return this.entries.filter(e => this.isSoftDeleted(e)).concat(this.deletedFromSnapshot);
     },
-    // TODO - add filter to tell new and changed apart once we have a baseline
-    newSecondaryEntries() {
+    notChangedSecondaryEntries() {
       return this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
-    },
-    // TODO - update once we have baseline
-    changedSecondaryEntries() {
-      return []
-    },
-    // TODO - update once we have baseline
-    deletedSecondaryEntries() {
-      return []
     },
     ignoredEntries() {
       return this.entries.filter(e => !this.isSoftDeleted(e) && e.ignore_entry)
@@ -230,11 +268,14 @@ export default {
         }
       );
     },
+    async loadSnapshot(id) {
+      const entries = await this.apiStore.getSnapshotEntries(id);
+      this.snapshotEntries = entries.filter(e => ['Host','Other'].includes(e.type));
+    },
     async loadData() {
       this.apiStore.loading = true;
       try {
         await this.loadEntries();
-        await this.apiStore.loadRules();
         this.apiStore.dirty.entries=true;
       } catch (err) {
         const status = err.response?.status;
@@ -251,8 +292,8 @@ export default {
       }
     },
   },
-  mounted() {
-    this.loadData();
+  async mounted() {
+    await this.loadData();
   },
 };
 </script>

@@ -9,7 +9,7 @@
       <!-- Customers -->
       <div class="mb-3">
         <select v-model="selectedCustomer" class="form-select">
-          <option disabled value="">-- select customer --</option>
+          <option disabled value="">-- Select customer --</option>
           <option v-for="c in customers" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>

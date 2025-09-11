@@ -9,7 +9,8 @@ import (
 
 type Snapshot struct {
 	cdb.BaseModel `bson:",inline"`
-	SnapshotID    int64 `bson:"snapshot_id"`
+	SnapshotID    int64  `bson:"snapshot_id"`
+	Comment       string `bson:"comment"`
 }
 
 func (s Snapshot) EntryCollectionName() string {

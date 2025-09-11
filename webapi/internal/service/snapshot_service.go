@@ -14,7 +14,7 @@ import (
 
 type SnapshotService interface {
 	GenericService[entity.Snapshot]
-	MakeSnapshot(context.Context) (*entity.Snapshot, error)
+	MakeSnapshot(context.Context, string) (*entity.Snapshot, error)
 	GetSnapshotEntries(context.Context, entity.Snapshot) ([]entity.FCWWNEntry, error)
 }
 
@@ -30,9 +30,10 @@ func NewSnapshotService(p repository.SnapshotRepository, e repository.FCWWNEntry
 	}
 }
 
-func (s snapshotService) MakeSnapshot(ctx context.Context) (*entity.Snapshot, error) {
+func (s snapshotService) MakeSnapshot(ctx context.Context, comment string) (*entity.Snapshot, error) {
 	snapshot := entity.Snapshot{
 		SnapshotID: time.Now().Unix(),
+		Comment:    comment,
 	}
 	snapshotID, err := s.Update(ctx, entity.NilObjectID(), &snapshot)
 	if err != nil {

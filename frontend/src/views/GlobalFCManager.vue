@@ -17,13 +17,6 @@
         </button>
 
         <RulesControls @rules-applied="loadData"/>
-
-        <button class="btn btn-primary me-2 mb-2" @click="downloadCustomerMapRules">
-          Export Customer WWNs
-        </button>
-        <button class="btn btn-primary me-2 mb-2" @click="downloadHostWWN">
-          Export Host WWNs
-        </button>
       </div>
       
       <div class="accordion" id="ruleAccordion" style="min-width: 800px;">
@@ -146,14 +139,6 @@ export default {
       this.apiStore.dirty.entries=true;
       this.apiStore.dirty.rules=true;
       await this.apiStore.init();
-    },
-    async downloadCustomerMapRules() {
-      const resp = await fcService.getCustomerWWNExport();
-      fcService.saveFile(resp);
-    },
-    async downloadHostWWN() {
-      const resp = await fcService.getHostWWNExport();
-      fcService.saveFile(resp);
     }
   },
 };

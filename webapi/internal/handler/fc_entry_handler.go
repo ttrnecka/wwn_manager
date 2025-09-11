@@ -176,7 +176,13 @@ func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
-	items, err := h.service.All(c.Request().Context())
+	items, err := h.service.Find(c.Request().Context(),
+		service.Filter{
+			"type":                service.Filter{"$in": []string{"Host", "Other"}},
+			"wwn_set":             service.Filter{"$in": []int{1, 2}},
+			"is_primary_customer": true,
+			"ignore_entry":        false,
+		}, service.SortOption{"wwn": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
 	}
@@ -201,7 +207,13 @@ func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) ExportCustomerWWNMap(c echo.Context) error {
-	items, err := h.service.Find(c.Request().Context(), service.Filter{"is_primary_customer": false}, service.SortOption{"wwn": "asc"})
+	items, err := h.service.Find(c.Request().Context(),
+		service.Filter{
+			"type":                service.Filter{"$in": []string{"Host", "Other"}},
+			"wwn_set":             service.Filter{"$in": []int{1, 2}},
+			"is_primary_customer": false,
+			"ignore_entry":        false,
+		}, service.SortOption{"wwn": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
 	}

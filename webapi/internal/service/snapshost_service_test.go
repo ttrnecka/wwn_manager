@@ -25,10 +25,27 @@ func startMongoContainer(t *testing.T) (testcontainers.Container, string) {
 		Image:        "mongo:6.0", // or "mongo:latest"
 		ExposedPorts: []string{"27017/tcp"},
 		WaitingFor:   wait.ForListeningPort("27017/tcp"),
+		Files: []testcontainers.ContainerFile{
+			{
+				HostFilePath:      "../../mongodump/wwn_identity/fc_wwn_entries.bson", // local path
+				ContainerFilePath: "/docker-entrypoint-initdb.d/wwn_identity/fc_wwn_entries.bson",
+				FileMode:          0644,
+			},
+			{
+				HostFilePath:      "../../mongodump/wwn_identity/fc_wwn_entries.metadata.json", // include metadata for indexes
+				ContainerFilePath: "/docker-entrypoint-initdb.d/wwn_identity/fc_wwn_entries.metadata.json",
+				FileMode:          0644,
+			},
+		},
 	}
 	mongoC, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,
+	})
+	require.NoError(t, err)
+
+	_, _, err = mongoC.Exec(ctx, []string{
+		"mongorestore", "--nsInclude=wwn_identity.fc_wwn_entries", "/docker-entrypoint-initdb.d/",
 	})
 	require.NoError(t, err)
 
@@ -56,7 +73,7 @@ func TestMakeSnapshot(t *testing.T) {
 	require.NoError(t, err)
 	defer client.Disconnect(ctx)
 
-	db := client.Database("testdb_snapshot")
+	db := client.Database("wwn_identity")
 	snapshots := entity.Snapshots(db)
 	entries := entity.FCWWNEntries(db)
 
@@ -67,24 +84,17 @@ func TestMakeSnapshot(t *testing.T) {
 	// --- Prepare service
 	svc := NewSnapshotService(snapRepo, entryRepo)
 
-	// --- Insert some sample data
-	entriesColl := entryRepo.GetCollection()
-	_, err = entriesColl.InsertMany(ctx, []interface{}{
-		bson.M{"_id": "1", "name": "entry1"},
-		bson.M{"_id": "2", "name": "entry2"},
-	})
-	require.NoError(t, err)
-
 	// --- Call MakeSnapshot
-	snap, err := svc.MakeSnapshot(ctx)
+	snap, err := svc.MakeSnapshot(ctx, "test comment")
 	require.NoError(t, err)
 	require.NotNil(t, snap)
+	require.Equal(t, "test comment", snap.Comment)
 
 	// --- Verify snapshot collection exists
 	targetColl := db.Collection(snap.EntryCollectionName())
 	count, err := targetColl.CountDocuments(ctx, bson.D{})
 	require.NoError(t, err)
-	require.Equal(t, int64(2), count)
+	require.Equal(t, int64(28350), count)
 
 	// --- Verify content matches
 	cur, err := targetColl.Find(ctx, bson.D{})
@@ -94,5 +104,5 @@ func TestMakeSnapshot(t *testing.T) {
 	var docs []bson.M
 	err = cur.All(ctx, &docs)
 	require.NoError(t, err)
-	require.Len(t, docs, 2)
+	require.Len(t, docs, 28350)
 }
