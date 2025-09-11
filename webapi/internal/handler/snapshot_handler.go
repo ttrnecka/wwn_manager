@@ -42,13 +42,13 @@ func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
 	}
 
 	// TODO: uncomment once the snapshot work is done
-	// entries, err = h.entryService.Find(c.Request().Context(), service.Filter{"needs_reconcile": true}, service.SortOption{})
-	// if err != nil {
-	// 	return errorWithInternal(http.StatusInternalServerError, "Failed to check entries requiring reconciliation", err)
-	// }
-	// if len(entries) > 0 {
-	// 	return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, reconcile all entries first", err)
-	// }
+	entries, err = h.entryService.Find(c.Request().Context(), service.Filter{"needs_reconcile": true}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to check entries requiring reconciliation", err)
+	}
+	if len(entries) > 0 {
+		return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, reconcile all entries first", err)
+	}
 
 	var snapshotDTO dto.SnapshotDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&snapshotDTO); err != nil {
