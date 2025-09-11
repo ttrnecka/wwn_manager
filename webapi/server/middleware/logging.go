@@ -24,6 +24,7 @@ func RequestLogger(logger zerolog.Logger) echo.MiddlewareFunc {
 		LogRemoteIP:      true,
 		LogUserAgent:     true,
 		LogContentLength: true,
+		LogError:         true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			// --- Capture request body ---
 			reqBody, _ := c.Get("reqBody").(string)

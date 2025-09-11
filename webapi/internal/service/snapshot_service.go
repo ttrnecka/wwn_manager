@@ -34,10 +34,11 @@ func (s snapshotService) MakeSnapshot(ctx context.Context) (*entity.Snapshot, er
 	snapshot := entity.Snapshot{
 		SnapshotID: time.Now().Unix(),
 	}
-	_, err := s.Update(ctx, entity.NilObjectID(), &snapshot)
+	snapshotID, err := s.Update(ctx, entity.NilObjectID(), &snapshot)
 	if err != nil {
 		return nil, err
 	}
+	snapshot.ID = snapshotID
 
 	sourceColl := s.EntryService.Collection()
 	targetColl := s.EntryService.Collection().Database().Collection(snapshot.EntryCollectionName())
@@ -70,9 +71,14 @@ func (s snapshotService) MakeSnapshot(ctx context.Context) (*entity.Snapshot, er
 			continue
 		}
 
-		keys, ok := idx["key"].(bson.M)
+		keyDoc, ok := idx["key"].(bson.M)
 		if !ok {
 			continue
+		}
+
+		keys := bson.D{}
+		for field, order := range keyDoc {
+			keys = append(keys, bson.E{Key: field, Value: order})
 		}
 
 		opts := options.Index()
