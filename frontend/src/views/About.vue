@@ -158,13 +158,13 @@
         Commit
       </li>
       <li>
-        Export the Host WWN and Override WWN
+        Export the Host WWNs and Override WWNs
       </li>
     </ul>
 
   <h3 class="blue">Import Entries</h3>
   <ul>
-    <li>Locate the <b>Host WWN Identification Feed</b> report</li>
+    <li>Locate the <b>Host WWN Identification Feed</b> report in the reporting tool</li>
     <li>Run it and export it as CSV</li>
     <li>Click <b>Import Entries</b> button on the <b>Global</b> page and select the csv file</li>
   </ul>
@@ -251,10 +251,22 @@
   </ul>
 
   <h3 class="blue">Commit</h3>
-  TBD
+  
+  After all Unknown records and records needing reconciliation have been addressed the records can be commited. This will
+  create a snapshot of the records for future reference.
 
-  <h3 class="blue">Export the Host WWN and Override WWN</h3>
-  TBD
+  <ul>
+    <li>Navigate to <b>Summary</b> section and click the <b>Commit</b> button</li>
+    <li>Provide optional comment to easier reference the snapshot and click <b>Commit</b> again!</li>
+    <li>If there are Unknown or not reconciled records the commit will not go through and notification is displayed</li>
+  </ul>
+
+  <h3 class="blue">Export the Host WWNs and Override WWNs</h3>
+    <ul>
+      <li>Navigate to <b>Summary</b> section and click the <b>Export Host WWNs</b> or <b>Export Override WWNs</b> button</li>
+      <li>Use these files to import the WWNs into the reporting tool.</li>
+      <li>If there are Unknown or not reconciled records wont be visible</li>
+    </ul>
   </div>
 </template>
 
