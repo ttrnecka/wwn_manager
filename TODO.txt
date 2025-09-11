@@ -1,16 +1,10 @@
 Short term TODO
-Snapshot - to compare changes
 Summary export
 Make it clear when the rules needs to be reapplied
-make clear what reconciliation rules were applied
 Lock export behind control
-- no unknown
-- no reconcile needed
 - and explicitely approved
-explicit approval creates baseline/snapshot
 Add WWN validation
-Finish About page
-
+Ability to manualy add WWNs
 
 Long term TODO
 Account solution - local account or AD?
@@ -20,6 +14,7 @@ Static code analysis? gosec, govulncheck, staticcheck in CI.
 Dependency scanning: npm audit/pnpm audit, govulncheck, Dependabot/Renovate.
 
 DONE
+Snapshot - to compare changes
 Web logging to file
 Session sliding refresh shorter expiration
 Summary - handle similar name
@@ -27,3 +22,10 @@ Summary - add ignored
 Records removal with duplicated customers
     - delete duplicate customer for each same wwn (not needed - and rerun rules)
 REfresh rules after import
+Lock export behind control
+- no unknown
+- no reconcile needed
+
+make clear what reconciliation rules were applied
+explicit approval creates baseline/snapshot
+Finish About page
