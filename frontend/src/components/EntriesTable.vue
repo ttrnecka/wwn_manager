@@ -1,5 +1,5 @@
 <template>
-  <div class="card my-3" style="min-width: 800px;">
+  <div class="card my-3" style="min-width: 1200px;">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span><b>Entries</b></span>
       <span>
@@ -38,45 +38,45 @@
       <table class="table table-hover mb-0 entry-table">
         <thead>
           <tr>
-            <th class="col-1">Type</th>
-            <th class="col-2">Customer</th>
-            <th class="col-2">WWN</th>
-            <th class="col-3">Zones</th>
-            <th class="col-3">Aliases</th>
-            <th>Hostname (Generated)</th>
-            <th>Hostname (Loaded)</th>
-            <th class="col-5">Reconciliation</th>
-            <th class="col-6"></th>
+            <th class="no-wrap-auto">Type</th>
+            <th class="no-wrap-auto">Customer</th>
+            <th class="no-wrap-auto">WWN</th>
+            <th class="no-wrap">Zones</th>
+            <th class="no-wrap">Aliases</th>
+            <th class="no-wrap-auto">Hostname (Generated)</th>
+            <th class="">Hostname (Loaded)</th>
+            <th class="">Reconciliation</th>
+            <th class=""></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="e in pagedEntries" :key="e.id" :class="{reconcile: needToReconcile(e)}">
-            <td class="col-1">{{ e.type }}</td>
-            <td class="col-2">{{ e.customer }}</td>
-            <td class="col-2">{{ e.wwn }}</td>
-            <td class="col-3 no-wrap" :title="e.zones.join(', ')">{{ e.zones.join(', ') }}</td>
-            <td class="col-3 no-wrap" :title="e.aliases.join(', ')">{{ e.aliases.join(', ') }}</td>
-            <td>
+            <td class="no-wrap-auto" >{{ e.type }}</td>
+            <td class=""><div class="cell-content1">{{ e.customer }}</div></td>
+            <td class="no-wrap-auto" >{{ e.wwn }}</td>
+            <td class="" :title="e.zones.join(', ')"><div class="cell-content1">{{ e.zones.join(', ') }}</div></td>
+            <td class="" :title="e.aliases.join(', ')"><div class="cell-content1">{{ e.aliases.join(', ') }}</div></td>
+            <td class="">
               <div class="d-flex justify-content-between">
               <strong>{{ e.hostname }}</strong>
               <button :title="`Reconcile with ${e.hostname} as hostname`" 
                       v-show="showHostMissMatch(e)" 
-                      class="btn btn-outline-primary btn-sm"
+                      class="btn btn-outline-primary btn-sm ms-1"
                       @click="fastHostReconcile(e,e.hostname)">
                 <i class="bi bi-arrow-bar-up" role='button'></i>
               </button>
               </div>
             </td>
-            <td><div class="d-flex justify-content-between">
+            <td class=""><div class="d-flex justify-content-between">
               <strong>{{ e.loaded_hostname }}</strong>
               <button :title="`Reconcile with ${e.loaded_hostname} as hostname`" 
                       v-show="showHostMissMatch(e)" 
-                      class="btn btn-outline-primary btn-sm"
+                      class="btn btn-outline-primary btn-sm ms-1"
                       @click="fastHostReconcile(e,e.loaded_hostname)">
                 <i class="bi bi-arrow-bar-up" role='button'></i>
               </button>
               </div></td>
-            <td class="col-5">
+            <td class="">
               <button v-show="needToReconcile(e)" class="btn btn-primary btn-sm" @click="openRecModal(e)">
                 Reconcile
               </button>
@@ -311,7 +311,6 @@ export default {
       if (this.noHostDetected) {
         this.filteredEntries = this.filteredEntries.filter(e => e.hostname === "")
       }
-      this.currentPage = 1;
     },
     changePage(page) {
       if (page >= 1 && page <= Math.ceil(this.filteredEntries.length / this.pageSize)) {
@@ -327,22 +326,31 @@ export default {
     background-color: rgb(248, 225, 217);
   }  
 
-  .no-wrap {
-    white-space: nowrap;     /* Prevent wrapping */
-    overflow: hidden;        /* Hide the extra text */
-    text-overflow: ellipsis; /* Show "..." at the end when cut */
-
+  .no-wrap-auto {
+    min-width: max-content;
+    white-space: nowrap
   }
 
+
   .entry-table {
-    table-layout: fixed;   /* Important for ellipsis in td */
+    table-layout: auto;   /* Important for ellipsis in td */
     width: 100%;
   }
 
-    td.col-1, th.col-1 { max-width: 80px; width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    td.col-2, th.col-2 { max-width: 170px; width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    td.col-3, th.col-3 { width: auto;}
-    td.col-4, th.col-4 { width: auto;}
-    td.col-5, th.col-5 { max-width: 100px; width: 100px; }
-    td.col-6, th.col-6 { max-width: 80px; width: 80px; }
+  .cell-content1 {
+    max-width: 150px;       /* or any px/rem */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;         /* needed for ellipsis to work here */
+  }
+
+  .cell-content2 {
+    max-width: 150px;       /* or any px/rem */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;         /* needed for ellipsis to work here */
+  }
+
 </style>

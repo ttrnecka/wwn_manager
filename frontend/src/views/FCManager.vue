@@ -3,18 +3,18 @@
     <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage ref="flash" />
     <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
-      <div class="mb-1">
+      <div class="mb-1" style="min-width: 1200px;">
         <RulesControls @rules-applied="loadData"/>
       </div> 
       <!-- Customers -->
-      <div class="mb-3">
+      <div class="mb-3" style="min-width: 1200px;">
         <select v-model="selectedCustomer" class="form-select">
           <option disabled value="">-- Select customer --</option>
           <option v-for="c in customers" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>
       
-      <div v-show="selectedCustomer" class="accordion" id="ruleAccordion" style="min-width: 800px;">
+      <div v-show="selectedCustomer" class="accordion" id="ruleAccordion" style="min-width: 1200px;">
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">

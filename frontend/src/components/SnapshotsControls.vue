@@ -5,7 +5,7 @@
       <option v-for="s in snapshots" :key="s.id" :value="s.id">{{ snapshotDesc(s) }}</option>
     </select>
     <button class="btn btn-primary me-2 mb-2 mt-2" @click="createSnapshot">
-      Commit
+      Save
     </button>
     <button class="btn btn-primary me-2 mb-2 mt-2" @click="downloadHostWWN" v-show="!apiStore.hasUnknowns && !apiStore.hasUnreconciled">
           Export Host WWNs
@@ -65,11 +65,11 @@ export default {
     async createSnapshot() {
       try {
         const result = await Swal.fire({
-          title: 'Commit records',
+          title: 'Save records',
           input: 'text',
-          inputPlaceholder: 'Optional comment',
+          inputPlaceholder: 'Optional comment to describe the save',
           showCancelButton: true,
-          confirmButtonText: 'Commit!',
+          confirmButtonText: 'Save!',
           customClass: {
             confirmButton: 'btn btn-primary btn-lg mr-2',
             cancelButton: 'btn btn-danger btn-lg',
@@ -77,13 +77,13 @@ export default {
           },
           preConfirm: (inputValue) => {
           if (this.apiStore.hasUnknowns) {
-            Swal.showValidationMessage('Cannot commit: There are Unknown type records, address them by updating or creating new range rules!');
+            Swal.showValidationMessage('Cannot save: There are Unknown type records, address them by updating or creating new range rules!');
             return false;
           }
 
           // TODO: uncomment after snapshot work is done
           if (this.apiStore.hasUnreconciled) {
-            Swal.showValidationMessage('Cannot commit: Please reconcile all records!');
+            Swal.showValidationMessage('Cannot save: Please reconcile all records!');
             return false;
           }
 

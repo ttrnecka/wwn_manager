@@ -3,7 +3,7 @@
     <LoadingOverlay :active="apiStore.loading" color="primary" size="3rem" />
     <FlashMessage />
     <div class="container mt-4" :class="{ 'opacity-50': apiStore.loading, 'pe-none': apiStore.loading }">
-      <div class="mb-1">
+      <div class="mb-1" style="min-width: 1200px;">
         <!-- Hidden file input -->
         <input
           type="file"
@@ -23,7 +23,7 @@
         </button>
       </div>
       
-      <div class="accordion" id="ruleAccordion" style="min-width: 800px;">
+      <div class="accordion" id="ruleAccordion" style="min-width: 1200px;">
         <div class="accordion-item">
           <h2 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">

@@ -155,7 +155,7 @@
         Update host rules
       </li>
       <li>
-        Commit
+        Save records
       </li>
       <li>
         Export the Host WWNs and Override WWNs
@@ -226,9 +226,10 @@
       <li><b>New WWN records</b> - records where WWN to host mapping currently does not exist in the source tool</li>
       <li><b>Changed WWN records</b> - records where host is different than host already in the tool after all rules have been applied</li>
       <li><b>Deleted WWN records</b> - records that exist in the source but have been marked for deletion in the next export</li>
-      <li><b>New Override WWN records</b> - new duplicate records that will go to override table, compared agaist previous snapshot</li>
-      <li><b>Changed Override WWN records</b> - changed duplicate records in override table where the host is different than in last snapshot </li>
-      <li><b>Deleted Override WWN records</b> - records that have been marked for deletion in the next override export</li>
+      <li><b>Unaltered Override WWN records</b> - duplicate override records that did not change compared to the selected snapshot</li>
+      <li><b>New Override WWN records</b> - new duplicate records that will go to override table, compared agaist the selected snapshot</li>
+      <li><b>Changed Override WWN records</b> - changed duplicate records in override table where the host is different than in selected snapshot </li>
+      <li><b>Deleted Override WWN records</b> - deleted override records, compared to the selected snapshot</li>
       <li><b>Ignored WWN records</b> - records that have both same WWN and similar decoded hostname with another WWN record, where the other record has been prioritized by the default reconciliation rules</li>
     </ul>
   </ul>
@@ -250,15 +251,15 @@
     <li>Click <b>Apply Rules</b> and review the changes</li>
   </ul>
 
-  <h3 class="blue">Commit</h3>
+  <h3 class="blue">Save Records</h3>
   
-  After all Unknown records and records needing reconciliation have been addressed the records can be commited. This will
+  After all Unknown records and records needing reconciliation have been addressed the records can be saved. This will
   create a snapshot of the records for future reference.
 
   <ul>
-    <li>Navigate to <b>Summary</b> section and click the <b>Commit</b> button</li>
-    <li>Provide optional comment to easier reference the snapshot and click <b>Commit</b> again!</li>
-    <li>If there are Unknown or not reconciled records the commit will not go through and notification is displayed</li>
+    <li>Navigate to <b>Summary</b> section and click the <b>Save</b> button</li>
+    <li>Provide optional comment to easier reference the snapshot and click <b>Save</b> again!</li>
+    <li>If there are Unknown or not reconciled records the save will not go through and notification is displayed</li>
   </ul>
 
   <h3 class="blue">Export the Host WWNs and Override WWNs</h3>
@@ -266,6 +267,7 @@
       <li>Navigate to <b>Summary</b> section and click the <b>Export Host WWNs</b> or <b>Export Override WWNs</b> button</li>
       <li>Use these files to import the WWNs into the reporting tool.</li>
       <li>If there are Unknown or not reconciled records wont be visible</li>
+      <li>The host names are exported as lower case, the source tool uses case-insensitive matching when checking host existence</li>
     </ul>
   </div>
 </template>

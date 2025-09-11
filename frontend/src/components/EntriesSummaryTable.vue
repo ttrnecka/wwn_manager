@@ -1,5 +1,5 @@
 <template>
-  <div class="card my-3" style="min-width: 800px;">
+  <div class="card my-3" style=" 800px;">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span><b>Entries</b></span>
       <input v-model="searchTerm" @input="applyFilter"

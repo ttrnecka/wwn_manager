@@ -160,7 +160,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
   td.col-1, th.col-1 { max-width: 80px; width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   td.col-2, th.col-2 { max-width: 220px; width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   td.col-3, th.col-3 { width: auto;}
