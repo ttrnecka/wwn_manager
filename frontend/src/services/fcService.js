@@ -67,12 +67,12 @@ export default {
     return axios.get(`${API}/rules/export`, {responseType: "blob"});
   },
 
-  getCustomerWWNExport() {
-    return axios.get(`${API}/entries/export/override`, {responseType: "blob"});
+  getCustomerWWNExport(snapId) {
+    return axios.get(`${API}/snapshots/${snapId}/export_override_wwn`, {responseType: "blob"});
   },
 
-  getHostWWNExport() {
-    return axios.get(`${API}/entries/export/map`, {responseType: "blob"});
+  getHostWWNExport(snapId) {
+    return axios.get(`${API}/snapshots/${snapId}/export_wwn`, {responseType: "blob"});
   },
 
   getReconcileWWNExport() {

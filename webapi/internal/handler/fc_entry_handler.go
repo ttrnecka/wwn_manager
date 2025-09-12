@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -176,36 +177,36 @@ func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
 	return c.JSON(http.StatusOK, customers)
 }
 
-func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
-	items, err := h.service.Find(c.Request().Context(),
-		service.Filter{
-			"type":                service.Filter{"$in": []string{"Host", "Other"}},
-			"wwn_set":             service.Filter{"$in": []int{1, 2}},
-			"is_primary_customer": true,
-			"ignore_entry":        false,
-		}, service.SortOption{"wwn": "asc"})
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
-	}
+// func (h *FCWWNEntryHandler) ExportHostWWNMap(c echo.Context) error {
+// 	items, err := h.service.Find(c.Request().Context(),
+// 		service.Filter{
+// 			"type":                service.Filter{"$in": []string{"Host", "Other"}},
+// 			"wwn_set":             service.Filter{"$in": []int{1, 2}},
+// 			"is_primary_customer": true,
+// 			"ignore_entry":        false,
+// 		}, service.SortOption{"wwn": "asc"})
+// 	if err != nil {
+// 		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+// 	}
 
-	f, err := os.CreateTemp("", "exportcsv-")
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
-	}
-	defer f.Close()
-	defer os.Remove(f.Name())
+// 	f, err := os.CreateTemp("", "exportcsv-")
+// 	if err != nil {
+// 		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
+// 	}
+// 	defer f.Close()
+// 	defer os.Remove(f.Name())
 
-	writer := csv.NewWriter(f)
+// 	writer := csv.NewWriter(f)
 
-	for _, item := range items {
-		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		if itemDTO.IsPrimaryCustomer {
-			writer.Write([]string{itemDTO.Hostname, itemDTO.WWN, itemDTO.WWN})
-		}
-	}
-	writer.Flush()
-	return c.Attachment(f.Name(), "host_wwn.csv")
-}
+// 	for _, item := range items {
+// 		itemDTO := mapper.ToFCWWNEntryDTO(item)
+// 		if itemDTO.IsPrimaryCustomer {
+// 			writer.Write([]string{itemDTO.Hostname, itemDTO.WWN, itemDTO.WWN})
+// 		}
+// 	}
+// 	writer.Flush()
+// 	return c.Attachment(f.Name(), "host_wwn.csv")
+// }
 
 func (h *FCWWNEntryHandler) ExportReconcileEntries(c echo.Context) error {
 	items, err := h.service.Find(c.Request().Context(),
@@ -237,34 +238,34 @@ func (h *FCWWNEntryHandler) ExportReconcileEntries(c echo.Context) error {
 	return c.Attachment(f.Name(), "records_to_reconcile.csv")
 }
 
-func (h *FCWWNEntryHandler) ExportCustomerWWNMap(c echo.Context) error {
-	items, err := h.service.Find(c.Request().Context(),
-		service.Filter{
-			"type":                service.Filter{"$in": []string{"Host", "Other"}},
-			"wwn_set":             service.Filter{"$in": []int{1, 2}},
-			"is_primary_customer": false,
-			"ignore_entry":        false,
-		}, service.SortOption{"wwn": "asc"})
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
-	}
+// func (h *FCWWNEntryHandler) ExportCustomerWWNMap(c echo.Context) error {
+// 	items, err := h.service.Find(c.Request().Context(),
+// 		service.Filter{
+// 			"type":                service.Filter{"$in": []string{"Host", "Other"}},
+// 			"wwn_set":             service.Filter{"$in": []int{1, 2}},
+// 			"is_primary_customer": false,
+// 			"ignore_entry":        false,
+// 		}, service.SortOption{"wwn": "asc"})
+// 	if err != nil {
+// 		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+// 	}
 
-	f, err := os.CreateTemp("", "exportcsv-")
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
-	}
-	defer f.Close()
-	defer os.Remove(f.Name())
+// 	f, err := os.CreateTemp("", "exportcsv-")
+// 	if err != nil {
+// 		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
+// 	}
+// 	defer f.Close()
+// 	defer os.Remove(f.Name())
 
-	writer := csv.NewWriter(f)
+// 	writer := csv.NewWriter(f)
 
-	for _, item := range items {
-		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		writer.Write([]string{itemDTO.WWN, itemDTO.Customer, itemDTO.Hostname})
-	}
-	writer.Flush()
-	return c.Attachment(f.Name(), "customer_wwn_host_override.csv")
-}
+// 	for _, item := range items {
+// 		itemDTO := mapper.ToFCWWNEntryDTO(item)
+// 		writer.Write([]string{itemDTO.WWN, itemDTO.Customer, itemDTO.Hostname})
+// 	}
+// 	writer.Flush()
+// 	return c.Attachment(f.Name(), "customer_wwn_host_override.csv")
+// }
 
 func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.FCWWNEntry, error) {
 	src, err := file.Open()
@@ -279,6 +280,8 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 
 	var wwnEntries []entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)
+
+	re := regexp.MustCompile(`^([0-9A-Fa-f]{2}:){7}[0-9A-Fa-f]{2}$`)
 
 	lineNumber := 0
 	for {
@@ -296,6 +299,11 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 		}
 
 		if len(line) < 7 {
+			continue
+		}
+
+		if !re.MatchString(line[1]) {
+			logger.Info().Msgf("Invalid WWN: %s", line[1])
 			continue
 		}
 

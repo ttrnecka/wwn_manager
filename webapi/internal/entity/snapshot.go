@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	"time"
 
 	cdb "github.com/ttrnecka/agent_poc/common/db"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,4 +24,10 @@ func Snapshots(db *mongo.Database) *cdb.CRUD[Snapshot] {
 
 func (s Snapshot) GetEntries(db *mongo.Database) *cdb.CRUD[FCWWNEntry] {
 	return cdb.NewCRUD[FCWWNEntry](db, s.EntryCollectionName())
+}
+
+func (s Snapshot) DataAndTime() string {
+	t := time.Unix(s.SnapshotID, 0).UTC()
+	formatted := t.Format("2006_01_02_15_04_05")
+	return formatted
 }

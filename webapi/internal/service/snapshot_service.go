@@ -16,6 +16,7 @@ type SnapshotService interface {
 	GenericService[entity.Snapshot]
 	MakeSnapshot(context.Context, string) (*entity.Snapshot, error)
 	GetSnapshotEntries(context.Context, entity.Snapshot) ([]entity.FCWWNEntry, error)
+	GetEntryService(entity.Snapshot) FCWWNEntryService
 }
 
 type snapshotService struct {
@@ -115,4 +116,12 @@ func (s snapshotService) GetSnapshotEntries(ctx context.Context, snapshot entity
 
 	entries, err := entrySvc.FindWithSoftDeleted(ctx, Filter{}, SortOption{"wwn": "asc"})
 	return entries, err
+}
+
+func (s snapshotService) GetEntryService(snapshot entity.Snapshot) FCWWNEntryService {
+	db := s.EntryService.Collection().Database()
+	entryCrud := snapshot.GetEntries(db)
+	entryRepo := repository.NewFCWWNEntryRepository(entryCrud)
+	entrySvc := NewFCWWNEntryService(entryRepo)
+	return entrySvc
 }

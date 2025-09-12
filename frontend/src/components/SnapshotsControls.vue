@@ -1,18 +1,18 @@
 <template>
   <div class="mb-3">
+    <button class="btn btn-primary me-2 mb-2 mt-2" @click="createSnapshot">
+      Save
+    </button>
+    <button class="btn btn-primary me-2 mb-2 mt-2" @click="hostWWNExportPopup">
+          Export Host WWNs
+    </button>
+    <button class="btn btn-primary me-2 mb-2 mt-2" @click="overrideWWNExportPopup">
+          Export Override WWNs
+        </button>
     <select v-model="selectedSnapshot" class="form-select">
       <option disabled value="">-- Select records version to compare --</option>
       <option v-for="s in snapshots" :key="s.id" :value="s.id">{{ snapshotDesc(s) }}</option>
     </select>
-    <button class="btn btn-primary me-2 mb-2 mt-2" @click="createSnapshot">
-      Save
-    </button>
-    <button class="btn btn-primary me-2 mb-2 mt-2" @click="downloadHostWWN" v-show="!apiStore.hasUnknowns && !apiStore.hasUnreconciled">
-          Export Host WWNs
-    </button>
-    <button class="btn btn-primary me-2 mb-2 mt-2" @click="downloadOverrideWWN" v-show="!apiStore.hasUnknowns && !apiStore.hasUnreconciled">
-          Export Override WWNs
-        </button>
   </div>
 </template>
 
@@ -48,12 +48,12 @@ export default {
     }
   },
   methods: {
-    async downloadHostWWN() {
-      const resp = await fcService.getHostWWNExport();
+    async downloadHostWWN(snapId) {
+      const resp = await fcService.getHostWWNExport(snapId);
       fcService.saveFile(resp);
     },
-    async downloadOverrideWWN() {
-      const resp = await fcService.getCustomerWWNExport();
+    async downloadOverrideWWN(snapId) {
+      const resp = await fcService.getCustomerWWNExport(snapId);
       fcService.saveFile(resp);
     },
     snapshotDesc(snapshot) {
@@ -82,10 +82,10 @@ export default {
           }
 
           // TODO: uncomment after snapshot work is done
-          if (this.apiStore.hasUnreconciled) {
-            Swal.showValidationMessage('Cannot save: Please reconcile all records!');
-            return false;
-          }
+          // if (this.apiStore.hasUnreconciled) {
+          //   Swal.showValidationMessage('Cannot save: Please reconcile all records!');
+          //   return false;
+          // }
 
           return inputValue;
         }
@@ -95,6 +95,82 @@ export default {
           const inputValue = result.value;
           const snap = await fcService.makeSnapshot(inputValue);
           await this.apiStore.loadSnapshots();
+        } 
+      } catch (err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.error("Data load failed:", error);
+        this.flash.show(`Data load failed: ${error}`, "danger");
+      }
+    },
+    async hostWWNExportPopup() {
+      try {
+        const result = await Swal.fire({
+          title: 'Export Host WWN records',
+          input: 'select',
+          inputPlaceholder: 'Select records version',
+          inputOptions: Object.fromEntries(this.snapshots.map(s => [s.id, this.snapshotDesc(s)])),
+          showCancelButton: true,
+          confirmButtonText: 'Export!',
+          customClass: {
+            confirmButton: 'btn btn-primary btn-lg mr-2',
+            cancelButton: 'btn btn-danger btn-lg',
+            loader: 'custom-loader',
+          },
+          preConfirm: (inputValue) => {
+            if (inputValue==='') {
+              Swal.showValidationMessage('Select version first');
+              return false;
+            }
+          }
+        });
+
+        if (result.isConfirmed) {
+          const inputValue = result.value;
+          const snap = await this.downloadHostWWN(inputValue);
+        } 
+      } catch (err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.error("Data load failed:", error);
+        this.flash.show(`Data load failed: ${error}`, "danger");
+      }
+    },
+    async overrideWWNExportPopup() {
+      try {
+        const result = await Swal.fire({
+          title: 'Export Override WWN records',
+          input: 'select',
+          inputPlaceholder: 'Select records version',
+          inputOptions: Object.fromEntries(this.snapshots.map(s => [s.id, this.snapshotDesc(s)])),
+          showCancelButton: true,
+          confirmButtonText: 'Export!',
+          customClass: {
+            confirmButton: 'btn btn-primary btn-lg mr-2',
+            cancelButton: 'btn btn-danger btn-lg',
+            loader: 'custom-loader',
+          },
+          preConfirm: (inputValue) => {
+            if (inputValue==='') {
+              Swal.showValidationMessage('Select version first');
+              return false;
+            }
+          }
+        });
+
+        if (result.isConfirmed) {
+          const inputValue = result.value;
+          const snap = await this.downloadOverrideWWN(inputValue);
         } 
       } catch (err) {
         const status = err.response?.status;

@@ -621,7 +621,7 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 		}
 	}
 	loadedReconciled := true
-	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) && !utils.ContainsIgnoreCase(entry.LoadedHostname, entry.Hostname) {
+	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) { //&& !utils.ContainsIgnoreCase(entry.LoadedHostname, entry.Hostname) {
 		loadedReconciled = false
 	}
 REC:
@@ -642,9 +642,15 @@ REC:
 			}
 		case entity.IgnoreLoaded:
 			if !loadedReconciled {
-				r, err := regexp.Compile(rule.Regex)
+				// check the regex format
+				regs := strings.Split(rule.Regex, ",")
+				// the 2nd field is WWN we follow the rule only for matching WWN
+				if len(regs) > 1 && entry.WWN != regs[1] {
+					continue
+				}
+				r, err := regexp.Compile(regs[0])
 				if err != nil {
-					return fmt.Errorf("apply-rec-rules - regex %s won't compile: %w", rule.Regex, err)
+					return fmt.Errorf("apply-rec-rules - regex %s won't compile: %w", regs[0], err)
 				}
 				match := r.MatchString(entry.LoadedHostname)
 				if match {

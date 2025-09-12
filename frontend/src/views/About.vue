@@ -122,9 +122,18 @@
         autogenerate this rule based on that selection.
       </li>
       <li>
-        <b>Ignore Loaded Host</b> - regular expression with match group that causes the loaded hostname to be ignored when checking missmatch between
+        <b>Ignore Loaded Host</b> - regular expression that causes the loaded hostname to be ignored when checking missmatch between
         loaded and decoded host. It is used to tell to export the record with decoded hostname despite the missmatch. Counter rule to tell to export 
-        the WWN with the loaded hostname is <b>host rule</b> of <b>WWN</b> type that maps the WWN to loaded hostname. The tool allows one click setup of both these rules. 
+        the WWN with the loaded hostname is <b>host rule</b> of <b>WWN</b> type that maps the WWN to loaded hostname. The tool allows one click setup of both these rules.
+        There are 2 formats for the regular expression field here:
+        <ul>
+          <li>
+            &lt;host_regexp&gt; - this will ignore all loaded hosts matching that regexp if reconciliation is required
+          </li>
+          <li>
+            &lt;host_regexp&gt;,&lt;WWN&gt; - this will ignore loaded hosts matching that regexp only if the record WWN equals to the WWN
+          </li>
+        </ul>
       </li>
     </ul>
 

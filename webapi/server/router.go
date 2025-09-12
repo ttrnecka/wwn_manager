@@ -62,8 +62,6 @@ func Router() *echo.Echo {
 	api.GET("/rules/export", ruleHandler.ExportRules)
 	api.POST("/rules/import", ruleHandler.ImportHandler)
 	api.POST("/rules/apply", ruleHandler.ApplyRules)
-	api.GET("/entries/export/map", fcWWNEntryHandler.ExportHostWWNMap)
-	api.GET("/entries/export/override", fcWWNEntryHandler.ExportCustomerWWNMap)
 	api.GET("/customers/:name/rules", ruleHandler.GetRules)
 	api.GET("/entries/export/reconcile", fcWWNEntryHandler.ExportReconcileEntries)
 	api.POST("/customers/:name/rules", ruleHandler.CreateUpdateRule)
@@ -74,6 +72,8 @@ func Router() *echo.Echo {
 	api.GET("/customers/:name/entries", fcWWNEntryHandler.FCWWNEntries)
 	api.GET("/snapshots", snapshotHandler.Snapshots)
 	api.GET("/snapshots/:id", snapshotHandler.GetSnapshotEntries)
+	api.GET("/snapshots/:id/export_wwn", snapshotHandler.ExportHostWWN)
+	api.GET("/snapshots/:id/export_override_wwn", snapshotHandler.ExportOverrideWWN)
 	api.POST("/snapshots", snapshotHandler.CreateSnapshot)
 
 	return e
