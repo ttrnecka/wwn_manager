@@ -35,7 +35,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 				Type:     entity.IgnoreLoaded,
 				Regex:    fmt.Sprintf("%s,%s", entry.LoadedHostname, entry.WWN),
 				Group:    0,
-				Order:    1,
+				Order:    0,
 				Comment:  fmt.Sprintf("%s hostname reconciliation", reconcileData.PrimaryHostname),
 			})
 		}
@@ -47,7 +47,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 				Type:     entity.WWNHostMapRule,
 				Regex:    entry.WWN,
 				Group:    0,
-				Order:    1,
+				Order:    0,
 				Comment:  reconcileData.PrimaryHostname,
 			})
 		}
@@ -60,7 +60,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 			Type:     entity.WWNCustomerMapRule,
 			Regex:    entry.WWN,
 			Group:    0,
-			Order:    1,
+			Order:    0,
 			Comment:  reconcileData.PrimaryCustomer,
 		})
 	}
