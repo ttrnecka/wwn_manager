@@ -108,6 +108,19 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
 	}
 
+	//TODO: temporarily include not reconciled secondaries
+	items2, err := entrySvc.Find(c.Request().Context(),
+		service.Filter{
+			"type":                service.Filter{"$in": []string{"Host", "Other"}},
+			"wwn_set":             service.Filter{"$in": []int{1, 2}},
+			"is_primary_customer": false,
+			"ignore_entry":        false,
+			"needs_reconcile":     true,
+		}, service.SortOption{"wwn": "asc"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+	}
+
 	f, err := os.CreateTemp("", "exportcsv-")
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
@@ -119,9 +132,16 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 
 	for _, item := range items {
 		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		if itemDTO.IsPrimaryCustomer {
+		if !itemDTO.NeedsReconcile {
 			writer.Write([]string{itemDTO.Hostname, itemDTO.WWN, itemDTO.WWN})
+		} else { //TODO: remove later - import not reconciled under loadedhostname
+			writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
 		}
+	}
+	// TODO: remove later - import all not reconciled secondaries with loaded hostname
+	for _, item := range items2 {
+		itemDTO := mapper.ToFCWWNEntryDTO(item)
+		writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), fmt.Sprintf("host_wwn_%s.csv", snapshot.DataAndTime()))
