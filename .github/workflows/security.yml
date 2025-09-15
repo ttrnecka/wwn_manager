@@ -33,6 +33,14 @@ jobs:
       run: |
         go install golang.org/x/vuln/cmd/govulncheck@latest
         echo "$HOME/go/bin" >> $GITHUB_PATH
+    
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install frontend dependencies
+      run: cd frontend && npm install
 
     # 5. Download Go modules
     - name: Download dependencies
@@ -45,3 +53,6 @@ jobs:
     # 7. Run govulncheck
     - name: Run govulncheck
       run: cd webapi && govulncheck ./...
+
+    - name: Run npm audit
+      run: cd frontend && npm audit --audit-level=high

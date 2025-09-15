@@ -4,4 +4,8 @@ services:
       context: .
       dockerfile: ./webapi/Dockerfile_scan
     image: wwn_webapi_scan:0.0.1
-    
+  frontend_scan:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile_scan
+    image: frontend_scan:0.0.1
