@@ -133,15 +133,24 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 	for _, item := range items {
 		itemDTO := mapper.ToFCWWNEntryDTO(item)
 		if !itemDTO.NeedsReconcile {
-			writer.Write([]string{itemDTO.Hostname, itemDTO.WWN, itemDTO.WWN})
+			err := writer.Write([]string{itemDTO.Hostname, itemDTO.WWN, itemDTO.WWN})
+			if err != nil {
+				return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
+			}
 		} else { //TODO: remove later - import not reconciled under loadedhostname
-			writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
+			err := writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
+			if err != nil {
+				return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
+			}
 		}
 	}
 	// TODO: remove later - import all not reconciled secondaries with loaded hostname
 	for _, item := range items2 {
 		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
+		err := writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
+		}
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), fmt.Sprintf("host_wwn_%s.csv", snapshot.DataAndTime()))
@@ -177,7 +186,10 @@ func (h *SnapshotHandler) ExportOverrideWWN(c echo.Context) error {
 
 	for _, item := range items {
 		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		writer.Write([]string{itemDTO.WWN, itemDTO.Customer, itemDTO.Hostname})
+		err := writer.Write([]string{itemDTO.WWN, itemDTO.Customer, itemDTO.Hostname})
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to write csv file", err)
+		}
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), fmt.Sprintf("customer_wwn_host_override_%s.csv", snapshot.DataAndTime()))

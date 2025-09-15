@@ -1,0 +1,7 @@
+services:
+  wwn_webapi_scan:
+    build:
+      context: .
+      dockerfile: ./webapi/Dockerfile_scan
+    image: wwn_webapi_scan:0.0.1
+    

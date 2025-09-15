@@ -229,10 +229,17 @@ func (h *FCWWNEntryHandler) ExportReconcileEntries(c echo.Context) error {
 
 	writer := csv.NewWriter(f)
 
-	writer.Write([]string{"Customer", "WWN", "Zones", "Aliases", "Hostname (Generated)", "Hostname (Loaded)"})
+	err = writer.Write([]string{"Customer", "WWN", "Zones", "Aliases", "Hostname (Generated)", "Hostname (Loaded)"})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to write csv file", err)
+	}
+
 	for _, item := range items {
 		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		writer.Write([]string{itemDTO.Customer, itemDTO.WWN, strings.Join(itemDTO.Zones, ","), strings.Join(itemDTO.Aliases, ","), itemDTO.Hostname, itemDTO.LoadedHostname})
+		err := writer.Write([]string{itemDTO.Customer, itemDTO.WWN, strings.Join(itemDTO.Zones, ","), strings.Join(itemDTO.Aliases, ","), itemDTO.Hostname, itemDTO.LoadedHostname})
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to write csv file", err)
+		}
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), "records_to_reconcile.csv")

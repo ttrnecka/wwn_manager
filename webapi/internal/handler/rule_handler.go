@@ -76,7 +76,10 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 
 	for _, item := range items {
 		itemDTO := mapper.ToRuleDTO(item)
-		writer.Write([]string{strconv.Itoa(itemDTO.Order), itemDTO.Customer, itemDTO.Regex, strconv.Itoa(itemDTO.Group), string(itemDTO.Type), itemDTO.Comment})
+		err := writer.Write([]string{strconv.Itoa(itemDTO.Order), itemDTO.Customer, itemDTO.Regex, strconv.Itoa(itemDTO.Group), string(itemDTO.Type), itemDTO.Comment})
+		if err != nil {
+			return errorWithInternal(http.StatusInternalServerError, "Failed to write csv file", err)
+		}
 	}
 	writer.Flush()
 	return c.Attachment(f.Name(), "rules.csv")

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/db"
@@ -30,7 +31,8 @@ func main() {
 	srv := &http.Server{
 		Addr: ":8888",
 		// Handler: Router(),
-		Handler: server.Router(),
+		Handler:           server.Router(),
+		ReadHeaderTimeout: time.Second * 10,
 	}
 
 	err = srv.ListenAndServe()
