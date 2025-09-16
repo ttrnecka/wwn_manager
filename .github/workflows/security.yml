@@ -8,7 +8,7 @@ on:
 
 jobs:
   security:
-    name: Run gosec and govulncheck
+    name: Run security scans
     runs-on: ubuntu-latest
 
     steps:

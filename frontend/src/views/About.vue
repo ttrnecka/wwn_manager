@@ -274,6 +274,7 @@
   <h3 class="blue">Export the Host WWNs and Override WWNs</h3>
     <ul>
       <li>Navigate to <b>Summary</b> section and click the <b>Export Host WWNs</b> or <b>Export Override WWNs</b> button</li>
+      <li>Select record version to export</li>
       <li>Use these files to import the WWNs into the reporting tool.</li>
       <li>If there are Unknown or not reconciled records wont be visible</li>
       <li>The host names are exported as lower case, the source tool uses case-insensitive matching when checking host existence</li>
