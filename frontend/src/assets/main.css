@@ -16,7 +16,9 @@ a,
 }
 
 .btn {
-  padding-top: 0 !important;
+  /* eslint-disable-next-line css/no-important */
+  padding-top: 0 !important; 
+  /* eslint-disable-next-line css/no-important */
   padding-bottom: 0 !important;
 }
 

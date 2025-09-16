@@ -1,7 +1,7 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import { onMounted, computed, watch } from 'vue'
-import Header from './components/Header.vue'
+import { onMounted, watch } from 'vue'
+import HeaderComponent from './components/HeaderComponent.vue'
 import { useUserStore } from '@/stores/userStore'
 import router from '@/router'
 
@@ -59,7 +59,7 @@ onMounted(() => {
     <main class="flex-grow-1 d-flex flex-column p-3 overflow-auto">
       <!-- Header -->
       <header class="d-flex justify-content-between align-items-center mb-3">
-        <Header msg="WWN Manager" />
+        <HeaderComponent msg="WWN Manager" />
       </header>
 
       <!-- Main content -->

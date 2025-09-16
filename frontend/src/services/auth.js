@@ -8,7 +8,7 @@ export async function logOut(opts = {}) {
   return await axios.get("/api/logout", opts)
 }
 
-export async function logIn(username,password,opts = {}) {
+export async function logIn(username,password) {
     const formData = new FormData()
     formData.append('username', username)
     formData.append('password', password)

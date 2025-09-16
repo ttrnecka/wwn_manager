@@ -21,6 +21,7 @@ import fcService from "@/services/fcService";
 import { useApiStore } from '@/stores/apiStore';
 import Swal from 'sweetalert2';
 import { useFlashStore } from '@/stores/flash'
+import router from '@/router'
 
 export default {
   name: "SnapshotsControls",
@@ -37,7 +38,7 @@ export default {
       return useFlashStore();
     },
     snapshots() {
-      return this.apiStore.snapshots.sort((a,b) => b.snapshot_id - a.snapshot_id);
+      return [...this.apiStore.snapshots].sort((a,b) => b.snapshot_id - a.snapshot_id);
     }
   },
   watch: {
@@ -93,7 +94,7 @@ export default {
 
         if (result.isConfirmed) {
           const inputValue = result.value;
-          const snap = await fcService.makeSnapshot(inputValue);
+          await fcService.makeSnapshot(inputValue);
           await this.apiStore.loadSnapshots();
         } 
       } catch (err) {
@@ -132,7 +133,7 @@ export default {
 
         if (result.isConfirmed) {
           const inputValue = result.value;
-          const snap = await this.downloadHostWWN(inputValue);
+          await this.downloadHostWWN(inputValue);
         } 
       } catch (err) {
         const status = err.response?.status;
@@ -170,7 +171,7 @@ export default {
 
         if (result.isConfirmed) {
           const inputValue = result.value;
-          const snap = await this.downloadOverrideWWN(inputValue);
+          await this.downloadOverrideWWN(inputValue);
         } 
       } catch (err) {
         const status = err.response?.status;

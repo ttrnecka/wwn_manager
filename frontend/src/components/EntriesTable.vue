@@ -152,7 +152,6 @@
 <script>
 import PagingControls from "./PagingControls.vue";
 import { useApiStore } from '@/stores/apiStore';
-import { GLOBAL_CUSTOMER } from '@/config'
 import ReconciliationModal from './ReconciliationModal.vue';
 import fcService from "@/services/fcService";
 import { useFlashStore } from '@/stores/flash'

@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import FCManager  from '../views/FCManager.vue'
 import GlobalFCManager  from '../views/GlobalFCManager.vue'
-import About  from '../views/About.vue'
-import Summary  from '../views/Summary.vue'
-import Login from '../views/Login.vue'
+import AboutPage  from '../views/AboutView.vue'
+import SummaryPage  from '../views/Summary.vue'
+import LoginView from '../views/LoginView.vue'
 import { useUserStore } from '@/stores/userStore'
 import { useApiStore } from '@/stores/apiStore'
 
@@ -29,14 +29,14 @@ const router = createRouter({
       path: '/summary',
       alias: ['/summary.html'],
       name: 'summary',
-      component: Summary,
+      component: SummaryPage,
       meta: { requiresData: true },
     },
     {
       path: '/about',
       alias: ['/about.html'],
       name: 'about',
-      component: About 
+      component: AboutPage 
     },
     {
       path: '/:pathMatch(.*)*',
@@ -45,7 +45,7 @@ const router = createRouter({
     },
     {
     path: '/login',
-      component: Login,
+      component: LoginView,
       beforeEnter: (to, from, next) => {
         const userStore = useUserStore()
         if (userStore.isLoggedIn) {

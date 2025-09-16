@@ -130,14 +130,14 @@ export default {
       });
     },
     async saveRules() {
-      const result = await showAlert(async () => {
+      await showAlert(async () => {
           await fcService.addRules(this.customer, this.localRules);
           this.$emit("rulesChanged");
       },
       {title: 'Save the rules?', text: "It may take a moment to process them", confirmButtonText: 'Yes, save!'})
     },
     async deleteRule(rule) {
-      const result = await showAlert(async () => {
+      await showAlert(async () => {
             if (rule.id) {
               // Existing rule in backend
               await fcService.deleteRule(this.customer, rule.id);

@@ -15,12 +15,6 @@ export const useUserStore = defineStore('data', () => {
     loggedIn.value = value
   }
 
-  async function getData() {
-    // await load("/user",user)
-    if (isLoggedIn.value) {
-    }
-  }
-
   async function fetchUser() {
     try {
       const response = await getUser({timeout: 2000})
@@ -42,7 +36,7 @@ export const useUserStore = defineStore('data', () => {
   
   async function logoutUser() {
     try {
-      const res = await logOut()
+      await logOut()
       loggedIn.value = false;
       router.push('/login')
     } catch (err) {
@@ -54,7 +48,7 @@ export const useUserStore = defineStore('data', () => {
 
 async function loginUser(username,password) {
   try {
-    const res = await logIn(username,password)
+    await logIn(username,password)
     loggedIn.value = true;
     router.push('/')
    } catch (err) {
@@ -69,5 +63,5 @@ async function loginUser(username,password) {
     }
   }
 }
-  return { loggedIn,user, isLoggedIn, getData, setLoggedIn, fetchUser, logoutUser, loginUser}
+  return { loggedIn,user, isLoggedIn, setLoggedIn, fetchUser, logoutUser, loginUser}
 });

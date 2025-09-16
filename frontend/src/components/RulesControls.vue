@@ -66,7 +66,7 @@ export default {
       fcService.saveFile(resp);
     },
     async applyRules() {
-      const result = await showAlert(async () => {
+      await showAlert(async () => {
           await fcService.applyRules();
           this.$emit('rules-applied');
       },

@@ -154,7 +154,7 @@ import { markRaw } from 'vue'
 import router from '@/router'
 
 export default {
-  name: "Summary",
+  name: "SummaryPage",
   components: { LoadingOverlay, FlashMessage, EntriesSummaryTable, SnapshotsControls },
   data() {
     return {
@@ -187,7 +187,7 @@ export default {
       const set1 = new Set(entries.map(item => `${item.customer}|${item.wwn}|${item.hostname}`));
       const set2 = new Set(entries.map(item => `${item.customer}|${item.wwn}`));
       const sentries = this.snapshotEntries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
-      return entries.filter(item => set2.has(`${item.customer}|${item.wwn}`) && !set1.has(`${item.customer}|${item.wwn}|${item.hostname}`));
+      return sentries.filter(item => set2.has(`${item.customer}|${item.wwn}`) && !set1.has(`${item.customer}|${item.wwn}|${item.hostname}`));
     },
     newOverrideSnapshot() {
       const entries = this.entries.filter(e => this.isSecondary(e) && !this.isSoftDeleted(e));
@@ -285,7 +285,7 @@ export default {
           router.push("/login")
           return
         }
-        console.error("Data load failed", err);
+        console.error("Data load failed", error);
         this.flash.show("Data load failed", "danger");
       } finally {
         this.apiStore.loading = false;

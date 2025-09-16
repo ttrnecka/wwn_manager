@@ -91,7 +91,6 @@ import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import { useApiStore } from '@/stores/apiStore';
 import { GLOBAL_CUSTOMER } from '@/config'
-import { showAlert } from '@/services/alert';
 
 export default {
   name: "GlobalFCManager",
