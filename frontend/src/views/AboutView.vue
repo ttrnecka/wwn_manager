@@ -169,6 +169,9 @@
       <li>
         Export the Host WWNs and Override WWNs
       </li>
+      <li>
+        Import records
+      </li>
     </ul>
 
   <h3 class="blue">Import Entries</h3>
@@ -204,6 +207,9 @@
   </ul>
 
   <h3 class="blue">Reconcile Records</h3>
+
+  <b>Note:</b> For hosts tagged as <b>decommissioned</b> always make sure the hostname with <b>decommissioned</b> tag is selected.<br/><br/>
+
 
   <ul>
     <li>Click <b>Reconcle Only</b> checkbox on the <b>Global</b> page</li>
@@ -275,9 +281,16 @@
     <ul>
       <li>Navigate to <b>Summary</b> section and click the <b>Export Host WWNs</b> or <b>Export Override WWNs</b> button</li>
       <li>Select record version to export</li>
-      <li>Use these files to import the WWNs into the reporting tool.</li>
-      <li>If there are Unknown or not reconciled records wont be visible</li>
       <li>The host names are exported as lower case, the source tool uses case-insensitive matching when checking host existence</li>
+    </ul>
+
+  <h3 class="blue">Import records</h3>
+    <ul>
+      <li>The import will delete and recreate records in aps_hba_port table. On top of the import itself, some reports may require collection refresh to display latest data.</li>
+      <li>Plan the import at time where potential report inaccuracies wil have limited impact (not end or begining of month, preferably Fridays)</li>
+      <li>Move the exported Host WWN file to the database server to /opt/aptare/DXC</li>
+      <li>From sqldeveloper run: <b>execute srm_load_pkg.loadHBAPortFile('dxccorp.net', 'N', '/opt/aptare/DXC/&lt;host_wwn_file_name&gt;', '/opt/aptare/DXC', 'Host_WWN.log','');</b></li>
+      <li>If needed, refresh required policies, otherwise wait for them to run according to the schedule</li>
     </ul>
   </div>
 </template>
