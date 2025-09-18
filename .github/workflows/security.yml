@@ -56,3 +56,6 @@ jobs:
 
     - name: Run npm audit
       run: cd frontend && npm audit --audit-level=high
+
+    - name: Run npm eslint
+      run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0

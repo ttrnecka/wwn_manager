@@ -237,10 +237,7 @@ export default {
       return !entry.is_primary_customer && !entry.ignore_entry && entry.wwn_set !== 3
     },
     isSoftDeleted(entry) {
-      if ('deleted_at' in entry) {
-        return true;
-      }
-      return false;
+      return "deleted_at" in entry;
     },
     removeEntry(id) {
       this.removeById(this.entries,id);

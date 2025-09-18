@@ -122,10 +122,7 @@ export default {
       }
     },
     is_soft_deleted(entry) {
-      if ('deleted_at' in entry) {
-        return true;
-      }
-      return false;
+      return "deleted_at" in entry;
     },
     async restoreEntry(e) {
       await this.apiStore.restoreEntry(e.id);

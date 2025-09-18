@@ -185,8 +185,6 @@ export const useApiStore = defineStore('api', {
       this.loading = true;
       try {
         await fcService.restoreEntry(id);
-        // this.dirty.entries=true;
-        // await this.loadEntries(GLOBAL_CUSTOMER);
       }  catch (err) {
         console.error("Entry restoration failed!", err);
         this.flash.show("Entry restoration failed", "danger");
@@ -220,10 +218,7 @@ export const useApiStore = defineStore('api', {
       return !entry.is_primary_customer && !entry.ignore_entry && entry.wwn_set !== 3
     },
     is_soft_deleted(entry) {
-      if ('deleted_at' in entry) {
-        return true;
-      }
-      return false;
+      return "deleted_at" in entry;
     },
   }
 });

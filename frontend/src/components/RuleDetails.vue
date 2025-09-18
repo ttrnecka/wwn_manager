@@ -68,30 +68,13 @@ export default {
       let texts = [];
       for (const rule of this.entry.default_reconcile_messages || []) {
         if (rule === rule_primary) {
-            if (this.entry.wwn_set === 3) {
-                texts.push("Default reconciliation rule 1: record selected as it is automatically discovered")
-            }
-            if (this.entry.wwn_set === 2) {
-                texts.push("Default reconciliation rule 2: record selected as it is manualy imported and matching SAN loaded hostname")
-            }
+          texts.push(this.getPrimaryReconcileRuleMsg(this.entry))
         }
         if (rule === rule_override) {
-            const sets = this.entry.duplicate_customers.map((e) => e.wwn_set)
-            if (sets.includes(3)) {
-                texts.push("Default reconciliation rule 1: record included in overrides as automatically discovered record with same WWN has been prioritized")
-            }
-            if (sets.includes(2)) {
-                texts.push("Default reconciliation rule 2: record included in overrides as manualy loaded record with same WWN has been prioritized")
-            }
+          texts.push(this.getOverrideReconcileRuleMsg(this.entry))
         }
         if (rule === rule_ignore) {
-            const sets = this.entry.duplicate_customers.map((e) => e.wwn_set)
-            if (sets.includes(3)) {
-                texts.push("Default reconciliation rule 1: record ignored as automatically discovered record with same WWN and similar hostname exist")
-            }
-            if (sets.includes(2)) {
-                texts.push("Default reconciliation rule 2: record ignored as manualy loaded record with same WWN and similar hostname exist")
-            }
+          texts.push(this.getIgnoreReconcileRuleMsg(this.entry))
         }
       }
       for (const rule of rules) {
@@ -106,6 +89,34 @@ export default {
         return texts.join(", ")
       }
       return ""
+    },
+  },
+  methods: {
+    getPrimaryReconcileRuleMsg(entry) {
+      if (entry.wwn_set === 3) {
+          return "Default reconciliation rule 1: record selected as it is automatically discovered"
+      }
+      if (entry.wwn_set === 2) {
+          return "Default reconciliation rule 2: record selected as it is manualy imported and matching SAN loaded hostname"
+      }
+    },
+    getOverrideReconcileRuleMsg(entry) {
+      const sets = entry.duplicate_customers.map((e) => e.wwn_set)
+      if (sets.includes(3)) {
+          return "Default reconciliation rule 1: record included in overrides as automatically discovered record with same WWN has been prioritized"
+      }
+      if (sets.includes(2)) {
+          return "Default reconciliation rule 2: record included in overrides as manualy loaded record with same WWN has been prioritized"
+      }
+    },
+    getIgnoreReconcileRuleMsg(entry) {
+      const sets = entry.duplicate_customers.map((e) => e.wwn_set)
+      if (sets.includes(3)) {
+          return "Default reconciliation rule 1: record ignored as automatically discovered record with same WWN and similar hostname exist"
+      }
+      if (sets.includes(2)) {
+          return "Default reconciliation rule 2: record ignored as manualy loaded record with same WWN and similar hostname exist"
+      }
     },
   }
 };

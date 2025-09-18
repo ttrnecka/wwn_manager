@@ -2,6 +2,9 @@ import js from "@eslint/js";
 import globals from "globals";
 import pluginVue from "eslint-plugin-vue";
 import css from "@eslint/css";
+import security from "eslint-plugin-security";
+import noSecrets from "eslint-plugin-no-secrets";
+import sonarjs from 'eslint-plugin-sonarjs';
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
@@ -9,7 +12,24 @@ export default defineConfig([
   // Vue files
   ...pluginVue.configs["flat/essential"].map(cfg => ({
     ...cfg,
-    files: ["**/*.vue"], // ensure this config only runs on Vue files
+    files: ["**/*.vue"], 
   })),
+  {
+    files: ["**/*.{js,vue}"],
+    plugins: {
+      "no-secrets": noSecrets,
+    },
+    rules: {
+      "no-secrets/no-secrets": "error",
+    },
+  },
+  {
+    files: ["**/*.js", "**/*.vue"],
+    ...sonarjs.configs.recommended,
+  },
+  {
+    files: ["**/*.js", "**/*.vue"],
+    ...security.configs.recommended,
+  },
   { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
 ]);

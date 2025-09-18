@@ -121,9 +121,17 @@ export default {
         ? Math.max(...this.localRules.map(r => r.order)) 
         : 0;
 
+      let type;
+      if (this.types.includes("wwn_range_array")) {
+        type = "wwn_range_array";
+      } else if (this.types.includes("alias")) {
+        type = "alias";
+      } else {
+        type = "ignore_loaded";
+      }
       this.localRules.push({
         id: null, // unsaved
-        type: this.types.includes("wwn_range_array") ? "wwn_range_array" : (this.types.includes("alias") ? 'alias' : 'ignore_loaded'), 
+        type: type,
         regex: "",
         order: maxOrder + 1, // assign next order
         group: 1

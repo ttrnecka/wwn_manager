@@ -13,4 +13,6 @@ RUN npm ci  --force --loglevel verbose
 COPY frontend/ .
 
 CMD echo "Running npm audit..." && \
-    npm audit --audit-level=high
+    npm audit --audit-level=high && \
+    echo "Running ESLint security scan..." && \
+    npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
