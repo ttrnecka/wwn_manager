@@ -24,6 +24,8 @@
 import fcService from "@/services/fcService";
 import { showAlert } from '@/services/alert';
 import { useApiStore } from '@/stores/apiStore';
+import { useFlashStore } from '@/stores/flash'
+import router from '@/router'
 
 export default {
   name: "RulesControls",
@@ -34,6 +36,9 @@ export default {
     };
   },
   computed: {
+    flash() {
+      return useFlashStore();
+    },
     apiStore() {
       return useApiStore();
     },
@@ -55,22 +60,58 @@ export default {
     },
     async uploadRules() {
       if (!this.file) return;
-      this.apiStore.loading = true;
-      await this.apiStore.importRules(this.file);
-      this.file = null;
-      this.fileName = "";
-      this.$refs.fileInput.value = null; 
+      try {
+        await this.apiStore.importRules(this.file);
+      } catch (err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.error("Download rules failed:", error);
+        this.flash.show(`Download rules failed: ${error}`, "danger");
+      } finally {
+        this.file = null;
+        this.fileName = "";
+        this.$refs.fileInput.value = null; 
+      }
     },
     async downloadRules() {
-      const resp = await fcService.getRulesExport();
-      fcService.saveFile(resp);
+      try {
+        const resp = await fcService.getRulesExport();
+        fcService.saveFile(resp);
+      } catch (err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.error("Download rules failed:", error);
+        this.flash.show(`Download rules failed: ${error}`, "danger");
+      }
     },
     async applyRules() {
-      await showAlert(async () => {
-          await fcService.applyRules();
-          this.$emit('rules-applied');
-      },
-      {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
+      try {
+        await showAlert(async () => {
+            await fcService.applyRules();
+            this.$emit('rules-applied');
+        },
+        {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
+      } catch (err) {
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+
+        if (status === 401) {
+          router.push("/login")
+          return
+        }
+        console.error("Apply rules failed:", error);
+        this.flash.show(`Apply rules failed: ${error}`, "danger");
+      }
     },
   }
 };
