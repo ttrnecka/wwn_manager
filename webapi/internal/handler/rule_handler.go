@@ -497,6 +497,10 @@ RANGE:
 }
 
 func applyHostRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
+	loadHostname := entry.LoadedHostname
+	if loadHostname == "" {
+		loadHostname = entry.Hostname
+	}
 	entry.Hostname = ""
 
 	// do host check only for host ranges
@@ -544,7 +548,7 @@ TOP:
 
 	// for set 2 and 3 there is no zone or alias so we just take loaded hostname as is
 	if entry.WWNSet == entity.WWNSetManual || entry.WWNSet == entity.WWNSetAuto {
-		entry.Hostname = strings.ToLower(entry.LoadedHostname)
+		entry.Hostname = strings.ToLower(loadHostname)
 	}
 
 	return nil
