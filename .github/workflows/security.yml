@@ -1,6 +1,7 @@
 name: Go Security Scan
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -62,4 +63,5 @@ jobs:
       run: cd frontend && npm audit --audit-level=high
 
     - name: Run npm eslint
+
       run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
