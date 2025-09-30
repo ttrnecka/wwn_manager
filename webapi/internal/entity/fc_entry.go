@@ -32,6 +32,7 @@ type FCWWNEntry struct {
 	Type                     string               `bson:"type,omitempty"`
 	TypeRule                 primitive.ObjectID   `bson:"type_rule,omitempty"`
 	HostNameRule             primitive.ObjectID   `bson:"hostname_rule,omitempty"`
+	HostNameRuleType         RuleType             `bson:"hostname_rule_type,omitempty"`
 	ReconcileRules           []primitive.ObjectID `bson:"reconcile_rules,omitempty"`
 	DefaultReconcileMessages []RuleType           `bson:"default_reconcile_messages,omitempty"`
 	NeedsReconcile           bool                 `bson:"needs_reconcile"`

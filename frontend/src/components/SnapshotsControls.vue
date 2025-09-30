@@ -100,11 +100,6 @@ export default {
       } catch (err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");
       }
@@ -138,11 +133,6 @@ export default {
       } catch (err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");
       }
@@ -176,11 +166,6 @@ export default {
       } catch (err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");
       }

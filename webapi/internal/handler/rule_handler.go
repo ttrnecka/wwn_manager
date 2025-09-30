@@ -519,6 +519,7 @@ TOP:
 			return fmt.Errorf("apply-rules - regex %s won't compile: %w", rule.Regex, err)
 		}
 		entry.HostNameRule = rule.ID
+		entry.HostNameRuleType = rule.Type
 		switch rule.Type {
 		case entity.ZoneRule:
 			for _, zone := range entry.Zones {
@@ -544,10 +545,11 @@ TOP:
 			}
 		}
 		entry.HostNameRule = entity.NilObjectID()
+		entry.HostNameRuleType = ""
 	}
 
 	// for set 2 and 3 there is no zone or alias so we just take loaded hostname as is
-	if entry.WWNSet == entity.WWNSetManual || entry.WWNSet == entity.WWNSetAuto {
+	if (entry.Hostname == "" && entry.WWNSet == entity.WWNSetManual) || entry.WWNSet == entity.WWNSetAuto {
 		entry.Hostname = strings.ToLower(loadHostname)
 	}
 
@@ -628,7 +630,8 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 		}
 	}
 	loadedReconciled := true
-	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) { //&& !utils.ContainsIgnoreCase(entry.LoadedHostname, entry.Hostname) {
+	// if the host rule was entity.WWNHostMapRule then we ignore if they are not equal as WWN host rule must contains host directly
+	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) && entry.HostNameRuleType != entity.WWNHostMapRule { //&& !utils.ContainsIgnoreCase(entry.LoadedHostname, entry.Hostname) {
 		loadedReconciled = false
 	}
 REC:

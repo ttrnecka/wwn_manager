@@ -19,6 +19,7 @@ type FCWWNEntryDTO struct {
 	Type                     string                     `json:"type"`
 	TypeRule                 string                     `json:"type_rule"`
 	HostNameRule             string                     `json:"hostname_rule"`
+	HostNameRuleType         entity.RuleType            `json:"hostname_rule_type,omitempty"`
 	ReconcileRules           []string                   `json:"reconcile_rules"`
 	DefaultReconcileMessages []entity.RuleType          `json:"default_reconcile_messages"`
 	NeedsReconcile           bool                       `json:"needs_reconcile"`

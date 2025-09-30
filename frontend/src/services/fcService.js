@@ -1,12 +1,35 @@
 import axios from "axios";
+import router from '@/router'
+import { useUserStore } from '@/stores/userStore'
 
 const API = "/api/v1"; 
 
+const api = axios.create({
+  baseURL: API,
+});
+
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      const userStore = useUserStore()
+      userStore.setLoggedIn(false)
+      if (router.currentRoute.value.path !== "/login") {
+        router.replace({ path: "/login" });
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+
 export default {
+  api,
   importFile(file) {
     const formData = new FormData();
     formData.append("file", file);
-    return axios.post(`${API}/import`, formData, {
+    return api.post(`/import`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
@@ -14,81 +37,81 @@ export default {
   importRules(file) {
     const formData = new FormData();
     formData.append("file", file);
-    return axios.post(`${API}/rules/import`, formData, {
+    return api.post(`/rules/import`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
 
   getCustomers() {
-    return axios.get(`${API}/customers`);
+    return api.get(`/customers`);
   },
 
   getRules(customer) {
-    return axios.get(`${API}/customers/${customer}/rules`);
+    return api.get(`/customers/${customer}/rules`);
   },
 
   getAllRules() {
-    return axios.get(`${API}/rules`);
+    return api.get(`/rules`);
   },
 
   addRule(customer, rule) {
-    return axios.post(`${API}/customers/${customer}/rules`, rule);
+    return api.post(`/customers/${customer}/rules`, rule);
   },
 
   addRules(customer, rules) {
-    return axios.post(`${API}/customers/${customer}/rules?mode=bulk`, rules);
+    return api.post(`/customers/${customer}/rules?mode=bulk`, rules);
   },
 
   deleteRule(customer, id) {
-    return axios.delete(`${API}/customers/${customer}/rules/${id}`);
+    return api.delete(`/customers/${customer}/rules/${id}`);
   },
   softDeleteEntry(id) {
-    return axios.post(`${API}/entries/${id}/softdelete`);
+    return api.post(`/entries/${id}/softdelete`);
   },
   restoreEntry(id) {
-    return axios.post(`${API}/entries/${id}/restore`);
+    return api.post(`/entries/${id}/restore`);
   },
   applyRules() {
-    return axios.post(`${API}/rules/apply`);
+    return api.post(`/rules/apply`);
   },
   setReconcileRules(entry_id,reconcileObj) {
-    return axios.post(`${API}/entries/${entry_id}/reconcile`, reconcileObj);
+    return api.post(`/entries/${entry_id}/reconcile`, reconcileObj);
   },
 
   getEntries(customer) {
-    return axios.get(`${API}/customers/${customer}/entries`);
+    return api.get(`/customers/${customer}/entries`);
   },
 
   getEntriesWithSoftDeleted(customer) {
-    return axios.get(`${API}/customers/${customer}/entries?softdeleted=yes`);
+    return api.get(`/customers/${customer}/entries?softdeleted=yes`);
   },
 
   getRulesExport() {
-    return axios.get(`${API}/rules/export`, {responseType: "blob"});
+    return api.get(`/rules/export`, {responseType: "blob"});
   },
 
   getCustomerWWNExport(snapId) {
-    return axios.get(`${API}/snapshots/${snapId}/export_override_wwn`, {responseType: "blob"});
+    return api.get(`/snapshots/${snapId}/export_override_wwn`, {responseType: "blob"});
   },
 
   getHostWWNExport(snapId) {
-    return axios.get(`${API}/snapshots/${snapId}/export_wwn`, {responseType: "blob"});
+    return api.get(`/snapshots/${snapId}/export_wwn`, {responseType: "blob"});
   },
 
   getReconcileWWNExport() {
-    return axios.get(`${API}/entries/export/reconcile`, {responseType: "blob"});
+    return api.get(`/entries/export/reconcile`, {responseType: "blob"});
   },
 
   getSnapshots() {
-    return axios.get(`${API}/snapshots`);
+    return api.get(`/snapshots`);
   },
 
   getSnapshot(id) {
-    return axios.get(`${API}/snapshots/${id}`);
+    return api.get(`/snapshots/${id}`);
   },
 
   makeSnapshot(comment) {
-    return axios.post(`${API}/snapshots`,{comment: comment});
+    return api.post(`/snapshots`,{comment: comment});
   },
 
   saveFile(resp) {

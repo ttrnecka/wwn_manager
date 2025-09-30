@@ -24,12 +24,6 @@ export const useUserStore = defineStore('data', () => {
     catch(err) {
       const status = err.response?.status;
       const error = err.response?.data?.message || err.message;
-
-      if (status === 401) {
-        loggedIn.value = false;
-        router.push("/login")
-        return
-      }
       console.error(`API error: ${error}`);
     }
   }

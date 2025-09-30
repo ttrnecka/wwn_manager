@@ -48,9 +48,9 @@ func Router() *echo.Echo {
 	ruleHandler := handler.NewRuleHandler(ruleSvc, fcwWWNEntrySvc)
 	snapshotHandler := handler.NewSnapshotHandler(snapshotSvc, fcwWWNEntrySvc)
 
-	e.POST("/api/login", userHandler.LoginUser)
-	e.GET("/api/logout", userHandler.LogoutUser)
-	e.GET("/api/user", userHandler.User, mid.AuthMiddleware)
+	e.POST("/api/v1/login", userHandler.LoginUser)
+	e.GET("/api/v1/logout", userHandler.LogoutUser)
+	e.GET("/api/v1/user", userHandler.User, mid.AuthMiddleware)
 
 	api := e.Group("/api/v1", mid.AuthMiddleware)
 

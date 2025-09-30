@@ -78,6 +78,7 @@
       <li><b>WWN</b> - user exact WWN to match to host name. Use <b>Comment</b> field as the hostname</li>
       <li><b>Zone</b> - use regular expression with match group on WWN zone to decode host</li>
     </ul>
+    <p>Host rules are applied only to WWN set 1 and 2. For WWN set 3, the generated hostname will always equal to the loaded hostname</p>
     <h4 class="blue">Reconciliation Rules</h4>
     <p>
       These are special rules to handle duplicate WWNs across multiple tenants or handle name missmatch between
@@ -278,6 +279,7 @@
   </ul>
 
   <h3 class="blue">Export the Host WWNs and Override WWNs</h3>
+    <p>Only WWN set 1 and 2 are exported. Set 3 WWNs are ignored as they are automatically discovered by the source tool.</p>
     <ul>
       <li>Navigate to <b>Summary</b> section and click the <b>Export Host WWNs</b> or <b>Export Override WWNs</b> button</li>
       <li>Select record version to export</li>

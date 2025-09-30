@@ -3,7 +3,6 @@ import fcService from "@/services/fcService";
 import { GLOBAL_CUSTOMER } from '@/config'
 import { useFlashStore } from '@/stores/flash'
 import { markRaw } from 'vue'
-import router from '@/router'
 
 export const useApiStore = defineStore('api', {
   state: () => ({
@@ -85,11 +84,6 @@ export const useApiStore = defineStore('api', {
       } catch(err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.log("Loading entries failed:",error)
         this.flash.show("Loading entries failed", "danger");
       } finally {
@@ -106,11 +100,6 @@ export const useApiStore = defineStore('api', {
       } catch(err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.log("Loading rules failed:",error)
         this.flash.show("Loading rules failed", "danger");
       } finally {
@@ -125,11 +114,6 @@ export const useApiStore = defineStore('api', {
       } catch(err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.log("Loading snapshots failed:",error)
         this.flash.show("Loading snapshots failed", "danger");
       } finally {
@@ -144,11 +128,6 @@ export const useApiStore = defineStore('api', {
       } catch(err) {
         const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-
-        if (status === 401) {
-          router.push("/login")
-          return
-        }
         console.log("Loading snapshot failed:",error)
         this.flash.show("Loading snapshot failed", "danger");
       } finally {
@@ -162,7 +141,9 @@ export const useApiStore = defineStore('api', {
         this.dirty.entries=true;
         await this.loadEntries(GLOBAL_CUSTOMER);
       } catch (err) {
-        console.error("Import failed!", err);
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+        console.error("Import failed!", error);
         this.flash.show("Import failed", "danger");
       } finally {
         this.loading = false;
@@ -175,7 +156,9 @@ export const useApiStore = defineStore('api', {
         this.dirty.rules=true;
         await this.loadRules();
       } catch (err) {
-        console.error("Import failed!", err);
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+        console.error("Import failed!", error);
         this.flash.show("Import failed", "danger");
       } finally {
         this.loading = false;
@@ -186,7 +169,9 @@ export const useApiStore = defineStore('api', {
       try {
         await fcService.restoreEntry(id);
       }  catch (err) {
-        console.error("Entry restoration failed!", err);
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+        console.error("Entry restoration failed!", error);
         this.flash.show("Entry restoration failed", "danger");
       } finally {
         this.loading = false;
@@ -199,7 +184,9 @@ export const useApiStore = defineStore('api', {
         this.dirty.entries=true;
         await this.loadEntries(GLOBAL_CUSTOMER);
       }  catch (err) {
-        console.error("Entry deletion failed!", err);
+        const status = err.response?.status;
+        const error = err.response?.data?.message || err.message;
+        console.error("Entry deletion failed!", error);
         this.flash.show("Entry deletion failed", "danger");
       } finally {
         this.loading = false;
