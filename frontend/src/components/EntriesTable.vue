@@ -156,7 +156,6 @@ import ReconciliationModal from './ReconciliationModal.vue';
 import fcService from "@/services/fcService";
 import { useFlashStore } from '@/stores/flash'
 import RuleDetails from "./RuleDetails.vue";
-import router from '@/router'
 
 export default {
   name: "EntriesTable",
@@ -230,9 +229,8 @@ export default {
         await fcService.setReconcileRules(this.modalData.entry.id, this.modalData);
         await this.apiStore.reload();
       } catch (err) {
-        const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
-        console.error("Reconciliation failed!", err);
+        console.error("Reconciliation failed!", error);
         this.flash.show("Reconciliation failed", "danger");
       }
       this.closeRecModal();

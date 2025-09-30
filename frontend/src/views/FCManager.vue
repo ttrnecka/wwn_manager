@@ -69,7 +69,6 @@ import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import { useFlashStore } from '@/stores/flash'
 import { useApiStore } from '@/stores/apiStore';
-import router from '@/router'
 
 export default {
   name: "FCManager",
@@ -112,7 +111,6 @@ export default {
         const res = await fcService.getCustomers();
         this.customers = res.data;
       }  catch (err) {
-        const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
         console.error("Failed to load customers!", error);
         this.flash.show("Failed to load customers!", "danger");

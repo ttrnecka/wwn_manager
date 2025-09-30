@@ -21,7 +21,6 @@ import fcService from "@/services/fcService";
 import { useApiStore } from '@/stores/apiStore';
 import Swal from 'sweetalert2';
 import { useFlashStore } from '@/stores/flash'
-import router from '@/router'
 
 export default {
   name: "SnapshotsControls",
@@ -98,7 +97,6 @@ export default {
           await this.apiStore.loadSnapshots();
         } 
       } catch (err) {
-        const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");
@@ -131,7 +129,6 @@ export default {
           await this.downloadHostWWN(inputValue);
         } 
       } catch (err) {
-        const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");
@@ -164,7 +161,6 @@ export default {
           await this.downloadOverrideWWN(inputValue);
         } 
       } catch (err) {
-        const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");

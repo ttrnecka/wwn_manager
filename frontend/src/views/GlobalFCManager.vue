@@ -91,7 +91,6 @@ import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
 import { useApiStore } from '@/stores/apiStore';
 import { GLOBAL_CUSTOMER } from '@/config'
-import router from '@/router'
 
 export default {
   name: "GlobalFCManager",
@@ -116,7 +115,6 @@ export default {
         const resp = await fcService.getReconcileWWNExport();
         fcService.saveFile(resp);
       }  catch (err) {
-        const status = err.response?.status;
         const error = err.response?.data?.message || err.message;
         console.error("Download failed!", error);
         this.flash.show("Download failed", "danger");

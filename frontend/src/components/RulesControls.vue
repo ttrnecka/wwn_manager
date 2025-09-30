@@ -25,7 +25,6 @@ import fcService from "@/services/fcService";
 import { showAlert } from '@/services/alert';
 import { useApiStore } from '@/stores/apiStore';
 import { useFlashStore } from '@/stores/flash'
-import router from '@/router'
 
 export default {
   name: "RulesControls",
@@ -63,7 +62,7 @@ export default {
       try {
         await this.apiStore.importRules(this.file);
       } catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.error("Download rules failed:", error);
         this.flash.show(`Download rules failed: ${error}`, "danger");
@@ -78,7 +77,7 @@ export default {
         const resp = await fcService.getRulesExport();
         fcService.saveFile(resp);
       } catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.error("Download rules failed:", error);
         this.flash.show(`Download rules failed: ${error}`, "danger");
@@ -92,8 +91,9 @@ export default {
         },
         {title: 'Apply the rules?', text: "It may take a moment to process them", confirmButtonText: 'Apply!'})
       } catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
+
         console.error("Apply rules failed:", error);
         this.flash.show(`Apply rules failed: ${error}`, "danger");
       }

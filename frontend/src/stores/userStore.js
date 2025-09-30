@@ -22,7 +22,6 @@ export const useUserStore = defineStore('data', () => {
       loggedIn.value = true;
     }
     catch(err) {
-      const status = err.response?.status;
       const error = err.response?.data?.message || err.message;
       console.error(`API error: ${error}`);
     }

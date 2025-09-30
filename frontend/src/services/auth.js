@@ -1,4 +1,3 @@
-import axios from 'axios';
 import fcService from "@/services/fcService";
 
 export async function getUser(opts = {}) {

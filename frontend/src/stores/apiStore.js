@@ -82,7 +82,7 @@ export const useApiStore = defineStore('api', {
         this.dirty.entries = false;
         this.entriesVersion++;
       } catch(err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.log("Loading entries failed:",error)
         this.flash.show("Loading entries failed", "danger");
@@ -98,7 +98,7 @@ export const useApiStore = defineStore('api', {
         this.rules = res.data;
         this.dirty.rules = false;
       } catch(err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.log("Loading rules failed:",error)
         this.flash.show("Loading rules failed", "danger");
@@ -112,7 +112,7 @@ export const useApiStore = defineStore('api', {
         const res = await fcService.getSnapshots();
         this.snapshots = res.data;
       } catch(err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.log("Loading snapshots failed:",error)
         this.flash.show("Loading snapshots failed", "danger");
@@ -126,7 +126,7 @@ export const useApiStore = defineStore('api', {
         const res = await fcService.getSnapshot(id);
         this.snapshotEntries = markRaw(res.data);
       } catch(err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.log("Loading snapshot failed:",error)
         this.flash.show("Loading snapshot failed", "danger");
@@ -141,7 +141,7 @@ export const useApiStore = defineStore('api', {
         this.dirty.entries=true;
         await this.loadEntries(GLOBAL_CUSTOMER);
       } catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.error("Import failed!", error);
         this.flash.show("Import failed", "danger");
@@ -156,7 +156,7 @@ export const useApiStore = defineStore('api', {
         this.dirty.rules=true;
         await this.loadRules();
       } catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.error("Import failed!", error);
         this.flash.show("Import failed", "danger");
@@ -169,7 +169,7 @@ export const useApiStore = defineStore('api', {
       try {
         await fcService.restoreEntry(id);
       }  catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.error("Entry restoration failed!", error);
         this.flash.show("Entry restoration failed", "danger");
@@ -184,7 +184,7 @@ export const useApiStore = defineStore('api', {
         this.dirty.entries=true;
         await this.loadEntries(GLOBAL_CUSTOMER);
       }  catch (err) {
-        const status = err.response?.status;
+        
         const error = err.response?.data?.message || err.message;
         console.error("Entry deletion failed!", error);
         this.flash.show("Entry deletion failed", "danger");
