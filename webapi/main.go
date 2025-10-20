@@ -1,10 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/gob"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 	"time"
 
+	"github.com/kardianos/service"
 	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/db"
 	"github.com/ttrnecka/wwn_identity/webapi/server"
@@ -19,7 +27,7 @@ func init() {
 	logger = logging.SetupLogger("http")
 }
 
-func main() {
+func (p *program) runServer() {
 	gob.Register(dto.UserDTO{})
 
 	// db
@@ -35,8 +43,95 @@ func main() {
 		ReadHeaderTimeout: time.Second * 10,
 	}
 
+	p.server = srv
 	err = srv.ListenAndServe()
 	if err != nil {
 		logger.Error().Err(err).Msg("")
 	}
+}
+
+type program struct {
+	exit   chan struct{}
+	server *http.Server
+	wg     sync.WaitGroup
+}
+
+func (p *program) Start(s service.Service) error {
+	// Start should not block.
+	p.exit = make(chan struct{})
+	p.wg.Add(1)
+	go p.run()
+	return nil
+}
+
+func (p *program) run() {
+	defer p.wg.Done()
+	go func() {
+		p.runServer()
+	}()
+	// Wait for stop signal
+	<-p.exit
+	logger.Info().Msg("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := p.server.Shutdown(ctx); err != nil {
+		logger.Error().Err(err).Msg("Error during server shutdown: ")
+	} else {
+		logger.Info().Msg("Echo server shut down cleanly..")
+	}
+}
+
+func (p *program) Stop(s service.Service) error {
+	close(p.exit)
+	p.wg.Wait()
+	return nil
+}
+
+func main() {
+	svcConfig := &service.Config{
+		Name:        "WWNManager",
+		DisplayName: "WWN Manager",
+		Description: "WWN Manager Web service",
+	}
+
+	prg := &program{}
+	s, err := service.New(prg, svcConfig)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("")
+	}
+
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "install", "uninstall", "start", "stop", "restart":
+			err = service.Control(s, os.Args[1])
+			if err != nil {
+				logger.Fatal().Err(err).Msg(fmt.Sprintf("Failed to %s service: %v", os.Args[1]))
+			}
+			logger.Info().Msg(fmt.Sprintf("Service %s successfully.", os.Args[1]))
+			return // 👈 exit after command
+		}
+	}
+
+	if !service.Interactive() {
+		// Running as a service
+		err = s.Run()
+		if err != nil {
+			logger.Fatal().Err(err).Msg("")
+		}
+		return
+	}
+
+	// Console mode for development/testing
+	logger.Info().Msg("Running in console mode.")
+	prg.Start(s)
+
+	// Handle Ctrl+C gracefully
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	<-sigChan
+
+	log.Println("Interrupt received, stopping service...")
+	prg.Stop(s)
 }

@@ -15,3 +15,7 @@ docker compose -f docker-compose-dev.yaml up -d
 Then in browser navigate to http://localhost with admin/password credentials
 
 Import entries and rules.
+
+# Local build for standalone deployment
+
+sudo docker compose -f docker-compose-build.yaml up -d --build

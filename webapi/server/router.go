@@ -1,6 +1,10 @@
 package server
 
 import (
+	"net/http"
+	"path/filepath"
+	"strings"
+
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
@@ -75,6 +79,30 @@ func Router() *echo.Echo {
 	api.GET("/snapshots/:id/export_wwn", snapshotHandler.ExportHostWWN)
 	api.GET("/snapshots/:id/export_override_wwn", snapshotHandler.ExportOverrideWWN)
 	api.POST("/snapshots", snapshotHandler.CreateSnapshot)
+
+	// --- Static file handler ---
+	staticDir := "static"
+
+	// This handles all non-API routes
+	e.GET("/*", func(c echo.Context) error {
+		path := c.Request().URL.Path
+
+		// Only handle non-API routes
+		if strings.HasPrefix(path, "/api") {
+			return echo.ErrNotFound
+		}
+
+		// Build full file path
+		filePath := filepath.Join(staticDir, path)
+
+		// Try to serve the file
+		if _, err := http.Dir(staticDir).Open(path); err != nil {
+			// If file not found, serve index.html
+			return c.File(filepath.Join(staticDir, "index.html"))
+		}
+
+		return c.File(filePath)
+	})
 
 	return e
 

@@ -1,0 +1,17 @@
+services:
+  backend-artifacts:
+    build:
+      context: .
+      dockerfile: ./webapi/Dockerfile_build_windows
+    volumes:
+      - ./build:/output
+    entrypoint: sh -c
+    command: ["cp /app/wwn_manager.exe /output/"]
+  frontend-artifacts:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile 
+    volumes:
+      - ./build/static:/output
+    entrypoint: sh -c
+    command: ["cp -r /app/dist/* /output/"]
