@@ -125,7 +125,10 @@ func main() {
 
 	// Console mode for development/testing
 	logger.Info().Msg("Running in console mode.")
-	prg.Start(s)
+	err = prg.Start(s)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("")
+	}
 
 	// Handle Ctrl+C gracefully
 	sigChan := make(chan os.Signal, 1)
@@ -133,5 +136,8 @@ func main() {
 	<-sigChan
 
 	log.Println("Interrupt received, stopping service...")
-	prg.Stop(s)
+	err = prg.Stop(s)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("")
+	}
 }
