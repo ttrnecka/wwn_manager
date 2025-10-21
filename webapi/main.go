@@ -57,7 +57,10 @@ func (p *program) runServer() {
 	// Only set env vars that aren't already set
 	for k, v := range envMap {
 		if _, exists := os.LookupEnv(k); !exists {
-			os.Setenv(k, v)
+			err := os.Setenv(k, v)
+			if err != nil {
+				logger.Fatal().Err(err).Msg("")
+			}
 		}
 	}
 
