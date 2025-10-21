@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/kardianos/service"
 	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/db"
@@ -27,17 +29,51 @@ func init() {
 	logger = logging.SetupLogger("http")
 }
 
+type program struct {
+	exit   chan struct{}
+	server *http.Server
+	wg     sync.WaitGroup
+}
+
 func (p *program) runServer() {
 	gob.Register(dto.UserDTO{})
 
+	ex, err := os.Executable()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("")
+	}
+	exPath := filepath.Dir(ex)
+	envFile := filepath.Join(exPath, ".env")
+
+	// if err := godotenv.Load(envFile); err != nil {
+	// 	logger.Info().Msg("No .env file found, using default config")
+	// }
+
+	envMap, err := godotenv.Read(envFile)
+	if err != nil {
+		log.Println("No .env file found")
+	}
+
+	// Only set env vars that aren't already set
+	for k, v := range envMap {
+		if _, exists := os.LookupEnv(k); !exists {
+			os.Setenv(k, v)
+		}
+	}
+
 	// db
-	err := db.Init()
+	err = db.Init()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("")
 	}
 
+	address, ok := os.LookupEnv("ADDRESS")
+	if !ok {
+		address = ":8888"
+	}
+
 	srv := &http.Server{
-		Addr: ":8888",
+		Addr: address,
 		// Handler: Router(),
 		Handler:           server.Router(),
 		ReadHeaderTimeout: time.Second * 10,
@@ -50,17 +86,17 @@ func (p *program) runServer() {
 	}
 }
 
-type program struct {
-	exit   chan struct{}
-	server *http.Server
-	wg     sync.WaitGroup
-}
-
 func (p *program) Start(s service.Service) error {
 	// Start should not block.
 	p.exit = make(chan struct{})
 	p.wg.Add(1)
 	go p.run()
+	return nil
+}
+
+func (p *program) Stop(s service.Service) error {
+	close(p.exit)
+	p.wg.Wait()
 	return nil
 }
 
@@ -83,17 +119,15 @@ func (p *program) run() {
 	}
 }
 
-func (p *program) Stop(s service.Service) error {
-	close(p.exit)
-	p.wg.Wait()
-	return nil
-}
-
 func main() {
 	svcConfig := &service.Config{
 		Name:        "WWNManager",
 		DisplayName: "WWN Manager",
 		Description: "WWN Manager Web service",
+		Dependencies: []string{
+			"Tcpip", // ensures TCP/IP is running
+			"MongoDB",
+		},
 	}
 
 	prg := &program{}
@@ -107,10 +141,10 @@ func main() {
 		case "install", "uninstall", "start", "stop", "restart":
 			err = service.Control(s, os.Args[1])
 			if err != nil {
-				logger.Fatal().Err(err).Msg(fmt.Sprintf("Failed to %s service: %v", os.Args[1]))
+				logger.Fatal().Err(err).Msg(fmt.Sprintf("Failed to %s service", os.Args[1]))
 			}
 			logger.Info().Msg(fmt.Sprintf("Service %s successfully.", os.Args[1]))
-			return // 👈 exit after command
+			return
 		}
 	}
 

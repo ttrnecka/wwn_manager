@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.39.0
 	github.com/ttrnecka/agent_poc/common v0.0.0-20250925135540-1328e92ded65
-	github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e
+	github.com/ttrnecka/agent_poc/logger v0.0.0-20251020161825-3a439a3d31ff
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
 )
@@ -46,6 +46,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/context v1.1.2 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/kardianos/service v1.2.4 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
@@ -90,7 +91,7 @@ require (
 	go.opentelemetry.io/proto/otlp v1.8.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect

@@ -16,7 +16,11 @@ type DB struct {
 }
 
 func Connect() (*DB, error) {
-	uri := os.Getenv("MONGO_URI")
+	uri, ok := os.LookupEnv("MONGO_URI")
+	if !ok {
+		uri = "mongodb://localhost:27017/"
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	db := DB{}
 	defer cancel()

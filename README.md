@@ -18,4 +18,13 @@ Import entries and rules.
 
 # Local build for standalone deployment
 
-sudo docker compose -f docker-compose-build.yaml up -d --build
+## Prerequisites
+
+- Linux (or WSL)
+- working docker/podman under user account
+- installed zip
+
+## Build
+
+- Open Linux or WSL session
+- Run ./build.sh

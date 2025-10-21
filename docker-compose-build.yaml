@@ -14,4 +14,4 @@ services:
     volumes:
       - ./build/static:/output
     entrypoint: sh -c
-    command: ["cp -r /app/dist/* /output/"]
+    command: ["cp -r /app/dist/* /output"]

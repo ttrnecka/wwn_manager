@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -81,7 +82,12 @@ func Router() *echo.Echo {
 	api.POST("/snapshots", snapshotHandler.CreateSnapshot)
 
 	// --- Static file handler ---
-	staticDir := "static"
+	ex, err := os.Executable()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("")
+	}
+	exPath := filepath.Dir(ex)
+	staticDir := filepath.Join(exPath, "static")
 
 	// This handles all non-API routes
 	e.GET("/*", func(c echo.Context) error {
