@@ -13,7 +13,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.39.0
 	github.com/ttrnecka/agent_poc/common v0.0.0-20250925135540-1328e92ded65
-	github.com/ttrnecka/agent_poc/logger v0.0.0-20251020161825-3a439a3d31ff
+	github.com/ttrnecka/agent_poc/logger v0.0.0-20251022084619-853560145039
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.41.0
 )

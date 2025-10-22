@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-const maxBodyLogSize = 1024 // limit body log size
+const maxBodyLogSize = 256 // limit body log size
 
 func RequestLogger(logger zerolog.Logger) echo.MiddlewareFunc {
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{

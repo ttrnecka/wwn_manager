@@ -1,10 +1,7 @@
 package server
 
 import (
-	"net/http"
-	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
@@ -16,6 +13,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	mid "github.com/ttrnecka/wwn_identity/webapi/server/middleware"
+	"github.com/ttrnecka/wwn_identity/webapi/shared/utils"
 )
 
 func Router() *echo.Echo {
@@ -82,34 +80,15 @@ func Router() *echo.Echo {
 	api.POST("/snapshots", snapshotHandler.CreateSnapshot)
 
 	// --- Static file handler ---
-	ex, err := os.Executable()
-	if err != nil {
-		logger.Fatal().Err(err).Msg("")
-	}
-	exPath := filepath.Dir(ex)
-	staticDir := filepath.Join(exPath, "static")
+
+	staticDir := filepath.Join(utils.BinaryOrBuildDir(), "static")
+
+	e.Static("assets", filepath.Join(staticDir, "assets"))
 
 	// This handles all non-API routes
 	e.GET("/*", func(c echo.Context) error {
-		path := c.Request().URL.Path
-
-		// Only handle non-API routes
-		if strings.HasPrefix(path, "/api") {
-			return echo.ErrNotFound
-		}
-
-		// Build full file path
-		filePath := filepath.Join(staticDir, path)
-
-		// Try to serve the file
-		if _, err := http.Dir(staticDir).Open(path); err != nil {
-			// If file not found, serve index.html
-			return c.File(filepath.Join(staticDir, "index.html"))
-		}
-
-		return c.File(filePath)
+		return c.File(filepath.Join(staticDir, "index.html"))
 	})
 
 	return e
-
 }

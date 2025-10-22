@@ -19,6 +19,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/db"
 	"github.com/ttrnecka/wwn_identity/webapi/server"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
+	"github.com/ttrnecka/wwn_identity/webapi/shared/utils"
 
 	logging "github.com/ttrnecka/agent_poc/logger"
 )
@@ -26,6 +27,7 @@ import (
 var logger zerolog.Logger
 
 func init() {
+	logging.LogLocation(utils.BinaryOrBuildDir())
 	logger = logging.SetupLogger("http")
 }
 
@@ -38,20 +40,13 @@ type program struct {
 func (p *program) runServer() {
 	gob.Register(dto.UserDTO{})
 
-	ex, err := os.Executable()
-	if err != nil {
-		logger.Fatal().Err(err).Msg("")
-	}
-	exPath := filepath.Dir(ex)
-	envFile := filepath.Join(exPath, ".env")
-
-	// if err := godotenv.Load(envFile); err != nil {
-	// 	logger.Info().Msg("No .env file found, using default config")
-	// }
+	envFile := filepath.Join(utils.BinaryOrBuildDir(), ".env")
 
 	envMap, err := godotenv.Read(envFile)
 	if err != nil {
-		log.Println("No .env file found")
+		logger.Info().Msg("No .env file found")
+	} else {
+		logger.Info().Msg(".env file loaded")
 	}
 
 	// Only set env vars that aren't already set

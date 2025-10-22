@@ -161,6 +161,8 @@ github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e h1:KO9bs
 github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e/go.mod h1:qJawWigOhbPhWfM4NRjysFh1SHBzhp3qFrroH3FgFjs=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20251020161825-3a439a3d31ff h1:simR+Vdbl/men+z6LZwq6pnB7D/V4lWvjv6rimsUytg=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20251020161825-3a439a3d31ff/go.mod h1:qJawWigOhbPhWfM4NRjysFh1SHBzhp3qFrroH3FgFjs=
+github.com/ttrnecka/agent_poc/logger v0.0.0-20251022084619-853560145039 h1:YsBresLcDxzUQFbMftBdVs36O17+HmMcxCNnA/IiA5Y=
+github.com/ttrnecka/agent_poc/logger v0.0.0-20251022084619-853560145039/go.mod h1:qJawWigOhbPhWfM4NRjysFh1SHBzhp3qFrroH3FgFjs=
 github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6KllzawFIhcdPw=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.2 h1:lxLXG0uE3Qnshl9QyaK6XJxMXlQZELvChBOCmQD0Loo=
