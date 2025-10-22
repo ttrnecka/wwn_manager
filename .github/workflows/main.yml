@@ -26,7 +26,8 @@ jobs:
           script: |
             set -euo pipefail
             cd /web/wwnmgr
-            git pull
+            git fetch origin
+            git checkout -B main origin/main
             sudo docker compose build
             echo "Build done"
             sudo systemctl restart wwnmgr
