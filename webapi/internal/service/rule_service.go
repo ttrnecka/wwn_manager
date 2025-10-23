@@ -125,7 +125,7 @@ func (s ruleService) BackupRules(ctx context.Context) error {
 }
 
 func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
+	return os.MkdirAll(dir, 0750)
 }
 
 func createTimestampedFile(dir, baseName, ext string) (*os.File, error) {

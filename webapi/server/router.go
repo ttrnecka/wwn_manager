@@ -60,6 +60,7 @@ func Router() *echo.Echo {
 	//rules amd entries
 
 	api.POST("/import", fcWWNEntryHandler.ImportHandler)
+	api.POST("/import_api", fcWWNEntryHandler.ImportApiHandler)
 	api.GET("/customers", fcWWNEntryHandler.ListCustomers)
 	api.GET("/rules", ruleHandler.Rules)
 	api.GET("/rules/export", ruleHandler.ExportRules)
