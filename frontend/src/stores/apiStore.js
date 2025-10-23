@@ -149,6 +149,20 @@ export const useApiStore = defineStore('api', {
         this.loading = false;
       }
     },
+    async importApiEntries() {
+      this.loading = true;
+      try {
+        await fcService.importApiEntries();
+        this.dirty.entries=true;
+        await this.loadEntries(GLOBAL_CUSTOMER);
+      } catch (err) {
+        const error = err.response?.data?.message || err.message;
+        console.error("Import failed!", error);
+        this.flash.show("Import failed", "danger");
+      } finally {
+        this.loading = false;
+      }
+    },
     async importRules(file) {
       this.loading = true;
       try {

@@ -34,6 +34,10 @@ export default {
     });
   },
 
+  importApiEntries() {
+    return api.post(`/import_api`);
+  },
+
   importRules(file) {
     const formData = new FormData();
     formData.append("file", file);

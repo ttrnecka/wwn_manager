@@ -16,6 +16,10 @@
           Import Entries
         </button>
 
+        <button class="btn btn-primary me-2 mb-2" @click="importFeedApi()">
+          Import Entries (API)
+        </button>
+
         <RulesControls @rules-applied="loadData"/>
 
         <button class="btn btn-primary me-2 mb-2" @click="downloadReconcileWWN">
@@ -89,8 +93,10 @@ import RulesControls from "@/components/RulesControls.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
+import { showAlert } from '@/services/alert';
 import { useApiStore } from '@/stores/apiStore';
 import { GLOBAL_CUSTOMER } from '@/config'
+import { useFlashStore } from '@/stores/flash'
 
 export default {
   name: "GlobalFCManager",
@@ -105,6 +111,9 @@ export default {
     };
   },
   computed: {
+    flash() {
+      return useFlashStore();
+    },
     apiStore() {
       return useApiStore();
     },
@@ -152,7 +161,21 @@ export default {
       this.apiStore.dirty.entries=true;
       this.apiStore.dirty.rules=true;
       await this.apiStore.init();
-    }
+    },
+    async importFeedApi() {
+      try {
+        await showAlert(async () => {
+            await this.apiStore.importApiEntries();
+        },
+        {title: 'Import feed data from ITA API?', text: "It may take several minutes to import", confirmButtonText: 'Import!'})
+      } catch (err) {
+        
+        const error = err.response?.data?.message || err.message;
+
+        console.error("Import failed:", error);
+        this.flash.show(`Import failed: ${error}`, "danger");
+      }
+    },
   },
 };
 </script>
