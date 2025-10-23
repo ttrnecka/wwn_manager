@@ -133,6 +133,8 @@ func createTimestampedFile(dir, baseName, ext string) (*os.File, error) {
 	fileName := fmt.Sprintf("%s_%s.%s", baseName, timestamp, ext)
 	fullPath := filepath.Join(dir, fileName)
 
+	fullPath = filepath.Clean(fullPath)
+
 	file, err := os.Create(fullPath)
 	if err != nil {
 		return nil, err

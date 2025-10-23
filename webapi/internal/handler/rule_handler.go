@@ -67,7 +67,10 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 	defer f.Close()
 	defer os.Remove(f.Name())
 
-	h.service.ExportRules(c.Request().Context(), f)
+	err = h.service.ExportRules(c.Request().Context(), f)
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to export rules", err)
+	}
 	return c.Attachment(f.Name(), "rules.csv")
 }
 
