@@ -60,11 +60,6 @@ func (h *RuleHandler) Rules(c echo.Context) error {
 }
 
 func (h *RuleHandler) ExportRules(c echo.Context) error {
-	items, err := h.service.All(c.Request().Context())
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
-	}
-
 	f, err := os.CreateTemp("", "exportcsv-")
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
@@ -72,16 +67,7 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 	defer f.Close()
 	defer os.Remove(f.Name())
 
-	writer := csv.NewWriter(f)
-
-	for _, item := range items {
-		itemDTO := mapper.ToRuleDTO(item)
-		err := writer.Write([]string{strconv.Itoa(itemDTO.Order), itemDTO.Customer, itemDTO.Regex, strconv.Itoa(itemDTO.Group), string(itemDTO.Type), itemDTO.Comment})
-		if err != nil {
-			return errorWithInternal(http.StatusInternalServerError, "Failed to write csv file", err)
-		}
-	}
-	writer.Flush()
+	h.service.ExportRules(c.Request().Context(), f)
 	return c.Attachment(f.Name(), "rules.csv")
 }
 
@@ -94,6 +80,11 @@ func (h *RuleHandler) DeleteRule(c echo.Context) error {
 	err = h.service.Delete(c.Request().Context(), probe_id)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete rules", err)
+	}
+
+	err = h.service.BackupRules(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to backup rules", err)
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -126,6 +117,11 @@ func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get rule", err)
 	}
 
+	err = h.service.BackupRules(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to backup rules", err)
+	}
+
 	itemDTO = mapper.ToRuleDTO(*itemTmp)
 	return c.JSON(http.StatusOK, itemDTO)
 }
@@ -148,18 +144,10 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 			return errorWithInternal(http.StatusInternalServerError, "Failed to update rule", err)
 		}
 	}
-	// fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
-	// if err != nil {
-	// 	return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
-	// }
-
-	// apply := c.QueryParam("apply")
-	// if apply != "false" {
-	// 	err = h.applyRules(c.Request().Context(), fcWWNEntries)
-	// 	if err != nil {
-	// 		return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
-	// 	}
-	// }
+	err := h.service.BackupRules(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to backup rules", err)
+	}
 	return c.NoContent(http.StatusOK)
 }
 
@@ -216,6 +204,11 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 		if err != nil {
 			return errorWithInternal(http.StatusInternalServerError, "Failed to apply rules", err)
 		}
+	}
+
+	err = h.service.BackupRules(c.Request().Context())
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to backup rules", err)
 	}
 
 	return c.JSON(http.StatusOK, entries)
