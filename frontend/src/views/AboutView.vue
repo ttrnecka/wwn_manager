@@ -176,11 +176,28 @@
     </ul>
 
   <h3 class="blue">Import Entries</h3>
+  <h4 class="blue">Using CSV</h4>
   <ul>
     <li>Locate the <b>Host WWN Identification Feed</b> report in the reporting tool</li>
     <li>Run it and export it as CSV</li>
     <li>Click <b>Import Entries</b> button on the <b>Global</b> page and select the csv file</li>
   </ul>
+
+  <h4 class="blue">Using API</h4>
+  One time setup:
+  <ul>
+    <li>Locate the <b>Host WWN Identification Feed</b> report in the reporting tool</li>
+    <li>Run it and get the template ID</li>
+    <li>Get ITA token</li>
+    <li>Modify <b>.env</b> file and update <b>ITA_API_URI</b>, <b>ITA_FEED_ID</b> and <b>ITA_TOKEN</b> variables</li>
+    <li>Restart the tool</li>
+  </ul>
+  
+  Import once the API is setup:
+  <ul>
+    <li>Click <b>Import Entries (API)</b> button on the <b>Global</b> page and confirm</li>
+  </ul>
+
 
   <h3 class="blue">Import Rules</h3>
 
@@ -205,6 +222,7 @@
         <li>Update regular expresion for existing rule or click <b>Add Rule</b> button at the bottom of the table and fill input appropriately</li>
       </ul>
     <li>Repeat all steps until there is no <b>Unknown</b> record</li>
+    <li>Updating or deleting rule will export the rules into backup folder, this can be used to reload older version of rules</li>
   </ul>
 
   <h3 class="blue">Reconcile Records</h3>
