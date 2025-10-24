@@ -27,7 +27,7 @@ import (
 var logger zerolog.Logger
 
 func init() {
-	logging.LogLocation(utils.BinaryOrBuildDir())
+	logging.LogLocation(filepath.Join(utils.BinaryOrBuildDir(), "logs"))
 	logger = logging.SetupLogger("http")
 }
 

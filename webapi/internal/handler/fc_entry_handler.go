@@ -328,25 +328,54 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]entity.FCWWNEntry, error) {
 		}
 
 		for _, line := range response.Data.Report.ReportData {
-
-			wwn := line["wwn"].Value.(string)
+			wwn, ok := line["wwn"].Value.(string)
+			if !ok {
+				logger.Error().Msgf("WWN type is not string: %T", line["wwn"].Value)
+				continue
+			}
 			if !re.MatchString(wwn) {
 				logger.Info().Msgf("Invalid WWN: %s", wwn)
 				continue
 			}
 
-			customer := line["customer"].Value.(string)
+			customer, ok := line["customer"].Value.(string)
+			if !ok {
+				logger.Error().Msgf("customer type is not string: %T", line["customer"].Value)
+				continue
+			}
 			if customer == "" {
 				customer = entity.UNKNOWN_CUSTOMER
 			}
-			zone := line["element_name"].Value.(string)
-			alias := line["alias"].Value.(string)
-			loadedHostname := line["loaded_host"].Value.(string)
+			zone, ok := line["element_name"].Value.(string)
+			if !ok {
+				logger.Error().Msgf("zone type is not string: %T", line["element_name"].Value)
+				continue
+			}
+			alias, ok := line["alias"].Value.(string)
+			if !ok {
+				logger.Error().Msgf("alias type is not string: %T", line["alias"].Value)
+				continue
+			}
+			loadedHostname, ok := line["loaded_host"].Value.(string)
+			if !ok {
+				logger.Error().Msgf("loaded_host type is not string: %T", line["loaded_host"].Value)
+				continue
+			}
 			isCsvLoad := true
-			if line["is_csv_load"].Value.(string) == "N" {
+			csvLoad, ok := line["is_csv_load"].Value.(string)
+			if !ok {
+				logger.Error().Msgf("is_csv_load type is not string: %T", line["is_csv_load"].Value)
+				continue
+			}
+			if csvLoad == "N" {
 				isCsvLoad = false
 			}
-			wwnSet := int(line["wwn_set"].Value.(float64))
+			wwnSetF, ok := line["wwn_set"].Value.(float64)
+			if !ok {
+				logger.Error().Msgf("wwn_set type is not numberic: %T", line["wwn_set"].Value)
+				continue
+			}
+			wwnSet := int(wwnSetF)
 
 			if loadedHostname == "No Matching Rule" {
 				loadedHostname = ""

@@ -9,11 +9,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
 	logging "github.com/ttrnecka/agent_poc/logger"
+	"github.com/ttrnecka/wwn_identity/webapi/shared/utils"
 )
 
 var logger zerolog.Logger
@@ -27,6 +29,7 @@ var httpClient = &http.Client{
 }
 
 func init() {
+	logging.LogLocation(filepath.Join(utils.BinaryOrBuildDir(), "logs"))
 	logger = logging.SetupLogger("ita")
 }
 
