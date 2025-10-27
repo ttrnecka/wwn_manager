@@ -27,12 +27,12 @@ func startMongoContainer(t *testing.T) (testcontainers.Container, string) {
 		WaitingFor:   wait.ForListeningPort("27017/tcp"),
 		Files: []testcontainers.ContainerFile{
 			{
-				HostFilePath:      "../../mongodump/wwn_identity/fc_wwn_entries.bson", // local path
+				HostFilePath:      "../../test_data/wwn_identity/fc_wwn_entries.bson", // local path
 				ContainerFilePath: "/docker-entrypoint-initdb.d/wwn_identity/fc_wwn_entries.bson",
 				FileMode:          0644,
 			},
 			{
-				HostFilePath:      "../../mongodump/wwn_identity/fc_wwn_entries.metadata.json", // include metadata for indexes
+				HostFilePath:      "../../test_data/wwn_identity/fc_wwn_entries.metadata.json", // include metadata for indexes
 				ContainerFilePath: "/docker-entrypoint-initdb.d/wwn_identity/fc_wwn_entries.metadata.json",
 				FileMode:          0644,
 			},
@@ -94,7 +94,7 @@ func TestMakeSnapshot(t *testing.T) {
 	targetColl := db.Collection(snap.EntryCollectionName())
 	count, err := targetColl.CountDocuments(ctx, bson.D{})
 	require.NoError(t, err)
-	require.Equal(t, int64(28350), count)
+	require.Equal(t, int64(4), count)
 
 	// --- Verify content matches
 	cur, err := targetColl.Find(ctx, bson.D{})
@@ -104,5 +104,5 @@ func TestMakeSnapshot(t *testing.T) {
 	var docs []bson.M
 	err = cur.All(ctx, &docs)
 	require.NoError(t, err)
-	require.Len(t, docs, 28350)
+	require.Len(t, docs, 4)
 }
