@@ -7,8 +7,6 @@ git clone https://github.com/ttrnecka/wwn_manager.git
 
 cd wwn_manager
 
-# update the .env file. set to IMPORT_ZSCALER_CERT=true if you run this behind zscaler
-
 docker compose -f docker-compose-dev.yaml up -d
 ```
 
@@ -28,3 +26,25 @@ Import entries and rules.
 
 - Open Linux or WSL session
 - Run ./build.sh
+- copy generated zip file to deployment servers
+
+# Dependency updates
+
+To update the dependencies you need local installation of Node.js and Go.
+
+## Frontend
+
+- Install Node v22.18 (or higher) on your server
+- navigate to frontend folder and run
+    - npm outdated
+    - npm update
+    - npm run dev (and check for error)
+
+## Backend
+
+- Install Go 1.24.x
+- navigate to webapi and run
+    - go get -u
+
+
+Now that both frontend and backend are updated create new commit/release/build.
