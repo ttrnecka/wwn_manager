@@ -36,16 +36,3 @@ type ReportData map[string]Column
 type Column struct {
 	Value any `json:"value"`
 }
-
-// func GetFeed() error {
-// 	var response FeedResponse
-
-// 	resp, err := GenerateReportTemplate(os.Getenv("ITA_API_URI"), os.Getenv("ITA_FEED_ID"), os.Getenv("ITA_TOKEN"), 0, 10000)
-// 	if err != nil {
-// 		return fmt.Errorf("cannot get feed report: %v", err)
-// 	}
-
-// 	if err := json.Unmarshal(resp, &response); err != nil {
-// 		return fmt.Errorf("cannot unmarshall feed report: %v", err)
-// 	}
-// }
