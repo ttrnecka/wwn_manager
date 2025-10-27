@@ -23,6 +23,7 @@ services:
       - mongodb
     volumes:
       - ./logs:/app/logs
+      - ./.env:/app/.env:ro
     environment:
       MONGO_URI: mongodb://mongodb_wwnmgr:27017/
   frontend-artifacts:
