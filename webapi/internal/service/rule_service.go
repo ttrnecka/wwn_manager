@@ -33,12 +33,12 @@ func NewRuleService(p repository.RuleRepository) RuleService {
 
 func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCWWNEntry, reconcileData dto.EntryReconcileDTO) error {
 
-	rules := make([]entity.Rule, 0)
+	rules := make([]*entity.Rule, 0)
 
 	if reconcileData.PrimaryHostname != "" {
 		// if entry decode host is primary
 		if entry.Hostname == reconcileData.PrimaryHostname {
-			rules = append(rules, entity.Rule{
+			rules = append(rules, &entity.Rule{
 				Customer: entry.Customer,
 				Type:     entity.IgnoreLoaded,
 				Regex:    fmt.Sprintf("%s,%s", entry.LoadedHostname, entry.WWN),
@@ -50,7 +50,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 
 		// if entry loaded host is primary
 		if entry.LoadedHostname == reconcileData.PrimaryHostname {
-			rules = append(rules, entity.Rule{
+			rules = append(rules, &entity.Rule{
 				Customer: entry.Customer,
 				Type:     entity.WWNHostMapRule,
 				Regex:    entry.WWN,
@@ -63,7 +63,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 
 	// if primary customer is set and different than current entry customer
 	if reconcileData.PrimaryCustomer != "" {
-		rules = append(rules, entity.Rule{
+		rules = append(rules, &entity.Rule{
 			Customer: entity.GLOBAL_CUSTOMER,
 			Type:     entity.WWNCustomerMapRule,
 			Regex:    entry.WWN,

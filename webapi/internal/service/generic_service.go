@@ -25,7 +25,7 @@ type GenericService[T any] interface {
 	Collection() *mongo.Collection
 	Find(context.Context, Filter, SortOption) ([]T, error)
 	FindWithSoftDeleted(context.Context, Filter, SortOption) ([]T, error)
-	InsertAll(context.Context, []T) error
+	InsertAll(context.Context, []*T) error
 	DeleteMany(context.Context, Filter) error
 }
 
@@ -139,7 +139,7 @@ func (s *genericService[T]) DeleteDependencies(ctx context.Context, parentID pri
 	return nil
 }
 
-func (s *genericService[T]) InsertAll(ctx context.Context, items []T) error {
+func (s *genericService[T]) InsertAll(ctx context.Context, items []*T) error {
 	return s.MainRepo.InsertAll(ctx, items)
 }
 

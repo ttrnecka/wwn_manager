@@ -13,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/kardianos/service"
 	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/db"
@@ -40,27 +39,10 @@ type program struct {
 func (p *program) runServer() {
 	gob.Register(dto.UserDTO{})
 
-	envFile := filepath.Join(utils.BinaryOrBuildDir(), ".env")
-
-	envMap, err := godotenv.Read(envFile)
-	if err != nil {
-		logger.Info().Msg("No .env file found")
-	} else {
-		logger.Info().Msg(".env file loaded")
-	}
-
-	// Only set env vars that aren't already set
-	for k, v := range envMap {
-		if _, exists := os.LookupEnv(k); !exists {
-			err := os.Setenv(k, v)
-			if err != nil {
-				logger.Fatal().Err(err).Msg("")
-			}
-		}
-	}
+	utils.LoadEnv(&logger)
 
 	// db
-	err = db.Init()
+	err := db.Init()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("")
 	}
@@ -107,13 +89,16 @@ func (p *program) run() {
 	<-p.exit
 	logger.Info().Msg("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	// if shutdown is requested sooner that the server runs
+	if p.server != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
 
-	if err := p.server.Shutdown(ctx); err != nil {
-		logger.Error().Err(err).Msg("Error during server shutdown: ")
-	} else {
-		logger.Info().Msg("Echo server shut down cleanly..")
+		if err := p.server.Shutdown(ctx); err != nil {
+			logger.Error().Err(err).Msg("Error during server shutdown: ")
+		} else {
+			logger.Info().Msg("Echo server shut down cleanly..")
+		}
 	}
 }
 

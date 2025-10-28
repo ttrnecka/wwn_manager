@@ -14,7 +14,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.39.0
-	github.com/ttrnecka/agent_poc/common v0.0.0-20251024104318-12072d4a4c7b
+	github.com/ttrnecka/agent_poc/common v0.0.0-20251028142701-143f54a5eea2
 	github.com/ttrnecka/agent_poc/logger v0.0.0-20251024104318-12072d4a4c7b
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.43.0

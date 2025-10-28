@@ -165,6 +165,16 @@ github.com/ttrnecka/agent_poc/common v0.0.0-20250925135540-1328e92ded65 h1:H5Qbz
 github.com/ttrnecka/agent_poc/common v0.0.0-20250925135540-1328e92ded65/go.mod h1:XVwQvbdT0slL4Tx6Doi2HBytpImEcG3nr/mdQRcf+ew=
 github.com/ttrnecka/agent_poc/common v0.0.0-20251024104318-12072d4a4c7b h1:2Yr8Mgu9JYRkF4NnZKR8I+9npXXwIVhCr34yhH5LGbU=
 github.com/ttrnecka/agent_poc/common v0.0.0-20251024104318-12072d4a4c7b/go.mod h1:XVwQvbdT0slL4Tx6Doi2HBytpImEcG3nr/mdQRcf+ew=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028101907-b931f9be9080 h1:a7bmLvR62nZ+KKbfFQps8WE7wS0WxArunTaEvTVoi7k=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028101907-b931f9be9080/go.mod h1:9XAMGnA+W7Y3XM+05gThdtmu5GhfDUgIIGcxIshMkmU=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028134511-d5a2f1d49047 h1:/Uu77gkCFJJ6lZ5Dz98n/wHltoLXqppXhEV0nybYKTI=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028134511-d5a2f1d49047/go.mod h1:9XAMGnA+W7Y3XM+05gThdtmu5GhfDUgIIGcxIshMkmU=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028141702-d5c56f8ed047 h1:CLiwQeeuRmb6CU1ViceGLc+gZU2NkJpgdFmPL088BaU=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028141702-d5c56f8ed047/go.mod h1:9XAMGnA+W7Y3XM+05gThdtmu5GhfDUgIIGcxIshMkmU=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028142004-2b160275cea6 h1:2R4ZMQc4Ixrqy5iC9Ek2eVqCs46KL9lgUneI29zLvOE=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028142004-2b160275cea6/go.mod h1:9XAMGnA+W7Y3XM+05gThdtmu5GhfDUgIIGcxIshMkmU=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028142701-143f54a5eea2 h1:7lUQOPtRaOrQNJZHqcz63jn4hx3BJEIHz/cqj61Y8EM=
+github.com/ttrnecka/agent_poc/common v0.0.0-20251028142701-143f54a5eea2/go.mod h1:9XAMGnA+W7Y3XM+05gThdtmu5GhfDUgIIGcxIshMkmU=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e h1:KO9bsq+JmEIAo83r1rEr7XtSYCaAsI314H+US0Sd6QA=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20250822063804-3c30ca1c6d8e/go.mod h1:qJawWigOhbPhWfM4NRjysFh1SHBzhp3qFrroH3FgFjs=
 github.com/ttrnecka/agent_poc/logger v0.0.0-20251020161825-3a439a3d31ff h1:simR+Vdbl/men+z6LZwq6pnB7D/V4lWvjv6rimsUytg=

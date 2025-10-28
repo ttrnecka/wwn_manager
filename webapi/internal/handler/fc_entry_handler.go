@@ -238,7 +238,7 @@ func (h *FCWWNEntryHandler) ExportReconcileEntries(c echo.Context) error {
 	return c.Attachment(f.Name(), "records_to_reconcile.csv")
 }
 
-func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.FCWWNEntry, error) {
+func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*entity.FCWWNEntry, error) {
 	src, err := file.Open()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open entry file: %w", err)
@@ -249,7 +249,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 	reader.Comma = ','
 	reader.FieldsPerRecord = -1
 
-	var wwnEntries []entity.FCWWNEntry
+	var wwnEntries []*entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)
 
 	re := regexp.MustCompile(`^([0-9A-Fa-f]{2}:){7}[0-9A-Fa-f]{2}$`)
@@ -301,15 +301,15 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]e
 
 	for _, v := range wwnEntryMap {
 		for _, e := range v {
-			wwnEntries = append(wwnEntries, e)
+			wwnEntries = append(wwnEntries, &e)
 		}
 	}
 	return wwnEntries, nil
 }
 
-func (h *FCWWNEntryHandler) readEntriesFromApi() ([]entity.FCWWNEntry, error) {
+func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 
-	var wwnEntries []entity.FCWWNEntry
+	var wwnEntries []*entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)
 
 	re := regexp.MustCompile(`^([0-9A-Fa-f]{2}:){7}[0-9A-Fa-f]{2}$`)
@@ -394,7 +394,7 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]entity.FCWWNEntry, error) {
 
 	for _, v := range wwnEntryMap {
 		for _, e := range v {
-			wwnEntries = append(wwnEntries, e)
+			wwnEntries = append(wwnEntries, &e)
 		}
 	}
 	return wwnEntries, nil

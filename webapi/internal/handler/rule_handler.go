@@ -247,6 +247,8 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 	var wg sync.WaitGroup
 	numWorkers := runtime.NumCPU() // one worker per CPU core
 
+	fcWWNEntriesPrts := utils.SliceToSliceOfPtrs(fcWWNEntries)
+
 	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.RangeRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
@@ -333,7 +335,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
 
-	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntries)
+	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntriesPrts)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
@@ -396,7 +398,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
 
-	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntries)
+	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntriesPrts)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
@@ -404,7 +406,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 	return nil
 }
 
-func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.Rule, error) {
+func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*entity.Rule, error) {
 	src, err := file.Open()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open entry file: %w", err)
@@ -415,7 +417,7 @@ func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.
 	reader.Comma = ','
 	reader.FieldsPerRecord = -1
 
-	rules := make([]entity.Rule, 0)
+	rules := make([]*entity.Rule, 0)
 
 	for {
 		line, err := reader.Read()
@@ -444,7 +446,7 @@ func (h *RuleHandler) readEntriesFromFile(file *multipart.FileHeader) ([]entity.
 			Type:     entity.RuleType(rtype),
 			Comment:  comment,
 		}
-		rules = append(rules, newRule)
+		rules = append(rules, &newRule)
 
 	}
 	return rules, nil
