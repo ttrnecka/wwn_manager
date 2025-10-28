@@ -247,8 +247,6 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 	var wg sync.WaitGroup
 	numWorkers := runtime.NumCPU() // one worker per CPU core
 
-	fcWWNEntriesPrts := utils.SliceToSliceOfPtrs(fcWWNEntries)
-
 	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.RangeRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
@@ -335,7 +333,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
 
-	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntriesPrts)
+	err = h.fcWWNEntryService.InsertAll(ctx, utils.SliceToSliceOfPtrs(fcWWNEntries))
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
@@ -398,7 +396,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entries", err)
 	}
 
-	err = h.fcWWNEntryService.InsertAll(ctx, fcWWNEntriesPrts)
+	err = h.fcWWNEntryService.InsertAll(ctx, utils.SliceToSliceOfPtrs(fcWWNEntries))
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert entries", err)
 	}
