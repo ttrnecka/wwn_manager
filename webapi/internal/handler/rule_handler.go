@@ -52,9 +52,26 @@ func (h *RuleHandler) Rules(c echo.Context) error {
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get rules", err)
 	}
+
+	usedRuleIDs, err := h.fcWWNEntryService.GetUniqueRules(c.Request().Context())
+
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to get unique rules", err)
+	}
+
+	// turn []string to map to O(1) lookup
+	m := make(map[string]struct{}, len(usedRuleIDs))
+	for _, s := range usedRuleIDs {
+		m[s] = struct{}{}
+	}
+
 	itemsDTO := []dto.RuleDTO{}
 	for _, item := range items {
-		itemsDTO = append(itemsDTO, mapper.ToRuleDTO(item))
+		it := mapper.ToRuleDTO(item)
+		if _, ok := m[it.ID]; ok {
+			it.Used = true
+		}
+		itemsDTO = append(itemsDTO, it)
 	}
 	return c.JSON(http.StatusOK, itemsDTO)
 }

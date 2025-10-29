@@ -150,7 +150,7 @@
         Import rules
       </li>
       <li>
-        Update range rules
+        Update rules
       </li>
       <li>
         Reconcile records
@@ -208,7 +208,9 @@
     <li>Click <b>Import Rules</b> button on the <b>Global</b> page and select the csv file</li>
   </ul>
 
-  <h3 class="blue">Update Range Rules</h3>
+  <h3 class="blue">Update Rules</h3>
+
+  <h4 class="blue">Update Range Rules</h4>
 
   After new import it is required to verify that there are no WWNs with <b>Unknown</b> type:
 
@@ -223,6 +225,19 @@
       </ul>
     <li>Repeat all steps until there is no <b>Unknown</b> record</li>
     <li>Updating or deleting rule will export the rules into backup folder, this can be used to reload older version of rules</li>
+  </ul>
+
+  <h4 class="blue">Cleanup Unused Rules</h4>
+
+  Some host and reconciliation rules are short lived and impact only 1 export. After the export is imported in the ITA the next feed will contain
+  expected data and the rule will not be used anymore. It is recommended to remove unused host and reconciliation rule to avoid the rules to grow indefinitely and beyond 
+  they expected application lifetime:
+
+  <ul>
+    <li>Make sure the rules has been applied before proceeding with the below review</li>
+    <li>Click <b>Host Rule</b> or <b>Reconcile Rules</b> on <b>Global</b> or <b>Customer</b> page</li>
+    <li>Review rules that have <b>Used</b> set to <b>No</b></li>
+    <li>Delete the rule is not used and it is not expected to be used in the future</li>
   </ul>
 
   <h3 class="blue">Reconcile Records</h3>

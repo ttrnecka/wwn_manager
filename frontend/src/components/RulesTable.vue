@@ -9,9 +9,10 @@
           <tr>
             <th class="col-1">Order</th>
             <th class="col-2">Type</th>
-            <th class="col-3">Regex</th>
+            <th class="col-4">Regex</th>
             <th class="col-1">Group</th>
             <th class="col-2">Comment</th>
+            <th class="col-1">Used</th>
             <th class="col-1"></th>
           </tr>
         </thead>
@@ -29,7 +30,7 @@
                 <option v-for="type in types" :key="type" :value="type">{{nameMap[type]}}</option>
               </select>
             </td>
-            <td class="col-3">
+            <td class="col-4">
               <input type="text" v-model="rule.regex" class="form-control form-control-sm" :disabled="noEditRule(rule)"/>
             </td>
             <td class="col-1">
@@ -37,6 +38,9 @@
             </td>
             <td class="col-2">
               <input type="text" v-model="rule.comment" class="form-control form-control-sm" :disabled="noEditRule(rule)"/>
+            </td>
+            <td class="col-1">
+              {{ rule.used ? "Yes":"No"}}
             </td>
             <td class="col-1 text-end align-middle">
                 <button class="btn btn-sm btn-danger delete-button" @click="deleteRule(rule)">Delete</button>

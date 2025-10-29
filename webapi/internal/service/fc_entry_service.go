@@ -6,6 +6,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -13,6 +14,7 @@ type FCWWNEntryService interface {
 	GenericService[entity.FCWWNEntry]
 	Customers(context.Context) ([]any, error)
 	FlagDuplicateWWNs(context.Context, Filter) error
+	GetUniqueRules(context.Context) ([]string, error)
 }
 
 type fcWWNEntryService struct {
@@ -109,4 +111,60 @@ func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context, filter Filter)
 		return err
 	}
 	return nil
+}
+
+// GetUniqueRules pulls unique ObjectIDs from type_rule, hostname_rule, and reconcile_rules
+func (s fcWWNEntryService) GetUniqueRules(ctx context.Context) ([]string, error) {
+	pipeline := mongo.Pipeline{
+		{
+			{"$project", bson.D{
+				{"allRules", bson.D{
+					{"$setUnion", bson.A{
+						bson.A{bson.D{{"$ifNull", bson.A{"$type_rule", nil}}}},
+						bson.A{bson.D{{"$ifNull", bson.A{"$hostname_rule", nil}}}},
+						bson.D{{"$ifNull", bson.A{"$reconcile_rules", bson.A{}}}},
+					}},
+				}},
+			}},
+		},
+		{
+			{"$unwind", "$allRules"},
+		},
+		{
+			{"$group", bson.D{
+				{"_id", nil},
+				{"uniqueRules", bson.D{{"$addToSet", "$allRules"}}},
+			}},
+		},
+		{
+			{"$project", bson.D{
+				{"_id", 0},
+				{"uniqueRules", 1},
+			}},
+		},
+	}
+
+	cursor, err := s.Collection().Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var result struct {
+		UniqueRules []primitive.ObjectID `bson:"uniqueRules"`
+	}
+
+	var uniqueRules []string
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, r := range result.UniqueRules {
+		uniqueRules = append(uniqueRules, r.Hex())
+	}
+
+	return uniqueRules, nil
 }

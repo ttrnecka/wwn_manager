@@ -10,4 +10,5 @@ type RuleDTO struct {
 	Group    int             `json:"group"`
 	Order    int             `json:"order" validate:"required"`
 	Comment  string          `json:"comment"`
+	Used     bool            `json:"used"`
 }
