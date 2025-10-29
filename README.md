@@ -7,6 +7,10 @@ git clone https://github.com/ttrnecka/wwn_manager.git
 
 cd wwn_manager
 
+# if customization is needed create .env from .env.template file
+# if not just run below
+
+touch .env
 docker compose -f docker-compose-dev.yaml up -d
 ```
 
