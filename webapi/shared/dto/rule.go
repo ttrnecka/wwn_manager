@@ -8,7 +8,7 @@ type RuleDTO struct {
 	Type     entity.RuleType `json:"type" validate:"required"`
 	Regex    string          `json:"regex" validate:"required"`
 	Group    int             `json:"group"`
-	Order    int             `json:"order" validate:"required"`
+	Order    int             `json:"order"`
 	Comment  string          `json:"comment"`
 	Used     bool            `json:"used"`
 }
