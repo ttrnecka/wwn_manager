@@ -2,8 +2,6 @@ module github.com/ttrnecka/wwn_identity/webapi
 
 go 1.24.11
 
-toolchain go1.24.11
-
 require (
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/gorilla/sessions v1.4.0
@@ -17,7 +15,7 @@ require (
 	github.com/ttrnecka/agent_poc/common v0.0.0-20251028142701-143f54a5eea2
 	github.com/ttrnecka/agent_poc/logger v0.0.0-20251024104318-12072d4a4c7b
 	go.mongodb.org/mongo-driver v1.17.4
-	golang.org/x/crypto v0.43.0
+	golang.org/x/crypto v0.45.0
 )
 
 require (
@@ -89,10 +87,10 @@ require (
 	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.8.0 // indirect
-	golang.org/x/net v0.46.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
