@@ -32,4 +32,8 @@ export default defineConfig([
     ...security.configs.recommended,
   },
   { files: ["**/*.css"], plugins: { css }, language: "css/css", extends: ["css/recommended"] },
+  {
+		// Note: there should be no other properties in this object
+		ignores: ["dist/*", "node_modules/*"],
+	},
 ]);

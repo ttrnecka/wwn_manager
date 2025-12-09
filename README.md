@@ -46,7 +46,8 @@ To update the dependencies you need local installation of Node.js and Go.
 
 ## Backend
 
-- Install Go 1.24.x
+- Install latest Go 1.24.x
+- Update webapi/Dockerfile* to use the same golang image
 - navigate to webapi and run
     - go get -u
 

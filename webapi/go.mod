@@ -1,8 +1,8 @@
 module github.com/ttrnecka/wwn_identity/webapi
 
-go 1.24.0
+go 1.24.11
 
-toolchain go1.24.6
+toolchain go1.24.11
 
 require (
 	github.com/go-playground/validator/v10 v10.28.0
