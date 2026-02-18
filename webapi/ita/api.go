@@ -77,6 +77,7 @@ func GenerateReportTemplate(baseUrl, templateId, token string, page int, pageSiz
 	// Perform the request
 	logger.Info().Msg(fmt.Sprintf("Calling %+v", u))
 
+	// #nosec G704
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)

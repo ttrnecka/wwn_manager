@@ -1,4 +1,4 @@
-FROM golang:1.24.11-alpine
+FROM golang:1.24.13-alpine
 
 COPY zscaler/zscaler-root-ca.crt /tmp/zscaler-root-ca.crt
 

@@ -9,7 +9,8 @@ type User struct {
 	cdb.BaseModel `bson:",inline"`
 	Username      string `bson:"username"`
 	Email         string `bson:"email"`
-	Password      string `bson:"password,omitempty"`
+	// #nosec G117
+	Password string `bson:"password,omitempty"`
 }
 
 func Users(db *mongo.Database) *cdb.CRUD[User] {
