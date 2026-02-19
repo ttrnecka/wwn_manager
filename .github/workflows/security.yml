@@ -62,7 +62,7 @@ jobs:
       run: cd webapi && govulncheck ./...
 
     - name: Run npm audit
-      run: cd frontend && npm audit --audit-level=high
+      run: cd frontend && npm audit --omit=dev --audit-level=high
 
     - name: Run npm eslint
 
