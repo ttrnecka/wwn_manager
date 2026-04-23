@@ -1,4 +1,4 @@
-FROM golang:1.25.8-alpine AS backend-build
+FROM golang:1.25.9-alpine AS backend-build
 
 COPY zscaler/zscaler-root-ca.crt /tmp/zscaler-root-ca.crt
 
