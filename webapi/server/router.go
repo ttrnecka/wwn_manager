@@ -79,6 +79,7 @@ func Router() *echo.Echo {
 	api.GET("/snapshots/:id/export_wwn", snapshotHandler.ExportHostWWN)
 	api.GET("/snapshots/:id/export_override_wwn", snapshotHandler.ExportOverrideWWN)
 	api.POST("/snapshots", snapshotHandler.CreateSnapshot)
+	api.DELETE("/snapshots/:id", snapshotHandler.DeleteSnapshot)
 
 	// --- Static file handler ---
 

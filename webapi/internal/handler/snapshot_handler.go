@@ -202,3 +202,16 @@ func (h *SnapshotHandler) ExportOverrideWWN(c echo.Context) error {
 	writer.Flush()
 	return c.Attachment(f.Name(), fmt.Sprintf("customer_wwn_host_override_%s.csv", snapshot.DataAndTime()))
 }
+
+func (h *SnapshotHandler) DeleteSnapshot(c echo.Context) error {
+	snapshot_id := c.Param("id")
+	if snapshot_id == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "snapshot id is required")
+	}
+
+	if err := h.service.Delete(c.Request().Context(), snapshot_id); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
+	}
+
+	return c.NoContent(http.StatusOK)
+}
