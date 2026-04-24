@@ -3,6 +3,9 @@
     <button class="btn btn-primary me-2 mb-2 mt-2" @click="createSnapshot">
       Save
     </button>
+    <button class="btn btn-danger me-2 mb-2 mt-2" @click="deleteSnapshotPopup" :disabled="!selectedSnapshot">
+      Delete
+    </button>
     <button class="btn btn-primary me-2 mb-2 mt-2" @click="hostWWNExportPopup">
           Export Host WWNs
     </button>
@@ -164,6 +167,36 @@ export default {
         const error = err.response?.data?.message || err.message;
         console.error("Data load failed:", error);
         this.flash.show(`Data load failed: ${error}`, "danger");
+      }
+    },
+    async deleteSnapshotPopup() {
+      try {
+        const snapshot = this.snapshots.find(s => s.id === this.selectedSnapshot);
+        const snapshotDesc = snapshot ? this.snapshotDesc(snapshot) : 'Unknown';
+
+        const result = await Swal.fire({
+          title: 'Delete Snapshot',
+          text: `Are you sure you want to delete this snapshot: ${snapshotDesc}?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Delete!',
+          customClass: {
+            confirmButton: 'btn btn-danger btn-lg mr-2',
+            cancelButton: 'btn btn-secondary btn-lg',
+            loader: 'custom-loader',
+          },
+        });
+
+        if (result.isConfirmed) {
+          await fcService.deleteSnapshot(this.selectedSnapshot);
+          this.selectedSnapshot = "";
+          await this.apiStore.loadSnapshots();
+          this.flash.show('Snapshot deleted successfully', 'success');
+        }
+      } catch (err) {
+        const error = err.response?.data?.message || err.message;
+        console.error("Snapshot deletion failed:", error);
+        this.flash.show(`Snapshot deletion failed: ${error}`, "danger");
       }
     },
   },

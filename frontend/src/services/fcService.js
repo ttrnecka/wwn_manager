@@ -118,6 +118,10 @@ export default {
     return api.post(`/snapshots`,{comment: comment});
   },
 
+  deleteSnapshot(snapId) {
+    return api.delete(`/snapshots/${snapId}`);
+  },
+
   saveFile(resp) {
     const disposition = resp.headers["content-disposition"];
     let filename = "downloaded-file";
