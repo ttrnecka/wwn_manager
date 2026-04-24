@@ -44,14 +44,22 @@ func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
 		return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, Unknown type entries exist", err)
 	}
 
+	entries, err = h.entryService.Find(c.Request().Context(), service.Filter{"type": nil}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to check nil type entries", err)
+	}
+	if len(entries) > 0 {
+		return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, apply the rules first", err)
+	}
+
 	// TODO: uncomment once the snapshot work is done
-	// entries, err = h.entryService.Find(c.Request().Context(), service.Filter{"needs_reconcile": true}, service.SortOption{})
-	// if err != nil {
-	// 	return errorWithInternal(http.StatusInternalServerError, "Failed to check entries requiring reconciliation", err)
-	// }
-	// if len(entries) > 0 {
-	// 	return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, reconcile all entries first", err)
-	// }
+	entries, err = h.entryService.Find(c.Request().Context(), service.Filter{"needs_reconcile": true}, service.SortOption{})
+	if err != nil {
+		return errorWithInternal(http.StatusInternalServerError, "Failed to check entries requiring reconciliation", err)
+	}
+	if len(entries) > 0 {
+		return errorWithInternal(http.StatusUnprocessableEntity, "Cannot make snapshot, reconcile all entries first", err)
+	}
 
 	var snapshotDTO dto.SnapshotDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&snapshotDTO); err != nil {
@@ -108,18 +116,18 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
 	}
 
-	//TODO: temporarily include not reconciled secondaries
-	items2, err := entrySvc.Find(c.Request().Context(),
-		service.Filter{
-			"type":                service.Filter{"$in": []string{"Host", "Other"}},
-			"wwn_set":             service.Filter{"$in": []int{1, 2}},
-			"is_primary_customer": false,
-			"ignore_entry":        false,
-			"needs_reconcile":     true,
-		}, service.SortOption{"wwn": "asc"})
-	if err != nil {
-		return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
-	}
+	// Commnented so unreconciled records are not exporter
+	// items2, err := entrySvc.Find(c.Request().Context(),
+	// 	service.Filter{
+	// 		"type":                service.Filter{"$in": []string{"Host", "Other"}},
+	// 		"wwn_set":             service.Filter{"$in": []int{1, 2}},
+	// 		"is_primary_customer": false,
+	// 		"ignore_entry":        false,
+	// 		"needs_reconcile":     true,
+	// 	}, service.SortOption{"wwn": "asc"})
+	// if err != nil {
+	// 	return errorWithInternal(http.StatusInternalServerError, "Failed to get entries", err)
+	// }
 
 	f, err := os.CreateTemp("", "exportcsv-")
 	if err != nil {
@@ -137,21 +145,21 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 			if err != nil {
 				return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
 			}
-		} else { //TODO: remove later - import not reconciled under loadedhostname
-			err := writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
-			if err != nil {
-				return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
-			}
+			// } // Commnented so unreconciled records are not exporter
+			// 	err := writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
+			// 	if err != nil {
+			// 		return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
+			// 	}
 		}
 	}
-	// TODO: remove later - import all not reconciled secondaries with loaded hostname
-	for _, item := range items2 {
-		itemDTO := mapper.ToFCWWNEntryDTO(item)
-		err := writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
-		if err != nil {
-			return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
-		}
-	}
+	// Commnented so unreconciled records are not exporter
+	// for _, item := range items2 {
+	// 	itemDTO := mapper.ToFCWWNEntryDTO(item)
+	// 	err := writer.Write([]string{itemDTO.LoadedHostname, itemDTO.WWN, itemDTO.WWN})
+	// 	if err != nil {
+	// 		return errorWithInternal(http.StatusInternalServerError, "Failed to write to csv file", err)
+	// 	}
+	// }
 	writer.Flush()
 	return c.Attachment(f.Name(), fmt.Sprintf("host_wwn_%s.csv", snapshot.DataAndTime()))
 }
