@@ -32,6 +32,14 @@ Import entries and rules.
 - Run ./build.sh
 - copy generated zip file to deployment servers
 
+## Test
+
+- have container runtime install, configuret the DOCKER_HOST. Example for podman:
+- systemctl --user start podman.socket
+- podman info --format '{{.Host.RemoteSocket.Path}}'
+- export DOCKER_HOST=unix://<your_podman_socket_location>
+- go test ./...
+
 # Dependency updates
 
 To update the dependencies you need local installation of Node.js and Go.
