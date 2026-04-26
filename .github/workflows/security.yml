@@ -1,4 +1,4 @@
-XDname: Go Security Scan
+name: Go Security Scan
 
 on:
   workflow_dispatch:
