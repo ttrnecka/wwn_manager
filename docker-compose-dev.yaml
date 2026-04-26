@@ -1,6 +1,6 @@
 services:
   nginx:
-    image: nginx:alpine
+    image: docker.io/library/nginx:alpine
     ports:
       - 80:80
     networks:
@@ -35,7 +35,7 @@ services:
     entrypoint: sh -c
     command: ["cp -r /app/dist/* /output/"]
   mongodb:
-    image: mongo:7
+    image: docker.io/library/mongo:7
     container_name: mongodb_wwnmgr
     restart: always
     networks:

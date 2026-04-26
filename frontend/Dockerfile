@@ -1,5 +1,5 @@
 # build stage
-FROM node:20-alpine AS frontend-build
+FROM docker.io/library/node:20-alpine AS frontend-build
 
 COPY zscaler/zscaler-root-ca.crt /tmp/zscaler-root-ca.crt
 
