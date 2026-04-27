@@ -8,16 +8,15 @@ systemctl --user start podman.socket
 # Delete build folder if it exists
 echo "Cleaning build directory..."
 rm -rf build
-mkdir -p build/static
+mkdir -p "build/static"
 
 # Run docker compose build
 echo "Building containers..."
-docker compose -f docker-compose-build.yaml up -d --build
+docker compose -f "docker-compose-build.yaml" up -d --build
 
 # Move .env.template into build directory
 echo "Moving .env.template to build/..."
-mkdir -p build
-cp .env.template build/.env.template
+cp "../../.env.template" "./build/.env.template"
 
 DATE=$(date +%Y%m%d)
 ZIPFILE="wwn_manager_${DATE}.zip"
@@ -29,7 +28,7 @@ fi
 
 echo "Zipping contents of build directory into ${ZIPFILE}..."
 (
-  cd build
+  cd "build"
   zip -r "../${ZIPFILE}" .
 )
 

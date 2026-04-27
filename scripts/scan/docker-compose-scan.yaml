@@ -1,27 +1,27 @@
 services:
   wwn_webapi_scan:
     build:
-      context: .
-      dockerfile: ./webapi/Dockerfile_scan
+      context: ../../
+      dockerfile: ./webapi/Dockerfile.scan
     image: wwn_webapi_scan:0.0.1
   frontend_scan:
     build:
-      context: .
-      dockerfile: ./frontend/Dockerfile_scan
+      context: ../../
+      dockerfile: ./frontend/Dockerfile.scan
     image: frontend_scan:0.0.1
   trivy:
     build:
-      context: .
-      dockerfile: ./Dockerfile_trivy
-    # image: aquasec/trivy:latest
+      context: ../../
+      dockerfile: ./Dockerfile.trivy
     container_name: trivy-scan
     volumes:
-      - ./:/workspace
+      - ../../:/workspace
       - trivy-cache:/root/.cache/
     working_dir: /workspace
     command: >
       fs
       --scanners vuln,secret,misconfig
+      --vuln-type library
       --severity HIGH,CRITICAL
       --exit-code 1
       --no-progress

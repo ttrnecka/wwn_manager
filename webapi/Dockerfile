@@ -20,8 +20,10 @@ RUN go build -o server ./webapi
 
 # final stage
 FROM alpine 
+RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
 WORKDIR /app
-COPY --from=backend-build /app/server /app/server
+COPY --from=backend-build --chown=appuser:appuser /app/server /app/server
 
+USER appuser
 EXPOSE 8888
 ENTRYPOINT ["/app/server"]
