@@ -29,6 +29,7 @@ Import entries and rules.
 ## Build
 
 - Open Linux or WSL session
+- cd scripts/standalone_build
 - Run ./build.sh
 - copy generated zip file to deployment servers
 
