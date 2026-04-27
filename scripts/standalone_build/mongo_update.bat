@@ -24,13 +24,16 @@ REM ---------- CONFIG ----------
 set "VERSION=7.0.31"
 set "DOWNLOAD_URL=https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-%VERSION%-signed.msi"
 
-set "TEMP_MSI=%TEMP%\mongodb-community-%VERSION%.msi"
 set "LOCAL_MSI=%~dp0mongodb-community-%VERSION%.msi"
 
 REM IMPORTANT:
 REM Adjust if your existing config lives elsewhere
-set "CONFIG_FILE=C:\Program Files\MongoDB\Server\mongod.cfg"
-set "CONFIG_BACKUP=%TEMP%\mongod.cfg.backup"
+set "CONFIG_FILE=C:\Program Files\MongoDB\Server\7.0\bin\mongod.cfg"
+set "CONFIG_BACKUP=%~dp0mongod.cfg.backup"
+
+set "DATA_DIR=D:\MongoDB\data"
+set "LOG_DIR=D:\MongoDB\log"
+set "LOG_FILE=%LOG_DIR%\mongod.log"
 
 set "NO_DOWNLOAD=false"
 
@@ -60,42 +63,52 @@ if exist "%CONFIG_FILE%" (
     echo Backup created:
     echo %CONFIG_BACKUP%
 ) else (
-    echo WARNING: Existing config not found:
-    echo %CONFIG_FILE%
-    echo Installer may create a new default config.
+    echo No existing mongod.cfg found.
+    echo A new config will be created after installation.
+    echo.
+
+    set "CONFIG_EXISTED=false"
 )
 
 echo.
 
-REM ---------- DETERMINE MSI SOURCE ----------
+REM =========================================================
+REM MSI HANDLING
+REM =========================================================
+
+set "MSI_FILE="
+
 if /I "%NO_DOWNLOAD%"=="true" (
     echo --no-download mode enabled
-    echo Expecting MSI here:
-    echo %LOCAL_MSI%
-    echo.
+    echo Checking local MSI in script folder...
 
-    if not exist "%LOCAL_MSI%" (
-        echo ERROR: MSI file not found:
+    if exist "%LOCAL_MSI%" (
+        echo Found MSI:
         echo %LOCAL_MSI%
+        set "MSI_FILE=%LOCAL_MSI%"
+    ) else (
+        echo ERROR: MSI not found locally
         exit /b 1
     )
-
-    set "MSI_FILE=%LOCAL_MSI%"
 ) else (
     echo Downloading latest MongoDB Community Server...
 
-    powershell -Command ^
-        "Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile '%TEMP_MSI%'"
+    if exist "%LOCAL_MSI%" (
+        echo Found MSI:
+        echo %LOCAL_MSI%
+    ) else (
+        powershell -Command ^
+            "Invoke-WebRequest -Uri '%DOWNLOAD_URL%' -OutFile '%LOCAL_MSI%'"
 
-    if not exist "%TEMP_MSI%" (
-        echo ERROR: Failed to download MongoDB installer.
-        exit /b 1
+        if not exist "%LOCAL_MSI%" (
+            echo ERROR: Download failed
+            exit /b 1
+        )
+        echo Download completed.
+        echo.
     )
 
-    echo Download completed.
-    echo.
-
-    set "MSI_FILE=%TEMP_MSI%"
+    set "MSI_FILE=%LOCAL_MSI%"
 )
 
 echo Using MSI:
@@ -119,7 +132,8 @@ REM ---------- SILENT UPGRADE ----------
 echo Installing/upgrading MongoDB silently...
 
 msiexec /i "%MSI_FILE%" ^
-    /qn ^
+    /qb! ^
+    ADDLOCAL="ServerService" ^
     SHOULD_INSTALL_COMPASS="0"
 
 if errorlevel 1 (
@@ -130,8 +144,22 @@ if errorlevel 1 (
 echo Upgrade completed successfully.
 echo.
 
-REM ---------- RESTORE CONFIG ----------
-if exist "%CONFIG_BACKUP%" (
+REM ---------- STOP SERVICE ----------
+echo Stopping MongoDB service...
+
+net stop MongoDB
+
+if errorlevel 1 (
+    echo WARNING: MongoDB service did not stop.
+) else (
+    echo MongoDB service stopped successfully.
+)
+
+REM =========================================================
+REM RESTORE OR CREATE CONFIG
+REM =========================================================
+
+if /I "%CONFIG_EXISTED%"=="true" (
     echo Restoring original mongod.cfg...
 
     copy /Y "%CONFIG_BACKUP%" "%CONFIG_FILE%" >nul
@@ -143,7 +171,33 @@ if exist "%CONFIG_BACKUP%" (
         exit /b 1
     )
 
-    echo Original config restored successfully.
+    echo Existing config restored successfully.
+) else (
+    echo Creating new mongod.cfg...
+
+    if not exist "%DATA_DIR%" mkdir "%DATA_DIR%"
+    if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
+
+    (
+        echo systemLog:
+        echo.  destination: file
+        echo.  path: "%LOG_FILE%"
+        echo.  logAppend: true
+        echo storage:
+        echo.  dbPath: "%DATA_DIR%"
+        echo net:
+        echo.  bindIp: 127.0.0.1
+        echo.  port: 27017
+    ) > "%CONFIG_FILE%"
+
+    if not exist "%CONFIG_FILE%" (
+        echo ERROR: Failed to create new mongod.cfg
+        exit /b 1
+    )
+
+    echo New config created successfully.
+    echo Data directory: %DATA_DIR%
+    echo Log directory : %LOG_DIR%
 )
 
 echo.
@@ -160,16 +214,6 @@ if errorlevel 1 (
     echo MongoDB service started successfully.
 )
 
-echo.
-
-REM ---------- CLEANUP ----------
-if /I "%NO_DOWNLOAD%"=="false" (
-    del "%TEMP_MSI%" >nul 2>&1
-)
-
-if exist "%CONFIG_BACKUP%" (
-    del "%CONFIG_BACKUP%" >nul 2>&1
-)
 
 echo.
 echo =========================================
