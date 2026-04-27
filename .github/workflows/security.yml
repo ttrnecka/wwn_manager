@@ -10,39 +10,51 @@ on:
   pull_request:
 
 jobs:
-  security:
-    name: Run security scans
+  go-security:
+    name: Go security scans
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
-      pull-requests: write
-      security-events: write 
-      
+
     steps:
-    # 1. Checkout the repository
     - name: Checkout code
       uses: actions/checkout@v6
 
-    # 2. Set up Go
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: '1.25.9'
 
-    # 3. Install gosec
     - name: Install gosec
       run: |
         go install github.com/securego/gosec/v2/cmd/gosec@latest
         echo "$HOME/go/bin" >> $GITHUB_PATH
 
-    # 4. Install govulncheck
     - name: Install govulncheck
       run: |
         go install golang.org/x/vuln/cmd/govulncheck@latest
         echo "$HOME/go/bin" >> $GITHUB_PATH
-    
-    - name: Install Node.js
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run gosec
+      run: gosec ./...
+
+    - name: Run govulncheck
+      run: cd webapi && govulncheck ./...
+
+  npm-security:
+    name: NPM security scans
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '20'
@@ -50,24 +62,22 @@ jobs:
     - name: Install frontend dependencies
       run: cd frontend && npm install
 
-    # 5. Download Go modules
-    - name: Download dependencies
-      run: go mod download
-
-    # 6. Run gosec
-    - name: Run gosec
-      run: gosec ./...
-
-    # 7. Run govulncheck
-    - name: Run govulncheck
-      run: cd webapi && govulncheck ./...
-
     - name: Run npm audit
       run: cd frontend && npm audit --omit=dev --audit-level=high
 
     - name: Run npm eslint
-
       run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
+
+  trivy-scan:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
 
     - name: Run Trivy filesystem scan
       uses: aquasecurity/trivy-action@v0.36.0
@@ -78,6 +88,7 @@ jobs:
         format: 'sarif'
         output: 'trivy-results.sarif'
         vuln-type: 'os,library'
+
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
       if: always()

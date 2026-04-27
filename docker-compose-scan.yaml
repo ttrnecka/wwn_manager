@@ -9,3 +9,23 @@ services:
       context: .
       dockerfile: ./frontend/Dockerfile_scan
     image: frontend_scan:0.0.1
+  trivy:
+    build:
+      context: .
+      dockerfile: ./Dockerfile_trivy
+    # image: aquasec/trivy:latest
+    container_name: trivy-scan
+    volumes:
+      - ./:/workspace
+      - trivy-cache:/root/.cache/
+    working_dir: /workspace
+    command: >
+      fs
+      --scanners vuln,secret,misconfig
+      --severity HIGH,CRITICAL
+      --exit-code 1
+      --no-progress
+      /workspace
+
+volumes:
+  trivy-cache:

@@ -47,7 +47,7 @@ To update the dependencies you need local installation of Node.js and Go.
 ## Scan
 
 Run:
-```docker compose -f docker-compose.scan.yaml up --build```
+```docker compose -f docker-compose-scan.yaml up --build```
 
 Observe any error in the output
 

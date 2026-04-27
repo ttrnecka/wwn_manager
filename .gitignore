@@ -6,3 +6,4 @@ frontend/dist
 *.log
 dist/
 webapi/.env
+.cache

@@ -9,7 +9,7 @@ RUN apk --no-cache add --no-check-certificate ca-certificates && update-ca-certi
 RUN  cp /tmp/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-ca.crt && \
       update-ca-certificates;
 
-RUN apk update && apk add bash dos2unix git 2>/dev/null
+RUN apk update && apk --no-cache add bash dos2unix git 2>/dev/null
 
 WORKDIR /app
 
