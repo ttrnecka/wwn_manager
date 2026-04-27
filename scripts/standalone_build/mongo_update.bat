@@ -31,8 +31,8 @@ REM Adjust if your existing config lives elsewhere
 set "CONFIG_FILE=C:\Program Files\MongoDB\Server\7.0\bin\mongod.cfg"
 set "CONFIG_BACKUP=%~dp0mongod.cfg.backup"
 
-set "DATA_DIR=D:\MongoDB\data"
-set "LOG_DIR=D:\MongoDB\log"
+set "DATA_DIR=D:\MongoDB\Server\7.0\data"
+set "LOG_DIR=D:\MongoDB\Server\7.0\log"
 set "LOG_FILE=%LOG_DIR%\mongod.log"
 
 set "NO_DOWNLOAD=false"
@@ -181,10 +181,10 @@ if /I "%CONFIG_EXISTED%"=="true" (
     (
         echo systemLog:
         echo.  destination: file
-        echo.  path: "%LOG_FILE%"
+        echo.  path: %LOG_FILE%
         echo.  logAppend: true
         echo storage:
-        echo.  dbPath: "%DATA_DIR%"
+        echo.  dbPath: %DATA_DIR%
         echo net:
         echo.  bindIp: 127.0.0.1
         echo.  port: 27017
