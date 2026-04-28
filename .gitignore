@@ -7,3 +7,5 @@ frontend/dist
 dist/
 webapi/.env
 .cache
+*.zip
+scripts/standalone_build/build

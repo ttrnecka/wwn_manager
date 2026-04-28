@@ -10,6 +10,21 @@ on:
   pull_request:
 
 jobs:
+  go-test:
+    name: Go tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.9'
+
+      - name: Run tests
+        run: cd webapi && go test ./...
+        
   go-security:
     name: Go security scans
     runs-on: ubuntu-latest
