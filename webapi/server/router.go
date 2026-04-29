@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/db"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/handler"
@@ -16,7 +17,7 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/shared/utils"
 )
 
-func Router() *echo.Echo {
+func Router(logger *zerolog.Logger) *echo.Echo {
 	e := echo.New()
 
 	e.Use(mid.RequestBodyCaptureMiddleware())
@@ -47,7 +48,7 @@ func Router() *echo.Echo {
 
 	//handlers
 	userHandler := handler.NewUserHandler(userSvc)
-	fcWWNEntryHandler := handler.NewFCWWNEntryHandler(fcwWWNEntrySvc, ruleSvc)
+	fcWWNEntryHandler := handler.NewFCWWNEntryHandler(fcwWWNEntrySvc, ruleSvc, logger)
 	ruleHandler := handler.NewRuleHandler(ruleSvc, fcwWWNEntrySvc)
 	snapshotHandler := handler.NewSnapshotHandler(snapshotSvc, fcwWWNEntrySvc)
 

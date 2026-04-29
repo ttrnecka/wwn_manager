@@ -5,15 +5,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func EnsureEntryCollection() error {
+type schema struct {
+	logger *zerolog.Logger
+	db     *DB
+}
+
+func (s *schema) EnsureEntryCollection() error {
 	ctx := context.Background()
-	col := dB.database.Collection("fc_wwn_entries")
+	col := s.db.database.Collection("fc_wwn_entries")
 
 	// 1. Create compound index for customer + wwn
 	_, err := col.Indexes().CreateOne(ctx, mongo.IndexModel{
@@ -46,13 +52,13 @@ func EnsureEntryCollection() error {
 		return fmt.Errorf("create index: %w", err)
 	}
 
-	logger.Info().Msgf("Indexes ensured for collection: fc_wwn_entries")
+	s.logger.Info().Msgf("Indexes ensured for collection: fc_wwn_entries")
 	return nil
 }
 
-func EnsureUserCollection() error {
+func (s *schema) EnsureUserCollection() error {
 	ctx := context.Background()
-	col := dB.database.Collection("users")
+	col := s.db.database.Collection("users")
 
 	// 1. Create compound index for email + status
 	_, err := col.Indexes().CreateOne(ctx, mongo.IndexModel{
@@ -78,7 +84,7 @@ func EnsureUserCollection() error {
 
 	hashedPw, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
 
-	logger.Info().Msgf("Indexes ensured for collection: users")
+	s.logger.Info().Msgf("Indexes ensured for collection: users")
 	// 2. Insert default user if not exists
 	defaultUser := bson.M{
 		"username":  "admin",
@@ -96,6 +102,6 @@ func EnsureUserCollection() error {
 	if err != nil {
 		return fmt.Errorf("insert default user: %w", err)
 	}
-	logger.Info().Msgf("Default user inserted")
+	s.logger.Info().Msgf("Default user inserted")
 	return nil
 }

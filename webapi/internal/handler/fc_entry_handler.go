@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
@@ -23,10 +24,12 @@ import (
 type FCWWNEntryHandler struct {
 	service     service.FCWWNEntryService
 	ruleService service.RuleService
+	logger      *zerolog.Logger
 }
 
-func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService) *FCWWNEntryHandler {
-	return &FCWWNEntryHandler{s, r}
+func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService, logger *zerolog.Logger) *FCWWNEntryHandler {
+	l := logger.With().Str("component", "FCWWNEntryHandler").Logger()
+	return &FCWWNEntryHandler{s, r, &l}
 }
 
 func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
@@ -274,7 +277,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*
 		}
 
 		if !re.MatchString(line[1]) {
-			logger.Info().Msgf("Invalid WWN: %s", line[1])
+			h.logger.Info().Msgf("Invalid WWN: %s", line[1])
 			continue
 		}
 
@@ -318,7 +321,14 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 	pageSize := 10000
 	for {
 		var response ita.FeedResponse
-		resp, err := ita.GenerateReportTemplate(os.Getenv("ITA_API_URI"), os.Getenv("ITA_FEED_ID"), os.Getenv("ITA_TOKEN"), page, pageSize)
+		itaClient, err := ita.NewITAClient(h.logger)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create ITA client: %v", err)
+		}
+		if os.Getenv("ITA_FEED_ID") == "" {
+			return nil, fmt.Errorf("ITA_FEED_ID environment variable is not set")
+		}
+		resp, err := itaClient.GenerateReportTemplate(os.Getenv("ITA_FEED_ID"), page, pageSize)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get feed report: %v", err)
 		}
@@ -330,17 +340,17 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 		for _, line := range response.Data.Report.ReportData {
 			wwn, ok := line["wwn"].Value.(string)
 			if !ok {
-				logger.Error().Msgf("WWN type is not string: %T", line["wwn"].Value)
+				h.logger.Error().Msgf("WWN type is not string: %T", line["wwn"].Value)
 				continue
 			}
 			if !re.MatchString(wwn) {
-				logger.Info().Msgf("Invalid WWN: %s", wwn)
+				h.logger.Info().Msgf("Invalid WWN: %s", wwn)
 				continue
 			}
 
 			customer, ok := line["customer"].Value.(string)
 			if !ok {
-				logger.Error().Msgf("customer type is not string: %T", line["customer"].Value)
+				h.logger.Error().Msgf("customer type is not string: %T", line["customer"].Value)
 				continue
 			}
 			if customer == "" {
@@ -348,23 +358,23 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 			}
 			zone, ok := line["element_name"].Value.(string)
 			if !ok {
-				logger.Error().Msgf("zone type is not string: %T", line["element_name"].Value)
+				h.logger.Error().Msgf("zone type is not string: %T", line["element_name"].Value)
 				continue
 			}
 			alias, ok := line["alias"].Value.(string)
 			if !ok {
-				logger.Error().Msgf("alias type is not string: %T", line["alias"].Value)
+				h.logger.Error().Msgf("alias type is not string: %T", line["alias"].Value)
 				continue
 			}
 			loadedHostname, ok := line["loaded_host"].Value.(string)
 			if !ok {
-				logger.Error().Msgf("loaded_host type is not string: %T", line["loaded_host"].Value)
+				h.logger.Error().Msgf("loaded_host type is not string: %T", line["loaded_host"].Value)
 				continue
 			}
 			isCsvLoad := true
 			csvLoad, ok := line["is_csv_load"].Value.(string)
 			if !ok {
-				logger.Error().Msgf("is_csv_load type is not string: %T", line["is_csv_load"].Value)
+				h.logger.Error().Msgf("is_csv_load type is not string: %T", line["is_csv_load"].Value)
 				continue
 			}
 			if csvLoad == "N" {
@@ -372,7 +382,7 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 			}
 			wwnSetF, ok := line["wwn_set"].Value.(float64)
 			if !ok {
-				logger.Error().Msgf("wwn_set type is not numberic: %T", line["wwn_set"].Value)
+				h.logger.Error().Msgf("wwn_set type is not numberic: %T", line["wwn_set"].Value)
 				continue
 			}
 			wwnSet := int(wwnSetF)

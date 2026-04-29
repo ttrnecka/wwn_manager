@@ -14,7 +14,7 @@ import (
 
 const maxBodyLogSize = 256 // limit body log size
 
-func RequestLogger(logger zerolog.Logger) echo.MiddlewareFunc {
+func RequestLogger(logger *zerolog.Logger) echo.MiddlewareFunc {
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:           true,
 		LogStatus:        true,
