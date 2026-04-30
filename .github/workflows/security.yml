@@ -13,6 +13,7 @@ env:
   GO_VERSION: '1.25.9'
   GOLANGCI_LINT_VERSION: v2.11.4
   NODE_VERSION: '22'
+  GHES: ${{ github.server_url != 'https://github.com' }}
 
 jobs:
   detect-modules:
@@ -20,8 +21,11 @@ jobs:
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+        if: env.GHES == 'false'
+      - uses: actions/checkout@v4
+        if: env.GHES == 'true'
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: '**/go.sum'
@@ -35,8 +39,11 @@ jobs:
       matrix:
         modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+        if: env.GHES == 'false'
+      - uses: actions/checkout@v4
+        if: env.GHES == 'true'
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: '**/go.sum'
@@ -49,11 +56,13 @@ jobs:
     name: Go tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        if: env.GHES == 'false'
+      - uses: actions/checkout@v4
+        if: env.GHES == 'true'
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: '**/go.sum'
@@ -68,25 +77,27 @@ jobs:
       contents: read
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        if: env.GHES == 'false'
+      - uses: actions/checkout@v4
+        if: env.GHES == 'true'
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ env.GO_VERSION }}
-        cache-dependency-path: '**/go.sum'
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: '**/go.sum'
 
-    - name: Install govulncheck
-      run: |
-        go install golang.org/x/vuln/cmd/govulncheck@latest
-        echo "$HOME/go/bin" >> $GITHUB_PATH
+      - name: Install govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
 
-    - name: Download dependencies
-      run: go mod download
+      - name: Download dependencies
+        run: go mod download
 
-    - name: Run govulncheck
-      run: cd webapi && govulncheck ./...
+      - name: Run govulncheck
+        run: cd webapi && govulncheck ./...
 
 
   npm-security:
@@ -96,25 +107,27 @@ jobs:
       contents: read
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        if: env.GHES == 'false'
+      - uses: actions/checkout@v4
+        if: env.GHES == 'true'
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v5
-      with:
-        node-version: ${{ env.NODE_VERSION }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
 
-    - name: Install frontend dependencies
-      run: cd frontend && npm install
+      - name: Install frontend dependencies
+        run: cd frontend && npm install
 
-    - name: Run npm audit
-      run: cd frontend && npm audit --omit=dev --audit-level=high
+      - name: Run npm audit
+        run: cd frontend && npm audit --omit=dev --audit-level=high
 
-    - name: Run npm eslint
-      run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
+      - name: Run npm eslint
+        run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
 
   trivy-scan-public:
-    if: github.server_url == 'https://github.com'
+    if: ${{ github.server_url == 'https://github.com' }}
     name: Trivy filesystem scan
     runs-on: ubuntu-latest
     permissions:
@@ -122,8 +135,7 @@ jobs:
       security-events: write
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Run Trivy filesystem scan
       uses: aquasecurity/trivy-action@v0.36.0
@@ -151,7 +163,7 @@ jobs:
 
   #   steps:
   #   - name: Checkout code
-  #     uses: actions/checkout@v5
+  #     uses: actions/checkout@v6
 
   #   - name: Run Trivy filesystem scan
   #     uses: aquasecurity/trivy-action@v0.34.0
