@@ -9,7 +9,40 @@ on:
     - cron: "0 2 1 * *"
   pull_request:
 
+env:
+  GO_VERSION: '1.25.9'
+  GOLANGCI_LINT_VERSION: v2.11.4
+  NODE_VERSION: '20'
+
 jobs:
+  detect-modules:
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.set-modules.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - id: set-modules
+        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
+
+  golangci-lint:
+    needs: detect-modules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: golangci-lint ${{ matrix.modules }}
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          working-directory: ${{ matrix.modules }}
   go-test:
     name: Go tests
     runs-on: ubuntu-latest
@@ -20,7 +53,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25.9'
+          go-version: ${{ env.GO_VERSION }}
 
       - name: Run tests
         run: cd webapi && go test ./...
@@ -38,7 +71,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.25.9'
+        go-version: ${{ env.GO_VERSION }}
 
     - name: Install govulncheck
       run: |
@@ -55,6 +88,7 @@ jobs:
       uses: golangci/golangci-lint-action@v9
       with:
         version: v2.11.4
+        working-directory: webapi/
 
   npm-security:
     name: NPM security scans
@@ -69,7 +103,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20'
+        node-version: ${{ env.NODE_VERSION }}
 
     - name: Install frontend dependencies
       run: cd frontend && npm install
