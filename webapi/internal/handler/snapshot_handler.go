@@ -62,11 +62,13 @@ func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
 	}
 
 	var snapshotDTO dto.SnapshotDTO
-	if err := json.NewDecoder(c.Request().Body).Decode(&snapshotDTO); err != nil {
+	err = json.NewDecoder(c.Request().Body).Decode(&snapshotDTO)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 
-	if err := validate.Struct(snapshotDTO); err != nil {
+	err = validate.Struct(snapshotDTO)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 

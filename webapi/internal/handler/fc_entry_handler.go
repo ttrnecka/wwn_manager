@@ -97,7 +97,7 @@ func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 
 	for _, e := range entries {
 		e.DuplicateCustomers = nil
-		_, err := h.service.Update(c.Request().Context(), e.ID, &e)
+		_, err = h.service.Update(c.Request().Context(), e.ID, &e)
 		if err != nil {
 			return errorWithInternal(http.StatusInternalServerError, "Failed to flush duplicate customers from entry", err)
 		}
@@ -174,7 +174,7 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) ImportAPIHandler(c echo.Context) error {
-	wwnEntries, err := h.readEntriesFromApi()
+	wwnEntries, err := h.readEntriesFromApi(c)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to read entries from api", err)
 	}
@@ -310,7 +310,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*
 	return wwnEntries, nil
 }
 
-func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
+func (h *FCWWNEntryHandler) readEntriesFromApi(c echo.Context) ([]*entity.FCWWNEntry, error) {
 
 	var wwnEntries []*entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)
@@ -328,7 +328,7 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 		if os.Getenv("ITA_FEED_ID") == "" {
 			return nil, fmt.Errorf("ITA_FEED_ID environment variable is not set")
 		}
-		resp, err := itaClient.GenerateReportTemplate(os.Getenv("ITA_FEED_ID"), page, pageSize)
+		resp, err := itaClient.GenerateReportTemplate(c.Request().Context(), os.Getenv("ITA_FEED_ID"), page, pageSize)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get feed report: %v", err)
 		}

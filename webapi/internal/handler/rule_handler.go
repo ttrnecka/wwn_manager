@@ -196,7 +196,8 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 
 	// get reconciliation rules and fix entry
 	var reconcileDTO dto.EntryReconcileDTO
-	if err := json.NewDecoder(c.Request().Body).Decode(&reconcileDTO); err != nil {
+	err = json.NewDecoder(c.Request().Body).Decode(&reconcileDTO)
+	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
 	// save rules

@@ -2,6 +2,7 @@ package ita
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -44,7 +45,7 @@ func NewITAClient(logger *zerolog.Logger) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) GenerateReportTemplate(templateID string, page int, pageSize int) ([]byte, error) {
+func (c *Client) GenerateReportTemplate(ctx context.Context, templateID string, page int, pageSize int) ([]byte, error) {
 	urlStr := fmt.Sprintf("%sreport-templates/%s", c.baseURL, templateID)
 	u, err := url.Parse(urlStr)
 	if err != nil {
@@ -66,7 +67,7 @@ func (c *Client) GenerateReportTemplate(templateID string, page int, pageSize in
 	client := c.httpClient
 
 	// Create POST request (no body)
-	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
