@@ -109,7 +109,8 @@ jobs:
     - name: Run npm eslint
       run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
 
-  trivy-scan:
+  trivy-scan-public:
+    if: github.server_url == 'https://github.com'
     name: Trivy filesystem scan
     runs-on: ubuntu-latest
     permissions:
@@ -121,7 +122,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Run Trivy filesystem scan
-      uses: aquasecurity/trivy-action@v0.34.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -131,7 +132,35 @@ jobs:
         vuln-type: 'library'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
+
+  # trivy-scan-ghes:
+  #   if: github.server_url != 'https://github.com'
+  #   name: Trivy filesystem scan
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: read
+  #     security-events: write
+
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+
+  #   - name: Run Trivy filesystem scan
+  #     uses: aquasecurity/trivy-action@v0.34.0
+  #     with:
+  #       scan-type: 'fs'
+  #       scan-ref: '.'
+  #       exit-code: '0'
+  #       format: 'sarif'
+  #       output: 'trivy-results.sarif'
+  #       vuln-type: 'library'
+
+  #   - name: Upload Trivy scan results to GitHub Security tab
+  #     uses: github/codeql-action/upload-sarif@v3
+  #     if: always()
+  #     with:
+  #       sarif_file: 'trivy-results.sarif'
