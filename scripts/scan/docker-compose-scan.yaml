@@ -3,12 +3,28 @@ services:
     build:
       context: ../../
       dockerfile: ./webapi/Dockerfile.scan
-    image: wwn_webapi_scan:0.0.1
+    # image: wwn_webapi_scan:0.0.1
+    container_name: webapi-scan
   frontend_scan:
     build:
       context: ../../
       dockerfile: ./frontend/Dockerfile.scan
-    image: frontend_scan:0.0.1
+    # image: frontend_scan:0.0.1
+    container_name: frontend-scan
+  golangci-lint:
+    image: golangci/golangci-lint:v2.11.4
+    working_dir: /app
+    volumes:
+      - ../../:/app
+      - ${GOCACHE:-~/.cache/go/build}:/.cache/go-build
+      - ${GOMODCACHE:-~/go/pkg/mod}:/.cache/mod
+      - ~/.cache/golangci-lint:/.cache/golangci-lint
+    environment:
+      - GOCACHE=/.cache/go-build
+      - GOMODCACHE=/.cache/mod
+      - GOLANGCI_LINT_CACHE=/.cache/golangci-lint
+    command: golangci-lint run webapi/
+    container_name: golangci-lin-scan
   trivy:
     build:
       context: ../../

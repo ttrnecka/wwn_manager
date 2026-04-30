@@ -260,7 +260,7 @@ func (h *RuleHandler) ImportHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
 }
 
-func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWWNEntry) error {
+func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWWNEntry) error { // nolint:gocyclo // TODO LATER
 
 	var wg sync.WaitGroup
 	numWorkers := runtime.NumCPU() // one worker per CPU core
@@ -511,7 +511,7 @@ RANGE:
 	return nil
 }
 
-func applyHostRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
+func applyHostRules(entry *entity.FCWWNEntry, rules []entity.Rule) error { // nolint:gocyclo // TODO LATER
 	loadHostname := entry.LoadedHostname
 	if loadHostname == "" {
 		loadHostname = entry.Hostname

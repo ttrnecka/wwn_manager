@@ -12,7 +12,6 @@ RUN  cp /tmp/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-c
 
 RUN apk update && apk --no-cache add bash dos2unix git 2>/dev/null
 
-RUN go install github.com/securego/gosec/v2/cmd/gosec@latest
 RUN go install golang.org/x/vuln/cmd/govulncheck@latest
 
 RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
@@ -28,8 +27,6 @@ RUN chown -R appuser:appuser /app
 
 USER appuser
 
-CMD echo "Running gosec..." && \
-    gosec ./... && \
-    echo "Running govulncheck..." && \
+CMD echo "Running govulncheck..." && \
     cd webapi && \
     govulncheck ./...
