@@ -75,11 +75,11 @@ jobs:
   golangci-lint-ghes:
     if: ${{ github.server_url != 'https://github.com' }}
     name: GolangCI-Lint GHES
-    needs: detect-modules
+    needs: detect-modules-ghes
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
+        modules: ${{ fromJSON(needs.detect-modules-ghes.outputs.modules) }}
     steps:
       - uses: actions/checkout@v4
       
