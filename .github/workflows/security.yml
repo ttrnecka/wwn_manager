@@ -35,7 +35,7 @@ jobs:
 
   detect-modules-ghes:
     if: ${{ github.server_url != 'https://github.com' }}
-    name: Detect Go modules
+    name: Detect Go modules GHES
     runs-on: ubuntu-latest
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
@@ -74,7 +74,7 @@ jobs:
   
   golangci-lint-ghes:
     if: ${{ github.server_url != 'https://github.com' }}
-    name: GolangCI-Lint
+    name: GolangCI-Lint GHES
     needs: detect-modules
     runs-on: ubuntu-latest
     strategy:
@@ -112,7 +112,7 @@ jobs:
   
   go-test-ghes:
     if: ${{ github.server_url != 'https://github.com' }}
-    name: Go tests
+    name: Go tests GHES
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -155,7 +155,7 @@ jobs:
 
   go-security-ghes:
     if: ${{ github.server_url != 'https://github.com' }}
-    name: Golang vulnerability check
+    name: Golang vulnerability check GHES
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -206,7 +206,7 @@ jobs:
 
   npm-security-ghes:
     if: ${{ github.server_url != 'https://github.com' }}
-    name: NPM security scans
+    name: NPM security scans GHES
     runs-on: ubuntu-latest
     permissions:
       contents: read
