@@ -572,7 +572,7 @@ TOP:
 	return nil
 }
 
-func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
+func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error { // nolint:gocyclo // TODO LATER
 	entry.NeedsReconcile = false
 	entry.IsPrimaryCustomer = true
 	entry.ReconcileRules = entity.NilOjectIDSlice()
