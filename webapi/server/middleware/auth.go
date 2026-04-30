@@ -13,7 +13,7 @@ func SessionManager() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 
-			sess, err := session.Get(SESSION_STORE, c)
+			sess, err := session.Get(SessionStore, c)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to get session:", err)
 			}
@@ -23,7 +23,7 @@ func SessionManager() echo.MiddlewareFunc {
 				HttpOnly: true,
 			}
 			sess.Values["_refresh"] = time.Now().UnixNano()
-			c.Set(SESSION_STORE, sess)
+			c.Set(SessionStore, sess)
 
 			// Ensure the session is always saved *before* headers are sent
 			c.Response().Before(func() {

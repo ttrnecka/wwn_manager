@@ -92,12 +92,12 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 }
 
 func (h *RuleHandler) DeleteRule(c echo.Context) error {
-	probe_id := c.Param("id")
-	_, err := h.service.Get(c.Request().Context(), probe_id)
+	probeID := c.Param("id")
+	_, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-	err = h.service.Delete(c.Request().Context(), probe_id)
+	err = h.service.Delete(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete rules", err)
 	}
@@ -186,10 +186,10 @@ func (h *RuleHandler) ApplyRules(c echo.Context) error {
 }
 
 func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
-	fcWWNEntryId := c.Param("id")
+	fcWWNEntryID := c.Param("id")
 
 	// get entry
-	fcWWNEntry, err := h.fcWWNEntryService.Get(c.Request().Context(), fcWWNEntryId)
+	fcWWNEntry, err := h.fcWWNEntryService.Get(c.Request().Context(), fcWWNEntryID)
 	if err != nil {
 		return c.JSON(http.StatusNotFound, err)
 	}
@@ -264,7 +264,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 	var wg sync.WaitGroup
 	numWorkers := runtime.NumCPU() // one worker per CPU core
 
-	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.RangeRules}}, service.SortOption{"order": "asc"})
+	globalRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GlobalCustomer, "type": service.Filter{"$in": entity.RangeRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
 	}
@@ -296,7 +296,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 
 	ruleMap := make(map[string][]entity.Rule)
 
-	globalHostRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.HostRules}}, service.SortOption{"order": "asc"})
+	globalHostRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GlobalCustomer, "type": service.Filter{"$in": entity.HostRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
 	}
@@ -371,7 +371,7 @@ func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWW
 
 	ruleMap = make(map[string][]entity.Rule)
 
-	globalReconcileRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GLOBAL_CUSTOMER, "type": service.Filter{"$in": entity.ReconcileRules}}, service.SortOption{"order": "asc"})
+	globalReconcileRules, err := h.service.Find(ctx, service.Filter{"customer": entity.GlobalCustomer, "type": service.Filter{"$in": entity.ReconcileRules}}, service.SortOption{"order": "asc"})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get GLOBAL rules", err)
 	}
@@ -573,7 +573,7 @@ TOP:
 func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 	entry.NeedsReconcile = false
 	entry.IsPrimaryCustomer = true
-	entry.ReconcileRules = entity.NilOjectIdSlice()
+	entry.ReconcileRules = entity.NilOjectIDSlice()
 	entry.DefaultReconcileMessages = []entity.RuleType{}
 
 	// do host check only for host ranges

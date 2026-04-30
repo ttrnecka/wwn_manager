@@ -64,7 +64,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 	// if primary customer is set and different than current entry customer
 	if reconcileData.PrimaryCustomer != "" {
 		rules = append(rules, &entity.Rule{
-			Customer: entity.GLOBAL_CUSTOMER,
+			Customer: entity.GlobalCustomer,
 			Type:     entity.WWNCustomerMapRule,
 			Regex:    entry.WWN,
 			Group:    0,

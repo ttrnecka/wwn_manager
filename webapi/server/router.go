@@ -61,7 +61,7 @@ func Router(logger *zerolog.Logger) *echo.Echo {
 	//rules amd entries
 
 	api.POST("/import", fcWWNEntryHandler.ImportHandler)
-	api.POST("/import_api", fcWWNEntryHandler.ImportApiHandler)
+	api.POST("/import_api", fcWWNEntryHandler.ImportAPIHandler)
 	api.GET("/customers", fcWWNEntryHandler.ListCustomers)
 	api.GET("/rules", ruleHandler.Rules)
 	api.GET("/rules/export", ruleHandler.ExportRules)

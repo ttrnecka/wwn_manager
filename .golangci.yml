@@ -39,6 +39,7 @@ linters:
           - errcheck
           - gosec
           - wrapcheck
+          - revive
         path: _test\.go
     paths:
       - third_party$

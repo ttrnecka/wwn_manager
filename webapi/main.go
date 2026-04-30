@@ -60,7 +60,7 @@ func (p *program) runServer() {
 	}
 }
 
-func (p *program) Start(s service.Service) error {
+func (p *program) Start(_ service.Service) error {
 	// Start should not block.
 	p.exit = make(chan struct{})
 	p.wg.Add(1)
@@ -68,7 +68,7 @@ func (p *program) Start(s service.Service) error {
 	return nil
 }
 
-func (p *program) Stop(s service.Service) error {
+func (p *program) Stop(_ service.Service) error {
 	close(p.exit)
 	p.wg.Wait()
 	return nil

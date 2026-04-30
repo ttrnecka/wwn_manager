@@ -23,29 +23,29 @@ var httpClient = &http.Client{
 	},
 }
 
-type ITAClient struct {
+type Client struct {
 	httpClient *http.Client
 	logger     *zerolog.Logger
 	token      string
-	baseUrl    string
+	baseURL    string
 }
 
-func NewITAClient(logger *zerolog.Logger) (*ITAClient, error) {
-	baseUrl := os.Getenv("ITA_API_URI")
+func NewITAClient(logger *zerolog.Logger) (*Client, error) {
+	baseURL := os.Getenv("ITA_API_URI")
 	token := os.Getenv("ITA_TOKEN")
-	if baseUrl == "" || token == "" {
+	if baseURL == "" || token == "" {
 		return nil, errors.New("ITA environment variables are not set up")
 	}
-	return &ITAClient{
+	return &Client{
 		httpClient: httpClient,
 		logger:     logger,
 		token:      token,
-		baseUrl:    baseUrl,
+		baseURL:    baseURL,
 	}, nil
 }
 
-func (c *ITAClient) GenerateReportTemplate(templateId string, page int, pageSize int) ([]byte, error) {
-	urlStr := fmt.Sprintf("%sreport-templates/%s", c.baseUrl, templateId)
+func (c *Client) GenerateReportTemplate(templateID string, page int, pageSize int) ([]byte, error) {
+	urlStr := fmt.Sprintf("%sreport-templates/%s", c.baseURL, templateID)
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)

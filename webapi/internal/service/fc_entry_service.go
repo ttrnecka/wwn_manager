@@ -28,7 +28,7 @@ func NewFCWWNEntryService(p repository.FCWWNEntryRepository) FCWWNEntryService {
 }
 
 func (s fcWWNEntryService) Customers(ctx context.Context) ([]any, error) {
-	result, err := s.Collection().Distinct(context.Background(), "customer", bson.M{})
+	result, err := s.Collection().Distinct(ctx, "customer", bson.M{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get distinct customers: %w", err)
 	}
@@ -38,7 +38,7 @@ func (s fcWWNEntryService) Customers(ctx context.Context) ([]any, error) {
 func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOption) ([]entity.FCWWNEntry, error) {
 	customer, ok := filter["customer"]
 	if ok {
-		if customer == entity.GLOBAL_CUSTOMER {
+		if customer == entity.GlobalCustomer {
 			delete(filter, "customer")
 		}
 	}
@@ -49,7 +49,7 @@ func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOpti
 func (s fcWWNEntryService) FindWithSoftDeleted(ctx context.Context, filter Filter, opt SortOption) ([]entity.FCWWNEntry, error) {
 	customer, ok := filter["customer"]
 	if ok {
-		if customer == entity.GLOBAL_CUSTOMER {
+		if customer == entity.GlobalCustomer {
 			delete(filter, "customer")
 		}
 	}

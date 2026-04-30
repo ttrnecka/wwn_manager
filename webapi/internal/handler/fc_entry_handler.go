@@ -71,12 +71,12 @@ func (h *FCWWNEntryHandler) FCWWNEntriesWithSoftDeleted(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
-	probe_id := c.Param("id")
-	_, err := h.service.Get(c.Request().Context(), probe_id)
+	probeID := c.Param("id")
+	_, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-	err = h.service.Delete(c.Request().Context(), probe_id)
+	err = h.service.Delete(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entry", err)
 	}
@@ -84,8 +84,8 @@ func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
-	probe_id := c.Param("id")
-	entry, err := h.service.Get(c.Request().Context(), probe_id)
+	probeID := c.Param("id")
+	entry, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -103,7 +103,7 @@ func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 		}
 	}
 
-	err = h.service.SoftDelete(c.Request().Context(), probe_id)
+	err = h.service.SoftDelete(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to soft delete entry", err)
 	}
@@ -111,9 +111,9 @@ func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) RestoreFCWWNEntry(c echo.Context) error {
-	probe_id := c.Param("id")
+	probeID := c.Param("id")
 
-	err := h.service.Restore(c.Request().Context(), probe_id)
+	err := h.service.Restore(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to restore entry", err)
 	}
@@ -173,7 +173,7 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
 }
 
-func (h *FCWWNEntryHandler) ImportApiHandler(c echo.Context) error {
+func (h *FCWWNEntryHandler) ImportAPIHandler(c echo.Context) error {
 	wwnEntries, err := h.readEntriesFromApi()
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to read entries from api", err)
@@ -283,7 +283,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*
 
 		customer := line[0]
 		if customer == "" {
-			customer = entity.UNKNOWN_CUSTOMER
+			customer = entity.UnknownCustomer
 		}
 		wwn := line[1]
 		zone := line[2]
@@ -354,7 +354,7 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 				continue
 			}
 			if customer == "" {
-				customer = entity.UNKNOWN_CUSTOMER
+				customer = entity.UnknownCustomer
 			}
 			zone, ok := line["element_name"].Value.(string)
 			if !ok {
@@ -397,9 +397,8 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 
 		if response.Data.Paging.Next == 0 {
 			break
-		} else {
-			page = response.Data.Paging.Next
 		}
+		page = response.Data.Paging.Next
 	}
 
 	for _, v := range wwnEntryMap {

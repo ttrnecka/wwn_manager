@@ -81,8 +81,8 @@ func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
 }
 
 func (h *SnapshotHandler) GetSnapshotEntries(c echo.Context) error {
-	snapshot_id := c.Param("id")
-	snapshot, err := h.service.Get(c.Request().Context(), snapshot_id)
+	snapshotID := c.Param("id")
+	snapshot, err := h.service.Get(c.Request().Context(), snapshotID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -98,8 +98,8 @@ func (h *SnapshotHandler) GetSnapshotEntries(c echo.Context) error {
 }
 
 func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
-	snapshot_id := c.Param("id")
-	snapshot, err := h.service.Get(c.Request().Context(), snapshot_id)
+	snapshotID := c.Param("id")
+	snapshot, err := h.service.Get(c.Request().Context(), snapshotID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -165,8 +165,8 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 }
 
 func (h *SnapshotHandler) ExportOverrideWWN(c echo.Context) error {
-	snapshot_id := c.Param("id")
-	snapshot, err := h.service.Get(c.Request().Context(), snapshot_id)
+	snapshotID := c.Param("id")
+	snapshot, err := h.service.Get(c.Request().Context(), snapshotID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -204,12 +204,12 @@ func (h *SnapshotHandler) ExportOverrideWWN(c echo.Context) error {
 }
 
 func (h *SnapshotHandler) DeleteSnapshot(c echo.Context) error {
-	snapshot_id := c.Param("id")
-	if snapshot_id == "" {
+	snapshotID := c.Param("id")
+	if snapshotID == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "snapshot id is required")
 	}
 
-	if err := h.service.Delete(c.Request().Context(), snapshot_id); err != nil {
+	if err := h.service.Delete(c.Request().Context(), snapshotID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
