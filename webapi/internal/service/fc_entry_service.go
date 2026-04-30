@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/repository"
@@ -29,7 +30,7 @@ func NewFCWWNEntryService(p repository.FCWWNEntryRepository) FCWWNEntryService {
 func (s fcWWNEntryService) Customers(ctx context.Context) ([]any, error) {
 	result, err := s.Collection().Distinct(context.Background(), "customer", bson.M{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get distinct customers: %w", err)
 	}
 	return result, nil
 }
@@ -42,7 +43,7 @@ func (s fcWWNEntryService) Find(ctx context.Context, filter Filter, opt SortOpti
 		}
 	}
 
-	return s.GenericService.Find(ctx, filter, opt)
+	return s.GenericService.Find(ctx, filter, opt) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s fcWWNEntryService) FindWithSoftDeleted(ctx context.Context, filter Filter, opt SortOption) ([]entity.FCWWNEntry, error) {
@@ -53,7 +54,7 @@ func (s fcWWNEntryService) FindWithSoftDeleted(ctx context.Context, filter Filte
 		}
 	}
 
-	return s.GenericService.FindWithSoftDeleted(ctx, filter, opt)
+	return s.GenericService.FindWithSoftDeleted(ctx, filter, opt) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context, filter Filter) error {
@@ -108,7 +109,7 @@ func (s fcWWNEntryService) FlagDuplicateWWNs(ctx context.Context, filter Filter)
 	}
 	_, err := s.Collection().Aggregate(ctx, pipeline)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to execute aggregation: %w", err)
 	}
 	return nil
 }
@@ -146,7 +147,7 @@ func (s fcWWNEntryService) GetUniqueRules(ctx context.Context) ([]string, error)
 
 	cursor, err := s.Collection().Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute aggregation: %w", err)
 	}
 	defer cursor.Close(ctx)
 
@@ -158,7 +159,7 @@ func (s fcWWNEntryService) GetUniqueRules(ctx context.Context) ([]string, error)
 
 	if cursor.Next(ctx) {
 		if err := cursor.Decode(&result); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to decode aggregation result: %w", err)
 		}
 	}
 

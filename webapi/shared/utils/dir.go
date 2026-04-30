@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,11 +36,11 @@ func isSubDir(parent, child string) (bool, error) {
 	// Get absolute, cleaned paths
 	parentAbs, err := filepath.Abs(parent)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to get absolute path for parent directory: %w", err)
 	}
 	childAbs, err := filepath.Abs(child)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to get absolute path for child directory: %w", err)
 	}
 
 	// Add a trailing separator to avoid false positives

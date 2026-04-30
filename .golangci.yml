@@ -1,0 +1,56 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - errcheck
+    - exhaustive
+    - gocyclo
+    - gosec
+    - govet
+    - ineffassign
+    - noctx
+    - revive
+    - staticcheck
+    - unused
+    - wrapcheck
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: true
+    gocyclo:
+      min-complexity: 15
+    govet:
+      enable:
+        - shadow
+    wrapcheck:
+      extra-ignore-sigs:
+        - (github.com/labstack/echo/v4.Context).JSON
+        - (github.com/labstack/echo/v4.Context).NoContent
+        - (github.com/labstack/echo/v4.Context).Attachment
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+          - wrapcheck
+        path: _test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -77,7 +77,7 @@ func (s ruleService) CreateReconcileRules(ctx context.Context, entry *entity.FCW
 	for _, rule := range rules {
 		err := s.DeleteMany(ctx, Filter{"customer": rule.Customer, "regex": rule.Regex, "type": rule.Type})
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to delete rule: %w", err)
 		}
 	}
 
@@ -125,7 +125,7 @@ func (s ruleService) BackupRules(ctx context.Context) error {
 }
 
 func ensureDir(dir string) error {
-	return os.MkdirAll(dir, 0750)
+	return os.MkdirAll(dir, 0750) // nolint:wrapcheck // wrapping is callers responsibility for context
 }
 
 func createTimestampedFile(dir, baseName, ext string) (*os.File, error) {
@@ -137,7 +137,7 @@ func createTimestampedFile(dir, baseName, ext string) (*os.File, error) {
 
 	file, err := os.Create(fullPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create timestamped file %s: %w", fullPath, err)
 	}
 
 	return file, nil

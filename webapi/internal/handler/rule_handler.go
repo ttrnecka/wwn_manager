@@ -503,6 +503,7 @@ RANGE:
 				entry.Type = "Other"
 				break RANGE
 			}
+		default:
 		}
 		entry.TypeRule = entity.NilObjectID()
 	}
@@ -601,17 +602,18 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 		dupReconciled = false
 		entry.IsPrimaryCustomer = false
 		// Auto set it automatically primary customer
-		if entry.WWNSet == entity.WWNSetAuto {
+		switch entry.WWNSet {
+		case entity.WWNSetAuto:
 			dupReconciled = true
 			entry.IsPrimaryCustomer = true
 			entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRulePrimary)
-		} else if entry.WWNSet == entity.WWNSetManual {
+		case entity.WWNSetManual:
 			if !unique {
 				dupReconciled = true
 				entry.IsPrimaryCustomer = true
 				entry.DefaultReconcileMessages = append(entry.DefaultReconcileMessages, entity.DefaultReconcileRulePrimary)
 			}
-		} else {
+		default:
 			// otherwise check of some other customer is auto
 			// if it is we reconcile it as it should be not primary if auto set exists
 			// as well the loaded hostname belongs to primary so we just flush it form secondary
@@ -642,11 +644,11 @@ func applyReconcileRules(entry *entity.FCWWNEntry, rules []entity.Rule) error {
 			}
 		}
 	}
-	loadedReconciled := true
-	// if the host rule was entity.WWNHostMapRule then we ignore if they are not equal as WWN host rule must contains host directly
-	if entry.LoadedHostname != "" && !strings.EqualFold(entry.Hostname, entry.LoadedHostname) && entry.HostNameRuleType != entity.WWNHostMapRule { //&& !utils.ContainsIgnoreCase(entry.LoadedHostname, entry.Hostname) {
-		loadedReconciled = false
-	}
+
+	// if the host rule was entity.WWNHostMapRule then we ignore if they are not equal as WWN host rule must contain host directly
+	loadedReconciled := entry.LoadedHostname == "" ||
+		strings.EqualFold(entry.Hostname, entry.LoadedHostname) ||
+		entry.HostNameRuleType == entity.WWNHostMapRule
 REC:
 	for _, rule := range rules {
 		switch rule.Type {

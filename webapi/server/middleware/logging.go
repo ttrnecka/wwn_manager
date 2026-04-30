@@ -117,7 +117,7 @@ func newResponseRecorder(w http.ResponseWriter) *responseRecorder {
 
 func (r *responseRecorder) Write(b []byte) (int, error) {
 	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
+	return r.ResponseWriter.Write(b) // nolint:wrapcheck
 }
 
 // --- Naive sensitive data masker ---

@@ -20,5 +20,5 @@ func NewUserService(r repository.UserRepository) UserService {
 }
 
 func (s *userService) GetByName(ctx context.Context, name string) (*entity.User, error) {
-	return s.repo.GetByField(ctx, "username", name)
+	return s.repo.GetByField(ctx, "username", name) //nolint:wrapcheck // repo already wraps errors
 }
