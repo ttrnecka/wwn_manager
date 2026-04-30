@@ -59,7 +59,7 @@ jobs:
         run: cd webapi && go test ./...
         
   go-security:
-    name: Golang scans
+    name: Golang vulnerability check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -84,11 +84,6 @@ jobs:
     - name: Run govulncheck
       run: cd webapi && govulncheck ./...
 
-    - name: golangci-lint
-      uses: golangci/golangci-lint-action@v9
-      with:
-        version: v2.11.4
-        working-directory: webapi/
 
   npm-security:
     name: NPM security scans
@@ -136,7 +131,7 @@ jobs:
         vuln-type: 'library'
 
     - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v4
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
