@@ -1,0 +1,12 @@
+name: Checkout
+description: 'Checkout code'
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+inputs:
+  fetch-depth:
+    default: '1'
