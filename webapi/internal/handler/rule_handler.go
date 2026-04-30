@@ -558,6 +558,7 @@ TOP:
 				entry.Hostname = strings.ToLower(rule.Comment)
 				break TOP
 			}
+		default:
 		}
 		entry.HostNameRule = entity.NilObjectID()
 		entry.HostNameRuleType = ""
@@ -685,6 +686,7 @@ REC:
 					loadedReconciled = true
 				}
 			}
+		default:
 		}
 		if loadedReconciled && dupReconciled {
 			break REC
