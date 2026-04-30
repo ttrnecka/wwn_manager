@@ -17,6 +17,8 @@ env:
 
 jobs:
   detect-modules:
+    if: ${{ github.server_url == 'https://github.com' }}
+    name: Detect Go modules
     runs-on: ubuntu-latest
     outputs:
       modules: ${{ steps.set-modules.outputs.modules }}
@@ -31,7 +33,26 @@ jobs:
       - id: set-modules
         run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
 
+  detect-modules-ghes:
+    if: ${{ github.server_url != 'https://github.com' }}
+    name: Detect Go modules
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.set-modules.outputs.modules }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: '**/go.sum'
+      
+      - id: set-modules
+        run: echo "modules=$(go list -m -json | jq -s '.' | jq -c '[.[].Dir]')" >> $GITHUB_OUTPUT
+
   golangci-lint:
+    if: ${{ github.server_url == 'https://github.com' }}
+    name: GolangCI-Lint
     needs: detect-modules
     runs-on: ubuntu-latest
     strategy:
@@ -50,8 +71,31 @@ jobs:
         with:
           version: ${{ env.GOLANGCI_LINT_VERSION }}
           working-directory: ${{ matrix.modules }}
+  
+  golangci-lint-ghes:
+    if: ${{ github.server_url != 'https://github.com' }}
+    name: GolangCI-Lint
+    needs: detect-modules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        modules: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: '**/go.sum'
+      
+      - name: golangci-lint ${{ matrix.modules }}
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          working-directory: ${{ matrix.modules }}
 
   go-test:
+    if: ${{ github.server_url == 'https://github.com' }}
     name: Go tests
     runs-on: ubuntu-latest
     steps:
@@ -65,8 +109,25 @@ jobs:
       
       - name: Run tests
         run: cd webapi && go test ./...
-        
+  
+  go-test-ghes:
+    if: ${{ github.server_url != 'https://github.com' }}
+    name: Go tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: '**/go.sum'
+      
+      - name: Run tests
+        run: cd webapi && go test ./...
+
   go-security:
+    if: ${{ github.server_url == 'https://github.com' }}
     name: Golang vulnerability check
     runs-on: ubuntu-latest
     permissions:
@@ -92,7 +153,35 @@ jobs:
       - name: Run govulncheck
         run: cd webapi && govulncheck ./...
 
+  go-security-ghes:
+    if: ${{ github.server_url != 'https://github.com' }}
+    name: Golang vulnerability check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: '**/go.sum'
+
+      - name: Install govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run govulncheck
+        run: cd webapi && govulncheck ./...
+
   npm-security:
+    if: ${{ github.server_url == 'https://github.com' }}
     name: NPM security scans
     runs-on: ubuntu-latest
     permissions:
@@ -102,7 +191,31 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm install
+
+      - name: Run npm audit
+        run: cd frontend && npm audit --omit=dev --audit-level=high
+
+      - name: Run npm eslint
+        run: cd frontend && npx eslint "**/*.{js,mjs,cjs,vue}" --max-warnings=0
+
+  npm-security-ghes:
+    if: ${{ github.server_url != 'https://github.com' }}
+    name: NPM security scans
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
