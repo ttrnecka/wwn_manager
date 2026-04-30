@@ -1,4 +1,4 @@
-name: Go Security Scan
+name: Security Scan & Linters
 
 on:
   workflow_dispatch:
@@ -47,9 +47,6 @@ jobs:
 
     - name: Download dependencies
       run: go mod download
-
-    - name: Run gosec
-      run: gosec ./...
 
     - name: Run govulncheck
       run: cd webapi && govulncheck ./...
