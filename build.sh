@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Start podman service for current user
-echo "Starting podman service..."
-systemctl --user start podman.socket
-
 # Delete build folder if it exists
 echo "Cleaning build directory..."
 rm -rf build

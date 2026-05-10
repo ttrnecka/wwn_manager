@@ -1,17 +1,32 @@
-# Local deployment with docker
+# Setup
 
-Ensure docker is installed on the machine where are are planing to run this.
+## Instal mise
+
+Linux:
+
+```curl https://mise.run | sh```
+
+Windows:
+
+```winget install jdx.mise```
+
+## Activate mise
+
+https://mise.en.dev/getting-started.html#activate-mise
+
+## Install dependencies
+
+```mise install```
+
+
+# Local Development
+
+```mise dev```
+
+# Local Deployment With Docker/Podman
 
 ```
-git clone https://github.com/ttrnecka/wwn_manager.git
-
-cd wwn_manager
-
-# if customization is needed create .env from .env.template file
-# if not just run below
-
-touch .env
-docker compose -f docker-compose-dev.yaml up -d
+just dev-docker
 ```
 
 Then in browser navigate to http://localhost with admin/password credentials
@@ -29,42 +44,41 @@ Import entries and rules.
 ## Build
 
 - Open Linux or WSL session
-- Run ./build.sh
+- Run ```just build```
 - copy generated zip file to deployment servers
 
 ## Test
 
-- have container runtime install, configuret the DOCKER_HOST. Example for podman:
+- have container runtime installed
+
+```just test```
+
+or, manually:
+
 - systemctl --user start podman.socket
-- podman info --format '{{.Host.RemoteSocket.Path}}'
-- export DOCKER_HOST=unix://<your_podman_socket_location>
+- export DOCKER_HOST=unix://$(podman info --format '{{.Host.RemoteSocket.Path}}')
 - go test ./...
 
 # Dependency updates
 
-To update the dependencies you need local installation of Node.js and Go.
-
 ## Scan
 
 Run:
-```docker compose -f docker-compose.scan.yaml up --build```
+```just scan```
 
 Observe any error in the output
 
-## Frontend
+### Frontend
 
-- Install Node v22.18 (or higher) on your server
 - navigate to frontend folder and run
     - npm outdated
     - npm update
     - npm run dev (and check for error)
 
-## Backend
+### Backend
 
-- Install latest Go 1.25.x
+- based on the findings update mise to use required version of golang
 - Update webapi/Dockerfile* to use the same golang image
-- navigate to webapi and run
-    - go get -u
-
+- ```just update-backend```
 
 Now that both frontend and backend are updated create new commit/release/build.
