@@ -1,5 +1,6 @@
 [tools]
-go = "1.26"
+go = "1.26.3"
+golangci-lint = "2.11.4"
 just = "latest"
 node = "26"
 tmux = "latest"

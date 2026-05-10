@@ -20,6 +20,9 @@ docker-ls:
 docker-stop:
     docker compose -f docker-compose.yaml down
 
+golint:
+    golangci-lint run webapi/
+    
 scan:
     cd scripts/scan && chmod 700 scan.sh && ./scan.sh
     

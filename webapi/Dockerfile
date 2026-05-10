@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.25.9-alpine AS backend-build
+FROM docker.io/library/golang:1.26.3-alpine AS backend-build
 
 COPY zscaler/zscaler-root-ca.crt /tmp/zscaler-root-ca.crt
 
