@@ -1,6 +1,7 @@
 build:
-    chmod 700 build.sh
-    ./build.sh
+    chmod 700 ./scripts/standalone_build/build.sh
+    cd ./scripts/standalone_build && ./build.sh
+    mv ./scripts/standalone_build/wwn_manager* .
 
 dev: dev-mongo
     tmux new-session -d 'cd frontend && npm run dev' \; \
@@ -20,7 +21,7 @@ docker-stop:
     docker compose -f docker-compose.yaml down
 
 scan:
-    docker compose -f docker-compose-scan.yaml up --build
+    cd scripts/scan && chmod 700 scan.sh && ./scan.sh
     
 test:
     #!/bin/bash

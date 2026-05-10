@@ -115,7 +115,7 @@ func (s snapshotService) GetSnapshotEntries(ctx context.Context, snapshot entity
 	entrySvc := NewFCWWNEntryService(entryRepo)
 
 	entries, err := entrySvc.FindWithSoftDeleted(ctx, Filter{}, SortOption{"wwn": "asc"})
-	return entries, err
+	return entries, err //nolint:wrapcheck // delegating to service layer that already wraps
 }
 
 func (s snapshotService) GetEntryService(snapshot entity.Snapshot) FCWWNEntryService {

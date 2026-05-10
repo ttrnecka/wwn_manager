@@ -21,13 +21,11 @@ https://mise.en.dev/getting-started.html#activate-mise
 
 # Local Development
 
-```mise dev```
+```just dev```
 
 # Local Deployment With Docker/Podman
 
-```
-just dev-docker
-```
+```just dev-docker```
 
 Then in browser navigate to http://localhost with admin/password credentials
 

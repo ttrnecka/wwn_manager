@@ -1,0 +1,47 @@
+services:
+  wwn_webapi_scan:
+    build:
+      context: ../../
+      dockerfile: ./webapi/Dockerfile.scan
+    # image: wwn_webapi_scan:0.0.1
+    container_name: webapi-scan
+  frontend_scan:
+    build:
+      context: ../../
+      dockerfile: ./frontend/Dockerfile.scan
+    # image: frontend_scan:0.0.1
+    container_name: frontend-scan
+  golangci-lint:
+    image: docker.io/golangci/golangci-lint:v2.11.4
+    working_dir: /app
+    volumes:
+      - ../../:/app
+      - ${GOCACHE:-~/.cache/go/build}:/.cache/go-build
+      - ${GOMODCACHE:-~/go/pkg/mod}:/.cache/mod
+      - ~/.cache/golangci-lint:/.cache/golangci-lint
+    environment:
+      - GOCACHE=/.cache/go-build
+      - GOMODCACHE=/.cache/mod
+      - GOLANGCI_LINT_CACHE=/.cache/golangci-lint
+    command: golangci-lint run webapi/
+    container_name: golangci-lin-scan
+  trivy:
+    build:
+      context: ../../
+      dockerfile: ./Dockerfile.trivy
+    container_name: trivy-scan
+    volumes:
+      - ../../:/workspace
+      - trivy-cache:/root/.cache/
+    working_dir: /workspace
+    command: >
+      fs
+      --scanners vuln,secret,misconfig
+      --vuln-type library
+      --severity HIGH,CRITICAL
+      --exit-code 1
+      --no-progress
+      /workspace
+
+volumes:
+  trivy-cache:

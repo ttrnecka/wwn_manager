@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
@@ -20,13 +21,23 @@ import (
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
 )
 
+var wwnRegex = regexp.MustCompile(`^([0-9A-Fa-f]{2}:){7}[0-9A-Fa-f]{2}$`)
+
 type FCWWNEntryHandler struct {
 	service     service.FCWWNEntryService
 	ruleService service.RuleService
+	logger      *zerolog.Logger
 }
 
-func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService) *FCWWNEntryHandler {
-	return &FCWWNEntryHandler{s, r}
+type entryLineRecord struct {
+	customer, wwn, zone, alias, loadedHostname string
+	isCsvLoad                                  bool
+	wwnSet                                     int
+}
+
+func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService, logger *zerolog.Logger) *FCWWNEntryHandler {
+	l := logger.With().Str("component", "FCWWNEntryHandler").Logger()
+	return &FCWWNEntryHandler{s, r, &l}
 }
 
 func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
@@ -68,12 +79,12 @@ func (h *FCWWNEntryHandler) FCWWNEntriesWithSoftDeleted(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
-	probe_id := c.Param("id")
-	_, err := h.service.Get(c.Request().Context(), probe_id)
+	probeID := c.Param("id")
+	_, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
-	err = h.service.Delete(c.Request().Context(), probe_id)
+	err = h.service.Delete(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to delete entry", err)
 	}
@@ -81,8 +92,8 @@ func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
-	probe_id := c.Param("id")
-	entry, err := h.service.Get(c.Request().Context(), probe_id)
+	probeID := c.Param("id")
+	entry, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusNotFound, err)
 	}
@@ -94,13 +105,13 @@ func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 
 	for _, e := range entries {
 		e.DuplicateCustomers = nil
-		_, err := h.service.Update(c.Request().Context(), e.ID, &e)
+		_, err = h.service.Update(c.Request().Context(), e.ID, &e)
 		if err != nil {
 			return errorWithInternal(http.StatusInternalServerError, "Failed to flush duplicate customers from entry", err)
 		}
 	}
 
-	err = h.service.SoftDelete(c.Request().Context(), probe_id)
+	err = h.service.SoftDelete(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to soft delete entry", err)
 	}
@@ -108,9 +119,9 @@ func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 }
 
 func (h *FCWWNEntryHandler) RestoreFCWWNEntry(c echo.Context) error {
-	probe_id := c.Param("id")
+	probeID := c.Param("id")
 
-	err := h.service.Restore(c.Request().Context(), probe_id)
+	err := h.service.Restore(c.Request().Context(), probeID)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to restore entry", err)
 	}
@@ -170,8 +181,8 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
 }
 
-func (h *FCWWNEntryHandler) ImportApiHandler(c echo.Context) error {
-	wwnEntries, err := h.readEntriesFromApi()
+func (h *FCWWNEntryHandler) ImportAPIHandler(c echo.Context) error {
+	wwnEntries, err := h.readEntriesFromAPI(c)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to read entries from api", err)
 	}
@@ -274,13 +285,13 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*
 		}
 
 		if !re.MatchString(line[1]) {
-			logger.Info().Msgf("Invalid WWN: %s", line[1])
+			h.logger.Info().Msgf("Invalid WWN: %s", line[1])
 			continue
 		}
 
 		customer := line[0]
 		if customer == "" {
-			customer = entity.UNKNOWN_CUSTOMER
+			customer = entity.UnknownCustomer
 		}
 		wwn := line[1]
 		zone := line[2]
@@ -307,18 +318,23 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*
 	return wwnEntries, nil
 }
 
-func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
+func (h *FCWWNEntryHandler) readEntriesFromAPI(c echo.Context) ([]*entity.FCWWNEntry, error) {
 
 	var wwnEntries []*entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)
-
-	re := regexp.MustCompile(`^([0-9A-Fa-f]{2}:){7}[0-9A-Fa-f]{2}$`)
 
 	page := 0
 	pageSize := 10000
 	for {
 		var response ita.FeedResponse
-		resp, err := ita.GenerateReportTemplate(os.Getenv("ITA_API_URI"), os.Getenv("ITA_FEED_ID"), os.Getenv("ITA_TOKEN"), page, pageSize)
+		itaClient, err := ita.NewITAClient(h.logger)
+		if err != nil {
+			return nil, fmt.Errorf("cannot create ITA client: %v", err)
+		}
+		if os.Getenv("ITA_FEED_ID") == "" {
+			return nil, fmt.Errorf("ITA_FEED_ID environment variable is not set")
+		}
+		resp, err := itaClient.GenerateReportTemplate(c.Request().Context(), os.Getenv("ITA_FEED_ID"), page, pageSize)
 		if err != nil {
 			return nil, fmt.Errorf("cannot get feed report: %v", err)
 		}
@@ -328,68 +344,20 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 		}
 
 		for _, line := range response.Data.Report.ReportData {
-			wwn, ok := line["wwn"].Value.(string)
-			if !ok {
-				logger.Error().Msgf("WWN type is not string: %T", line["wwn"].Value)
-				continue
-			}
-			if !re.MatchString(wwn) {
-				logger.Info().Msgf("Invalid WWN: %s", wwn)
+			entryLine, err := h.parseEntryLine(line)
+			if err != nil {
+				h.logger.Error().Msgf("Failed to parse entry line: %v", err)
 				continue
 			}
 
-			customer, ok := line["customer"].Value.(string)
-			if !ok {
-				logger.Error().Msgf("customer type is not string: %T", line["customer"].Value)
-				continue
-			}
-			if customer == "" {
-				customer = entity.UNKNOWN_CUSTOMER
-			}
-			zone, ok := line["element_name"].Value.(string)
-			if !ok {
-				logger.Error().Msgf("zone type is not string: %T", line["element_name"].Value)
-				continue
-			}
-			alias, ok := line["alias"].Value.(string)
-			if !ok {
-				logger.Error().Msgf("alias type is not string: %T", line["alias"].Value)
-				continue
-			}
-			loadedHostname, ok := line["loaded_host"].Value.(string)
-			if !ok {
-				logger.Error().Msgf("loaded_host type is not string: %T", line["loaded_host"].Value)
-				continue
-			}
-			isCsvLoad := true
-			csvLoad, ok := line["is_csv_load"].Value.(string)
-			if !ok {
-				logger.Error().Msgf("is_csv_load type is not string: %T", line["is_csv_load"].Value)
-				continue
-			}
-			if csvLoad == "N" {
-				isCsvLoad = false
-			}
-			wwnSetF, ok := line["wwn_set"].Value.(float64)
-			if !ok {
-				logger.Error().Msgf("wwn_set type is not numberic: %T", line["wwn_set"].Value)
-				continue
-			}
-			wwnSet := int(wwnSetF)
-
-			if loadedHostname == "No Matching Rule" {
-				loadedHostname = ""
-			}
-
-			updateEntryMap(wwnEntryMap, customer, wwn, zone, alias, loadedHostname, isCsvLoad, wwnSet)
+			updateEntryMap(wwnEntryMap, entryLine.customer, entryLine.wwn, entryLine.zone, entryLine.alias, entryLine.loadedHostname, entryLine.isCsvLoad, entryLine.wwnSet)
 
 		}
 
 		if response.Data.Paging.Next == 0 {
 			break
-		} else {
-			page = response.Data.Paging.Next
 		}
+		page = response.Data.Paging.Next
 	}
 
 	for _, v := range wwnEntryMap {
@@ -400,6 +368,61 @@ func (h *FCWWNEntryHandler) readEntriesFromApi() ([]*entity.FCWWNEntry, error) {
 	return wwnEntries, nil
 }
 
+func (h *FCWWNEntryHandler) parseEntryLine(line ita.ReportData) (entryLineRecord, error) {
+	entryLine := entryLineRecord{}
+	wwn, ok := line["wwn"].Value.(string)
+	if !ok {
+		return entryLine, fmt.Errorf("WWN type is not string: %T", line["wwn"].Value)
+	}
+	if !wwnRegex.MatchString(wwn) {
+		return entryLine, fmt.Errorf("invalid WWN: %s", wwn)
+	}
+	entryLine.wwn = wwn
+
+	customer, ok := line["customer"].Value.(string)
+	if !ok {
+		return entryLine, fmt.Errorf("customer type is not string: %T", line["customer"].Value)
+	}
+	if customer == "" {
+		customer = entity.UnknownCustomer
+	}
+	entryLine.customer = customer
+	zone, ok := line["element_name"].Value.(string)
+	if !ok {
+		return entryLine, fmt.Errorf("zone type is not string: %T", line["element_name"].Value)
+	}
+	entryLine.zone = zone
+	alias, ok := line["alias"].Value.(string)
+	if !ok {
+		return entryLine, fmt.Errorf("alias type is not string: %T", line["alias"].Value)
+	}
+	entryLine.alias = alias
+	loadedHostname, ok := line["loaded_host"].Value.(string)
+	if !ok {
+		return entryLine, fmt.Errorf("loaded_host type is not string: %T", line["loaded_host"].Value)
+	}
+	entryLine.loadedHostname = loadedHostname
+	isCsvLoad := true
+	csvLoad, ok := line["is_csv_load"].Value.(string)
+	if !ok {
+		return entryLine, fmt.Errorf("is_csv_load type is not string: %T", line["is_csv_load"].Value)
+	}
+	if csvLoad == "N" {
+		isCsvLoad = false
+	}
+	entryLine.isCsvLoad = isCsvLoad
+	wwnSetF, ok := line["wwn_set"].Value.(float64)
+	if !ok {
+		return entryLine, fmt.Errorf("wwn_set type is not numberic: %T", line["wwn_set"].Value)
+	}
+	wwnSet := int(wwnSetF)
+	entryLine.wwnSet = wwnSet
+
+	if loadedHostname == "No Matching Rule" {
+		entryLine.loadedHostname = ""
+	}
+	return entryLine, nil
+}
 func updateEntryMap(wwnEntryMap map[string]map[string]entity.FCWWNEntry, customer, wwn, zone, alias, loadedHostname string, isCsvLoad bool, wwnSet int) {
 
 	// Create or update FCWWNEntry

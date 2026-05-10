@@ -23,28 +23,22 @@ import (
 	logging "github.com/ttrnecka/agent_poc/logger"
 )
 
-var logger zerolog.Logger
-
-func init() {
-	logging.LogLocation(filepath.Join(utils.BinaryOrBuildDir(), "logs"))
-	logger = logging.SetupLogger("http")
-}
-
 type program struct {
 	exit   chan struct{}
 	server *http.Server
 	wg     sync.WaitGroup
+	logger *zerolog.Logger
 }
 
 func (p *program) runServer() {
 	gob.Register(dto.UserDTO{})
 
-	utils.LoadEnv(&logger)
+	utils.LoadEnv(p.logger)
 
 	// db
-	err := db.Init()
+	err := db.Init(p.logger)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("")
+		p.logger.Fatal().Err(err).Msg("")
 	}
 
 	address, ok := os.LookupEnv("ADDRESS")
@@ -55,18 +49,18 @@ func (p *program) runServer() {
 	srv := &http.Server{
 		Addr: address,
 		// Handler: Router(),
-		Handler:           server.Router(),
+		Handler:           server.Router(p.logger),
 		ReadHeaderTimeout: time.Second * 10,
 	}
 
 	p.server = srv
 	err = srv.ListenAndServe()
 	if err != nil {
-		logger.Error().Err(err).Msg("")
+		p.logger.Error().Err(err).Msg("")
 	}
 }
 
-func (p *program) Start(s service.Service) error {
+func (p *program) Start(_ service.Service) error {
 	// Start should not block.
 	p.exit = make(chan struct{})
 	p.wg.Add(1)
@@ -74,7 +68,7 @@ func (p *program) Start(s service.Service) error {
 	return nil
 }
 
-func (p *program) Stop(s service.Service) error {
+func (p *program) Stop(_ service.Service) error {
 	close(p.exit)
 	p.wg.Wait()
 	return nil
@@ -87,7 +81,7 @@ func (p *program) run() {
 	}()
 	// Wait for stop signal
 	<-p.exit
-	logger.Info().Msg("Shutting down server...")
+	p.logger.Info().Msg("Shutting down server...")
 
 	// if shutdown is requested sooner that the server runs
 	if p.server != nil {
@@ -95,14 +89,18 @@ func (p *program) run() {
 		defer cancel()
 
 		if err := p.server.Shutdown(ctx); err != nil {
-			logger.Error().Err(err).Msg("Error during server shutdown: ")
+			p.logger.Error().Err(err).Msg("Error during server shutdown: ")
 		} else {
-			logger.Info().Msg("Echo server shut down cleanly..")
+			p.logger.Info().Msg("Echo server shut down cleanly..")
 		}
 	}
 }
 
 func main() {
+
+	logging.LogLocation(filepath.Join(utils.BinaryOrBuildDir(), "logs"))
+	logger := logging.SetupLogger("http")
+
 	svcConfig := &service.Config{
 		Name:        "WWNManager",
 		DisplayName: "WWN Manager",
@@ -113,7 +111,7 @@ func main() {
 		},
 	}
 
-	prg := &program{}
+	prg := &program{logger: &logger}
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("")

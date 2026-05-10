@@ -14,7 +14,7 @@ import (
 
 const maxBodyLogSize = 256 // limit body log size
 
-func RequestLogger(logger zerolog.Logger) echo.MiddlewareFunc {
+func RequestLogger(logger *zerolog.Logger) echo.MiddlewareFunc {
 	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
 		LogURI:           true,
 		LogStatus:        true,
@@ -117,7 +117,7 @@ func newResponseRecorder(w http.ResponseWriter) *responseRecorder {
 
 func (r *responseRecorder) Write(b []byte) (int, error) {
 	r.body.Write(b)
-	return r.ResponseWriter.Write(b)
+	return r.ResponseWriter.Write(b) // nolint:wrapcheck
 }
 
 // --- Naive sensitive data masker ---

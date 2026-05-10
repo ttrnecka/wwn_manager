@@ -21,5 +21,5 @@ func NewGenericRepository[T any](db *cdb.CRUD[T]) GenericRepository[T] {
 }
 
 func (r *genericRepository[T]) DeleteBy(ctx context.Context, key string, value any) error {
-	return r.HardDelete(ctx, bson.M{key: value})
+	return r.HardDelete(ctx, bson.M{key: value}) // nolint:wrapcheck // delegating to CRUD, which already wraps errors
 }

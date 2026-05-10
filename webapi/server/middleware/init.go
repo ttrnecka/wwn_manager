@@ -1,3 +1,3 @@
 package middleware
 
-const SESSION_STORE = "agentpoc"
+const SessionStore = "agentpoc"

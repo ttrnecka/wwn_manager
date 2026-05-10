@@ -1,0 +1,10 @@
+FROM docker.io/aquasec/trivy:latest
+
+# copy your internal CA cert
+COPY zscaler/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-ca.crt
+
+# update trusted certificates
+RUN update-ca-certificates
+
+RUN addgroup -g 1000 appuser && adduser -D -u 1000 -G appuser appuser
+USER appuser

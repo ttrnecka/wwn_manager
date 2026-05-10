@@ -6,3 +6,6 @@ frontend/dist
 *.log
 dist/
 webapi/.env
+.cache
+*.zip
+scripts/standalone_build/build

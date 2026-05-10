@@ -25,15 +25,15 @@ const (
 	DefaultReconcileRuleIgnore   RuleType = "default_reconcile_rule_ignore"   //reconcile rule
 )
 
-var RangeRules []RuleType = []RuleType{
+var RangeRules = []RuleType{
 	WWNArrayRangeRule, WWNBackupRangeRule, WWNHostRangeRule, WWNOtherRangeRule,
 }
 
-var HostRules []RuleType = []RuleType{
+var HostRules = []RuleType{
 	ZoneRule, AliasRule, WWNHostMapRule,
 }
 
-var ReconcileRules []RuleType = []RuleType{
+var ReconcileRules = []RuleType{
 	WWNCustomerMapRule, IgnoreLoaded,
 }
 

@@ -44,7 +44,7 @@ func NewGenericService[T any](r repository.GenericRepository[T]) GenericService[
 }
 
 func (s *genericService[T]) All(ctx context.Context) ([]T, error) {
-	return s.MainRepo.All(ctx)
+	return s.MainRepo.All(ctx) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) Find(ctx context.Context, filter Filter, opt SortOption) ([]T, error) {
@@ -56,7 +56,7 @@ func (s *genericService[T]) Find(ctx context.Context, filter Filter, opt SortOpt
 		}
 		mopts = append(mopts, options.Find().SetSort(bson.M{k: order}))
 	}
-	return s.MainRepo.Find(ctx, filter, mopts...)
+	return s.MainRepo.Find(ctx, filter, mopts...) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) FindWithSoftDeleted(ctx context.Context, filter Filter, opt SortOption) ([]T, error) {
@@ -68,66 +68,58 @@ func (s *genericService[T]) FindWithSoftDeleted(ctx context.Context, filter Filt
 		}
 		mopts = append(mopts, options.Find().SetSort(bson.M{k: order}))
 	}
-	return s.MainRepo.FindWithSoftDeleted(ctx, filter, mopts...)
+	return s.MainRepo.FindWithSoftDeleted(ctx, filter, mopts...) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) Get(ctx context.Context, id string) (*T, error) {
 	idp, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid ID format: %w", err)
 	}
-	return s.MainRepo.GetByID(ctx, idp)
+	return s.MainRepo.GetByID(ctx, idp) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) Delete(ctx context.Context, id string) error {
 	idp, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid ID format: %w", err)
 	}
 	err = s.DeleteDependencies(ctx, idp)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete dependencies: %w", err)
 	}
-	return s.MainRepo.HardDeleteByID(ctx, idp)
+	return s.MainRepo.HardDeleteByID(ctx, idp) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) SoftDelete(ctx context.Context, id string) error {
 	idp, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid ID format: %w", err)
 	}
-	// err = s.DeleteDependencies(ctx, idp)
-	// if err != nil {
-	// 	return err
-	// }
-	return s.MainRepo.SoftDeleteByID(ctx, idp)
+	return s.MainRepo.SoftDeleteByID(ctx, idp) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) Restore(ctx context.Context, id string) error {
 	idp, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		return fmt.Errorf("invalid ID format: %w", err)
 	}
-	// err = s.DeleteDependencies(ctx, idp)
-	// if err != nil {
-	// 	return err
-	// }
-	return s.MainRepo.RestoreByID(ctx, idp)
+	return s.MainRepo.RestoreByID(ctx, idp) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) DeleteMany(ctx context.Context, filter Filter) error {
-	return s.MainRepo.HardDelete(ctx, filter)
+	return s.MainRepo.HardDelete(ctx, filter) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) DeleteAll(ctx context.Context) error {
-	return s.MainRepo.HardDelete(ctx, bson.M{})
+	return s.MainRepo.HardDelete(ctx, bson.M{}) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) Update(ctx context.Context, id primitive.ObjectID, item *T) (primitive.ObjectID, error) {
 	if id.IsZero() {
-		return s.MainRepo.Create(ctx, item)
+		return s.MainRepo.Create(ctx, item) // nolint:wrapcheck // delegating to repository, which already wraps errors
 	}
-	return id, s.MainRepo.UpdateByID(ctx, id, item)
+	return id, s.MainRepo.UpdateByID(ctx, id, item) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) DeleteDependencies(ctx context.Context, parentID primitive.ObjectID) error {
@@ -140,7 +132,7 @@ func (s *genericService[T]) DeleteDependencies(ctx context.Context, parentID pri
 }
 
 func (s *genericService[T]) InsertAll(ctx context.Context, items []*T) error {
-	return s.MainRepo.InsertAll(ctx, items)
+	return s.MainRepo.InsertAll(ctx, items) // nolint:wrapcheck // delegating to repository, which already wraps errors
 }
 
 func (s *genericService[T]) RegisterDependencies(fn ...DependencyDeleteFunc) {

@@ -6,7 +6,7 @@ import (
 )
 
 func Session(c echo.Context) *sessions.Session {
-	if sess, ok := c.Get(SESSION_STORE).(*sessions.Session); ok {
+	if sess, ok := c.Get(SessionStore).(*sessions.Session); ok {
 		return sess
 	}
 	return nil

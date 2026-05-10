@@ -2,6 +2,7 @@ package ita
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,16 +10,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/rs/zerolog"
-	logging "github.com/ttrnecka/agent_poc/logger"
-	"github.com/ttrnecka/wwn_identity/webapi/shared/utils"
 )
-
-var logger zerolog.Logger
 
 var httpClient = &http.Client{
 	Timeout: 3 * time.Minute,
@@ -28,23 +24,29 @@ var httpClient = &http.Client{
 	},
 }
 
-func init() {
-	logging.LogLocation(filepath.Join(utils.BinaryOrBuildDir(), "logs"))
-	logger = logging.SetupLogger("ita")
+type Client struct {
+	httpClient *http.Client
+	logger     *zerolog.Logger
+	token      string
+	baseURL    string
 }
 
-func Configured() bool {
-	if os.Getenv("ITA_API_URI") == "" || os.Getenv("ITA_FEED_ID") == "" || os.Getenv("ITA_TOKEN") == "" {
-		return false
-	}
-	return true
-}
-
-func GenerateReportTemplate(baseUrl, templateId, token string, page int, pageSize int) ([]byte, error) {
-	if !Configured() {
+func NewITAClient(logger *zerolog.Logger) (*Client, error) {
+	baseURL := os.Getenv("ITA_API_URI")
+	token := os.Getenv("ITA_TOKEN")
+	if baseURL == "" || token == "" {
 		return nil, errors.New("ITA environment variables are not set up")
 	}
-	urlStr := fmt.Sprintf("%sreport-templates/%s", baseUrl, templateId)
+	return &Client{
+		httpClient: httpClient,
+		logger:     logger,
+		token:      token,
+		baseURL:    baseURL,
+	}, nil
+}
+
+func (c *Client) GenerateReportTemplate(ctx context.Context, templateID string, page int, pageSize int) ([]byte, error) {
+	urlStr := fmt.Sprintf("%sreport-templates/%s", c.baseURL, templateID)
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid URL: %w", err)
@@ -62,20 +64,20 @@ func GenerateReportTemplate(baseUrl, templateId, token string, page int, pageSiz
 		return nil, fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	client := httpClient
+	client := c.httpClient
 
 	// Create POST request (no body)
-	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(payload))
+	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Set Authorization header
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", token)
+	req.Header.Set("Authorization", c.token)
 
 	// Perform the request
-	logger.Info().Msg(fmt.Sprintf("Calling %+v", u))
+	c.logger.Info().Msg(fmt.Sprintf("Calling %+v", u))
 
 	// #nosec G704
 	resp, err := client.Do(req)

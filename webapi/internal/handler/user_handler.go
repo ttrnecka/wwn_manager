@@ -30,7 +30,6 @@ func (e *UserHandler) LoginUser(c echo.Context) error {
 	user, err := e.service.GetByName(c.Request().Context(), username)
 
 	if err != nil {
-		logger.Error().Err(err).Msg("")
 		if errors.Is(err, cdb.ErrNotFound) {
 			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid credentials")
 		}

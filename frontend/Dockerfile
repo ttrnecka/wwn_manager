@@ -15,5 +15,9 @@ RUN npm run build
 
 # final stage
 FROM alpine 
+RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
+
 WORKDIR /app
-COPY --from=frontend-build /app/dist /app/dist
+COPY --from=frontend-build --chown=appuser:appgroup /app/dist /app/dist
+
+USER appuser
