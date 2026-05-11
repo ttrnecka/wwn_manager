@@ -3,7 +3,7 @@ build:
     cd ./scripts/standalone_build && ./build.sh
     mv ./scripts/standalone_build/wwn_manager* .
 
-dev: dev-mongo
+dev: dev-mongo install
     tmux new-session -d 'cd frontend && npm run dev' \; \
          split-window 'cd webapi && go run .' \; \
          attach
@@ -22,7 +22,9 @@ docker-stop:
 
 golint:
     golangci-lint run webapi/
-    
+
+install:
+    cd frontend && npm install
 scan:
     cd scripts/scan && chmod 700 scan.sh && ./scan.sh
     
