@@ -8,10 +8,7 @@
       </div> 
       <!-- Customers -->
       <div class="mb-3" style="min-width: 1200px;">
-        <select v-model="selectedCustomer" class="form-select">
-          <option disabled value="">-- Select customer --</option>
-          <option v-for="c in customers" :key="c" :value="c">{{ c }}</option>
-        </select>
+        <CustomerAutocomplete v-model="selectedCustomer" :customers="customers" />
       </div>
       
       <div v-show="selectedCustomer" class="accordion" id="ruleAccordion" style="min-width: 1200px;">
@@ -67,12 +64,13 @@ import RulesControls from "@/components/RulesControls.vue";
 import EntriesTable from "@/components/EntriesTable.vue";
 import LoadingOverlay from "@/components/LoadingOverlay.vue";
 import FlashMessage from "@/components/FlashMessage.vue";
+import CustomerAutocomplete from "@/components/CustomerAutocomplete.vue";
 import { useFlashStore } from '@/stores/flash'
 import { useApiStore } from '@/stores/apiStore';
 
 export default {
   name: "FCManager",
-  components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage, RulesControls },
+  components: { RulesTable, EntriesTable, LoadingOverlay, FlashMessage, RulesControls, CustomerAutocomplete },
   data() {
     return {
       customers: [],
