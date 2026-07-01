@@ -1,4 +1,4 @@
-FROM docker.io/aquasec/trivy:latest
+FROM docker.io/aquasec/trivy:0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f
 
 # copy your internal CA cert
 COPY zscaler/zscaler-root-ca.crt /usr/local/share/ca-certificates/zscaler-root-ca.crt
