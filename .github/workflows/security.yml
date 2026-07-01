@@ -10,7 +10,7 @@ on:
   pull_request:
 
 env:
-  GO_VERSION: '1.26.3'
+  GO_VERSION: '1.26.4'
   GOLANGCI_LINT_VERSION: v2.11.4
   NODE_VERSION: '26'
   GHES: ${{ github.server_url != 'https://github.com' }}
@@ -252,6 +252,7 @@ jobs:
         format: 'sarif'
         output: 'trivy-results.sarif'
         vuln-type: 'library'
+        version: v0.72.0
 
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v4
