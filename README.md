@@ -76,7 +76,9 @@ Observe any error in the output
 ### Backend
 
 - based on the findings update mise to use required version of golang
+- ```mise upgrade```
 - Update webapi/Dockerfile* to use the same golang image
 - ```just update-backend```
+- Update go version in github action
 
 Now that both frontend and backend are updated create new commit/release/build.
