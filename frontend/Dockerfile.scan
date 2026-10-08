@@ -9,7 +9,7 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
 RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
 
-RUN npm install -g npm@12.0.2
+RUN npm install -g npm@12.2.0
 
 WORKDIR /app
 COPY frontend/package*.json ./
