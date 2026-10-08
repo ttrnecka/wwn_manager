@@ -1,11 +1,13 @@
 # build stage
-FROM docker.io/library/node:20-alpine AS frontend-build
+FROM docker.io/library/node:26-alpine AS frontend-build
 
 COPY zscaler/zscaler-root-ca.crt /tmp/zscaler-root-ca.crt
 
 RUN apk --no-cache add --no-check-certificate ca-certificates && update-ca-certificates
 RUN cat /tmp/zscaler-root-ca.crt >> /etc/ssl/certs/ca-certificates.crt
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+RUN npm install -g npm@12.2.0
 
 WORKDIR /app
 COPY frontend/package*.json ./
