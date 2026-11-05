@@ -27,6 +27,7 @@ linters:
         - (github.com/labstack/echo/v4.Context).JSON
         - (github.com/labstack/echo/v4.Context).NoContent
         - (github.com/labstack/echo/v4.Context).Attachment
+        - github.com/labstack/echo/v4.HTTPError
   exclusions:
     generated: lax
     presets:

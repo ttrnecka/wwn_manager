@@ -21,7 +21,7 @@ docker-stop:
     docker compose -f docker-compose.yaml down
 
 golint:
-    golangci-lint run webapi/
+    cd webapi && golangci-lint run --path-mode=abs
 
 install:
     cd frontend && npm install
