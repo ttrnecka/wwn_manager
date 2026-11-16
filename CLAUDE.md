@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Toolchain
 
-Versions are pinned in `mise.toml` (run `mise install` once). The repo expects `mise`, Go 1.26.x, golangci-lint 2.x, Node 26, `just`, and `tmux`. Most tasks are wrapped by `just` — read `Justfile` before inventing a new command.
+Versions are pinned in `mise.toml` (run `mise install` once). The repo expects `mise`, Go 1.27.x, golangci-lint 2.x, Node 26, `just`, and `tmux`. Most tasks are wrapped by `just` — read `Justfile` before inventing a new command.
 
 ## Common commands
 
