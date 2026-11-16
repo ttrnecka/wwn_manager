@@ -24,10 +24,10 @@ linters:
         - shadow
     wrapcheck:
       extra-ignore-sigs:
-        - (github.com/labstack/echo/v4.Context).JSON
-        - (github.com/labstack/echo/v4.Context).NoContent
-        - (github.com/labstack/echo/v4.Context).Attachment
-        - github.com/labstack/echo/v4.HTTPError
+        - (*github.com/labstack/echo/v5.Context).JSON
+        - (*github.com/labstack/echo/v5.Context).NoContent
+        - (*github.com/labstack/echo/v5.Context).Attachment
+        - github.com/labstack/echo/v5.NewHTTPError
   exclusions:
     generated: lax
     presets:

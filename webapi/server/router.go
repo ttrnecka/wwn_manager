@@ -4,9 +4,9 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo-contrib/v5/session"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/db"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
@@ -23,7 +23,7 @@ func Router(logger *zerolog.Logger) *echo.Echo {
 	e.Use(mid.RequestBodyCaptureMiddleware())
 	e.Use(mid.ResponseBodyCaptureMiddleware())
 	e.Use(mid.RequestLogger(logger))
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORS("*"))
 	e.Use(middleware.Recover())
 	e.Use(session.Middleware(sessions.NewCookieStore([]byte("secret"))))
 	e.Use(mid.SessionManager())
@@ -89,7 +89,7 @@ func Router(logger *zerolog.Logger) *echo.Echo {
 	e.Static("assets", filepath.Join(staticDir, "assets"))
 
 	// This handles all non-API routes
-	e.GET("/*", func(c echo.Context) error {
+	e.GET("/*", func(c *echo.Context) error {
 		return c.File(filepath.Join(staticDir, "index.html"))
 	})
 

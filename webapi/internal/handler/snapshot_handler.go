@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
 	"github.com/ttrnecka/wwn_identity/webapi/shared/dto"
@@ -22,7 +22,7 @@ func NewSnapshotHandler(s service.SnapshotService, e service.FCWWNEntryService) 
 	return &SnapshotHandler{s, e}
 }
 
-func (h *SnapshotHandler) Snapshots(c echo.Context) error {
+func (h *SnapshotHandler) Snapshots(c *echo.Context) error {
 
 	items, err := h.service.All(c.Request().Context())
 	if err != nil {
@@ -35,7 +35,7 @@ func (h *SnapshotHandler) Snapshots(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemsDTO)
 }
 
-func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
+func (h *SnapshotHandler) CreateSnapshot(c *echo.Context) error {
 	entries, err := h.entryService.Find(c.Request().Context(), service.Filter{"type": "Unknown"}, service.SortOption{})
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to check unknown type entries", err)
@@ -64,17 +64,17 @@ func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
 	var snapshotDTO dto.SnapshotDTO
 	err = json.NewDecoder(c.Request().Body).Decode(&snapshotDTO)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 
 	err = validate.Struct(snapshotDTO)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 
 	snapshot, err := h.service.MakeSnapshot(c.Request().Context(), snapshotDTO.Comment)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, err.Error(), err)
 		// return errorWithInternal(http.StatusInternalServerError, "Failed to create snapshot", err)
 	}
 	itemDTO := mapper.ToSnapshotDTO(*snapshot)
@@ -82,11 +82,11 @@ func (h *SnapshotHandler) CreateSnapshot(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemDTO)
 }
 
-func (h *SnapshotHandler) GetSnapshotEntries(c echo.Context) error {
+func (h *SnapshotHandler) GetSnapshotEntries(c *echo.Context) error {
 	snapshotID := c.Param("id")
 	snapshot, err := h.service.Get(c.Request().Context(), snapshotID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return errorWithInternal(http.StatusNotFound, err.Error(), err)
 	}
 	entries, err := h.service.GetSnapshotEntries(c.Request().Context(), *snapshot)
 	if err != nil {
@@ -99,11 +99,11 @@ func (h *SnapshotHandler) GetSnapshotEntries(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemsDTO)
 }
 
-func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
+func (h *SnapshotHandler) ExportHostWWN(c *echo.Context) error {
 	snapshotID := c.Param("id")
 	snapshot, err := h.service.Get(c.Request().Context(), snapshotID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return errorWithInternal(http.StatusNotFound, err.Error(), err)
 	}
 	entrySvc := h.service.GetEntryService(*snapshot)
 
@@ -166,11 +166,11 @@ func (h *SnapshotHandler) ExportHostWWN(c echo.Context) error {
 	return c.Attachment(f.Name(), fmt.Sprintf("host_wwn_%s.csv", snapshot.DataAndTime()))
 }
 
-func (h *SnapshotHandler) ExportOverrideWWN(c echo.Context) error {
+func (h *SnapshotHandler) ExportOverrideWWN(c *echo.Context) error {
 	snapshotID := c.Param("id")
 	snapshot, err := h.service.Get(c.Request().Context(), snapshotID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return errorWithInternal(http.StatusNotFound, err.Error(), err)
 	}
 	entrySvc := h.service.GetEntryService(*snapshot)
 
@@ -205,14 +205,14 @@ func (h *SnapshotHandler) ExportOverrideWWN(c echo.Context) error {
 	return c.Attachment(f.Name(), fmt.Sprintf("customer_wwn_host_override_%s.csv", snapshot.DataAndTime()))
 }
 
-func (h *SnapshotHandler) DeleteSnapshot(c echo.Context) error {
+func (h *SnapshotHandler) DeleteSnapshot(c *echo.Context) error {
 	snapshotID := c.Param("id")
 	if snapshotID == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "snapshot id is required")
 	}
 
 	if err := h.service.Delete(c.Request().Context(), snapshotID); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err)
+		return errorWithInternal(http.StatusInternalServerError, err.Error(), err)
 	}
 
 	return c.NoContent(http.StatusOK)

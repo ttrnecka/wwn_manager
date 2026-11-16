@@ -15,7 +15,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/service"
@@ -33,7 +33,7 @@ func NewRuleHandler(s service.RuleService, w service.FCWWNEntryService) *RuleHan
 	return &RuleHandler{s, w}
 }
 
-func (h *RuleHandler) GetRules(c echo.Context) error {
+func (h *RuleHandler) GetRules(c *echo.Context) error {
 	customer := c.Param("name")
 	rules, err := h.service.Find(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"order": "asc"})
 	if err != nil {
@@ -46,7 +46,7 @@ func (h *RuleHandler) GetRules(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemsDTO)
 }
 
-func (h *RuleHandler) Rules(c echo.Context) error {
+func (h *RuleHandler) Rules(c *echo.Context) error {
 
 	items, err := h.service.All(c.Request().Context())
 	if err != nil {
@@ -76,7 +76,7 @@ func (h *RuleHandler) Rules(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemsDTO)
 }
 
-func (h *RuleHandler) ExportRules(c echo.Context) error {
+func (h *RuleHandler) ExportRules(c *echo.Context) error {
 	f, err := os.CreateTemp("", "exportcsv-")
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to create temp csv file", err)
@@ -91,11 +91,11 @@ func (h *RuleHandler) ExportRules(c echo.Context) error {
 	return c.Attachment(f.Name(), "rules.csv")
 }
 
-func (h *RuleHandler) DeleteRule(c echo.Context) error {
+func (h *RuleHandler) DeleteRule(c *echo.Context) error {
 	probeID := c.Param("id")
 	_, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return errorWithInternal(http.StatusNotFound, err.Error(), err)
 	}
 	err = h.service.Delete(c.Request().Context(), probeID)
 	if err != nil {
@@ -109,7 +109,7 @@ func (h *RuleHandler) DeleteRule(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
+func (h *RuleHandler) CreateUpdateRule(c *echo.Context) error {
 	mode := c.QueryParam("mode")
 	// bulk mode with array of rules
 	if mode == "bulk" {
@@ -118,12 +118,12 @@ func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
 	customer := c.Param("name")
 	var itemDTO dto.RuleDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&itemDTO); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 	itemDTO.Customer = customer
 
 	if err := validate.Struct(itemDTO); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 	item := mapper.ToRuleEntity(itemDTO)
 
@@ -146,16 +146,16 @@ func (h *RuleHandler) CreateUpdateRule(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemDTO)
 }
 
-func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
+func (h *RuleHandler) CreateUpdateRules(c *echo.Context) error {
 	customer := c.Param("name")
 	var itemsDTO []dto.RuleDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&itemsDTO); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 	for _, item := range itemsDTO {
 		item.Customer = customer
 		if err := validate.Struct(item); err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
+			return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 		}
 		item := mapper.ToRuleEntity(item)
 
@@ -171,7 +171,7 @@ func (h *RuleHandler) CreateUpdateRules(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *RuleHandler) ApplyRules(c echo.Context) error {
+func (h *RuleHandler) ApplyRules(c *echo.Context) error {
 
 	fcWWNEntries, err := h.fcWWNEntryService.All(c.Request().Context())
 	if err != nil {
@@ -185,7 +185,7 @@ func (h *RuleHandler) ApplyRules(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
+func (h *RuleHandler) SetupAndApplyReconcileRules(c *echo.Context) error {
 	fcWWNEntryID := c.Param("id")
 
 	// get entry
@@ -198,7 +198,7 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 	var reconcileDTO dto.EntryReconcileDTO
 	err = json.NewDecoder(c.Request().Body).Decode(&reconcileDTO)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 	// save rules
 	err = h.service.CreateReconcileRules(c.Request().Context(), fcWWNEntry, reconcileDTO)
@@ -236,7 +236,7 @@ func (h *RuleHandler) SetupAndApplyReconcileRules(c echo.Context) error {
 	// return c.NoContent(http.StatusOK)
 }
 
-func (h *RuleHandler) ImportHandler(c echo.Context) error {
+func (h *RuleHandler) ImportHandler(c *echo.Context) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return errorWithInternal(http.StatusBadRequest, "Failed to load import file from request", err)
@@ -257,7 +257,7 @@ func (h *RuleHandler) ImportHandler(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to insert rules", err)
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
+	return c.JSON(http.StatusOK, map[string]string{"message": "Import successful"})
 }
 
 func (h *RuleHandler) applyRules(ctx context.Context, fcWWNEntries []entity.FCWWNEntry) error { // nolint:gocyclo // TODO LATER

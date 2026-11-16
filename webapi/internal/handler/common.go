@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/labstack/echo/v4"
+import "github.com/labstack/echo/v5"
 
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
@@ -13,6 +13,5 @@ func contains(slice []string, item string) bool {
 
 func errorWithInternal(code int, message string, err error) error {
 	newErr := echo.NewHTTPError(code, message)
-	newErr.Internal = err
-	return newErr
+	return newErr.Wrap(err)
 }

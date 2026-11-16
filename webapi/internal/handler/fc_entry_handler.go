@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/rs/zerolog"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/entity"
 	"github.com/ttrnecka/wwn_identity/webapi/internal/mapper"
@@ -40,7 +40,7 @@ func NewFCWWNEntryHandler(s service.FCWWNEntryService, r service.RuleService, lo
 	return &FCWWNEntryHandler{s, r, &l}
 }
 
-func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
+func (h *FCWWNEntryHandler) FCWWNEntries(c *echo.Context) error {
 	mode := c.QueryParam("softdeleted")
 	if mode != "" {
 		return h.FCWWNEntriesWithSoftDeleted(c)
@@ -61,7 +61,7 @@ func (h *FCWWNEntryHandler) FCWWNEntries(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemDTO)
 }
 
-func (h *FCWWNEntryHandler) FCWWNEntriesWithSoftDeleted(c echo.Context) error {
+func (h *FCWWNEntryHandler) FCWWNEntriesWithSoftDeleted(c *echo.Context) error {
 	customer := c.Param("name")
 
 	items, err := h.service.FindWithSoftDeleted(c.Request().Context(), service.Filter{"customer": customer}, service.SortOption{"wwn": "asc"})
@@ -78,11 +78,11 @@ func (h *FCWWNEntryHandler) FCWWNEntriesWithSoftDeleted(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemDTO)
 }
 
-func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
+func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c *echo.Context) error {
 	probeID := c.Param("id")
 	_, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return errorWithInternal(http.StatusNotFound, err.Error(), err)
 	}
 	err = h.service.Delete(c.Request().Context(), probeID)
 	if err != nil {
@@ -91,11 +91,11 @@ func (h *FCWWNEntryHandler) DeleteFCWWNEntry(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
+func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c *echo.Context) error {
 	probeID := c.Param("id")
 	entry, err := h.service.Get(c.Request().Context(), probeID)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusNotFound, err)
+		return errorWithInternal(http.StatusNotFound, err.Error(), err)
 	}
 
 	entries, err := h.service.Find(c.Request().Context(), service.Filter{"wwn": entry.WWN}, service.SortOption{})
@@ -118,7 +118,7 @@ func (h *FCWWNEntryHandler) SoftDeleteFCWWNEntry(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *FCWWNEntryHandler) RestoreFCWWNEntry(c echo.Context) error {
+func (h *FCWWNEntryHandler) RestoreFCWWNEntry(c *echo.Context) error {
 	probeID := c.Param("id")
 
 	err := h.service.Restore(c.Request().Context(), probeID)
@@ -128,14 +128,14 @@ func (h *FCWWNEntryHandler) RestoreFCWWNEntry(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func (h *FCWWNEntryHandler) CreateUpdateFCWWNEntry(c echo.Context) error {
+func (h *FCWWNEntryHandler) CreateUpdateFCWWNEntry(c *echo.Context) error {
 	var itemDTO dto.FCWWNEntryDTO
 	if err := json.NewDecoder(c.Request().Body).Decode(&itemDTO); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 
 	if err := validate.Struct(itemDTO); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err)
+		return errorWithInternal(http.StatusBadRequest, err.Error(), err)
 	}
 	item := mapper.ToFCWWNEntryEntity(itemDTO)
 
@@ -153,7 +153,7 @@ func (h *FCWWNEntryHandler) CreateUpdateFCWWNEntry(c echo.Context) error {
 	return c.JSON(http.StatusOK, itemDTO)
 }
 
-func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
+func (h *FCWWNEntryHandler) ImportHandler(c *echo.Context) error {
 	file, err := c.FormFile("file")
 	if err != nil {
 		return errorWithInternal(http.StatusBadRequest, "Failed to load import file from request", err)
@@ -178,10 +178,10 @@ func (h *FCWWNEntryHandler) ImportHandler(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
+	return c.JSON(http.StatusOK, map[string]string{"message": "Import successful"})
 }
 
-func (h *FCWWNEntryHandler) ImportAPIHandler(c echo.Context) error {
+func (h *FCWWNEntryHandler) ImportAPIHandler(c *echo.Context) error {
 	wwnEntries, err := h.readEntriesFromAPI(c)
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to read entries from api", err)
@@ -201,10 +201,10 @@ func (h *FCWWNEntryHandler) ImportAPIHandler(c echo.Context) error {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to flag duplicate entries", err)
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{"message": "Import successful"})
+	return c.JSON(http.StatusOK, map[string]string{"message": "Import successful"})
 }
 
-func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
+func (h *FCWWNEntryHandler) ListCustomers(c *echo.Context) error {
 	customers, err := h.service.Customers(c.Request().Context())
 	if err != nil {
 		return errorWithInternal(http.StatusInternalServerError, "Failed to get customers", err)
@@ -212,7 +212,7 @@ func (h *FCWWNEntryHandler) ListCustomers(c echo.Context) error {
 	return c.JSON(http.StatusOK, customers)
 }
 
-func (h *FCWWNEntryHandler) ExportReconcileEntries(c echo.Context) error {
+func (h *FCWWNEntryHandler) ExportReconcileEntries(c *echo.Context) error {
 	items, err := h.service.Find(c.Request().Context(),
 		service.Filter{
 			"type":            service.Filter{"$in": []string{"Host", "Other"}},
@@ -318,7 +318,7 @@ func (h *FCWWNEntryHandler) readEntriesFromFile(file *multipart.FileHeader) ([]*
 	return wwnEntries, nil
 }
 
-func (h *FCWWNEntryHandler) readEntriesFromAPI(c echo.Context) ([]*entity.FCWWNEntry, error) {
+func (h *FCWWNEntryHandler) readEntriesFromAPI(c *echo.Context) ([]*entity.FCWWNEntry, error) {
 
 	var wwnEntries []*entity.FCWWNEntry
 	wwnEntryMap := make(map[string]map[string]entity.FCWWNEntry, 0)

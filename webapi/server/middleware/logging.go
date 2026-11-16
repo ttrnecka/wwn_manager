@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/rs/zerolog"
 )
 
@@ -24,13 +24,12 @@ func RequestLogger(logger *zerolog.Logger) echo.MiddlewareFunc {
 		LogRemoteIP:      true,
 		LogUserAgent:     true,
 		LogContentLength: true,
-		LogError:         true,
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
 			// --- Capture request body ---
 			reqBody, _ := c.Get("reqBody").(string)
 
 			// --- Capture response body ---
-			respRecorder, ok := c.Response().Writer.(*responseRecorder)
+			respRecorder, ok := c.Response().(*responseRecorder)
 			var respBody string
 			if ok {
 				respBody = respRecorder.body.String()
@@ -68,7 +67,7 @@ func RequestLogger(logger *zerolog.Logger) echo.MiddlewareFunc {
 
 func RequestBodyCaptureMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			req := c.Request()
 			if req.Body != nil {
 				// Read the full body
@@ -94,10 +93,10 @@ func RequestBodyCaptureMiddleware() echo.MiddlewareFunc {
 // Wrap response writer before RequestLogger runs
 func ResponseBodyCaptureMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
+		return func(c *echo.Context) error {
 			// Wrap the response writer so we can read the body later
-			rec := newResponseRecorder(c.Response().Writer)
-			c.Response().Writer = rec
+			rec := newResponseRecorder(c.Response())
+			c.SetResponse(rec)
 			return next(c)
 		}
 	}
@@ -113,6 +112,10 @@ func newResponseRecorder(w http.ResponseWriter) *responseRecorder {
 		ResponseWriter: w,
 		body:           &bytes.Buffer{},
 	}
+}
+
+func (r *responseRecorder) Unwrap() http.ResponseWriter {
+	return r.ResponseWriter
 }
 
 func (r *responseRecorder) Write(b []byte) (int, error) {
