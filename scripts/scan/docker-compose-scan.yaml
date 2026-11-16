@@ -12,7 +12,7 @@ services:
     # image: frontend_scan:0.0.1
     container_name: frontend-scan
   golangci-lint:
-    image: docker.io/golangci/golangci-lint:v2.11.4
+    image: docker.io/golangci/golangci-lint:v2.15.0
     working_dir: /app
     volumes:
       - ../../:/app

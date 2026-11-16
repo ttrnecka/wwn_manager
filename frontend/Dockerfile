@@ -7,7 +7,7 @@ RUN apk --no-cache add --no-check-certificate ca-certificates && update-ca-certi
 RUN cat /tmp/zscaler-root-ca.crt >> /etc/ssl/certs/ca-certificates.crt
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 
-RUN npm install -g npm@12.2.0
+RUN npm install -g npm@12.2.2
 
 WORKDIR /app
 COPY frontend/package*.json ./
